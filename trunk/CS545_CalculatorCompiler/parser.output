@@ -1,0 +1,328 @@
+Terminals unused in grammar
+
+   LOW
+   HIGH
+
+
+Grammar
+
+    0 $accept: stmts $end
+
+    1 stmts: stmt stmts
+    2      | stmt
+
+    3 stmt: id ASSIGN exp SEMICOLON
+    4     | exp SEMICOLON
+
+    5 exp: LP exp RP
+    6    | exp ADD exp
+    7    | exp SUB exp
+    8    | exp MUL exp
+    9    | exp DIV exp
+   10    | NUM
+   11    | id
+
+   12 id: ID
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+LP (258) 5
+RP (259) 5
+ADD (260) 6
+SUB (261) 7
+MUL (262) 8
+DIV (263) 9
+ASSIGN (264) 3
+SEMICOLON (265) 3 4
+NUM (266) 10
+ID (267) 12
+LOW (268)
+HIGH (269)
+
+
+Nonterminals, with rules where they appear
+
+$accept (15)
+    on left: 0
+stmts (16)
+    on left: 1 2, on right: 0 1
+stmt (17)
+    on left: 3 4, on right: 1 2
+exp (18)
+    on left: 5 6 7 8 9 10 11, on right: 3 4 5 6 7 8 9
+id (19)
+    on left: 12, on right: 3 11
+
+
+state 0
+
+    0 $accept: . stmts $end
+
+    LP   shift, and go to state 1
+    NUM  shift, and go to state 2
+    ID   shift, and go to state 3
+
+    stmts  go to state 4
+    stmt   go to state 5
+    exp    go to state 6
+    id     go to state 7
+
+
+state 1
+
+    5 exp: LP . exp RP
+
+    LP   shift, and go to state 1
+    NUM  shift, and go to state 2
+    ID   shift, and go to state 3
+
+    exp  go to state 8
+    id   go to state 9
+
+
+state 2
+
+   10 exp: NUM .
+
+    $default  reduce using rule 10 (exp)
+
+
+state 3
+
+   12 id: ID .
+
+    $default  reduce using rule 12 (id)
+
+
+state 4
+
+    0 $accept: stmts . $end
+
+    $end  shift, and go to state 10
+
+
+state 5
+
+    1 stmts: stmt . stmts
+    2      | stmt .
+
+    LP   shift, and go to state 1
+    NUM  shift, and go to state 2
+    ID   shift, and go to state 3
+
+    $default  reduce using rule 2 (stmts)
+
+    stmts  go to state 11
+    stmt   go to state 5
+    exp    go to state 6
+    id     go to state 7
+
+
+state 6
+
+    4 stmt: exp . SEMICOLON
+    6 exp: exp . ADD exp
+    7    | exp . SUB exp
+    8    | exp . MUL exp
+    9    | exp . DIV exp
+
+    ADD        shift, and go to state 12
+    SUB        shift, and go to state 13
+    MUL        shift, and go to state 14
+    DIV        shift, and go to state 15
+    SEMICOLON  shift, and go to state 16
+
+
+state 7
+
+    3 stmt: id . ASSIGN exp SEMICOLON
+   11 exp: id .
+
+    ASSIGN  shift, and go to state 17
+
+    $default  reduce using rule 11 (exp)
+
+
+state 8
+
+    5 exp: LP exp . RP
+    6    | exp . ADD exp
+    7    | exp . SUB exp
+    8    | exp . MUL exp
+    9    | exp . DIV exp
+
+    RP   shift, and go to state 18
+    ADD  shift, and go to state 12
+    SUB  shift, and go to state 13
+    MUL  shift, and go to state 14
+    DIV  shift, and go to state 15
+
+
+state 9
+
+   11 exp: id .
+
+    $default  reduce using rule 11 (exp)
+
+
+state 10
+
+    0 $accept: stmts $end .
+
+    $default  accept
+
+
+state 11
+
+    1 stmts: stmt stmts .
+
+    $default  reduce using rule 1 (stmts)
+
+
+state 12
+
+    6 exp: exp ADD . exp
+
+    LP   shift, and go to state 1
+    NUM  shift, and go to state 2
+    ID   shift, and go to state 3
+
+    exp  go to state 19
+    id   go to state 9
+
+
+state 13
+
+    7 exp: exp SUB . exp
+
+    LP   shift, and go to state 1
+    NUM  shift, and go to state 2
+    ID   shift, and go to state 3
+
+    exp  go to state 20
+    id   go to state 9
+
+
+state 14
+
+    8 exp: exp MUL . exp
+
+    LP   shift, and go to state 1
+    NUM  shift, and go to state 2
+    ID   shift, and go to state 3
+
+    exp  go to state 21
+    id   go to state 9
+
+
+state 15
+
+    9 exp: exp DIV . exp
+
+    LP   shift, and go to state 1
+    NUM  shift, and go to state 2
+    ID   shift, and go to state 3
+
+    exp  go to state 22
+    id   go to state 9
+
+
+state 16
+
+    4 stmt: exp SEMICOLON .
+
+    $default  reduce using rule 4 (stmt)
+
+
+state 17
+
+    3 stmt: id ASSIGN . exp SEMICOLON
+
+    LP   shift, and go to state 1
+    NUM  shift, and go to state 2
+    ID   shift, and go to state 3
+
+    exp  go to state 23
+    id   go to state 9
+
+
+state 18
+
+    5 exp: LP exp RP .
+
+    $default  reduce using rule 5 (exp)
+
+
+state 19
+
+    6 exp: exp . ADD exp
+    6    | exp ADD exp .
+    7    | exp . SUB exp
+    8    | exp . MUL exp
+    9    | exp . DIV exp
+
+    MUL  shift, and go to state 14
+    DIV  shift, and go to state 15
+
+    $default  reduce using rule 6 (exp)
+
+
+state 20
+
+    6 exp: exp . ADD exp
+    7    | exp . SUB exp
+    7    | exp SUB exp .
+    8    | exp . MUL exp
+    9    | exp . DIV exp
+
+    MUL  shift, and go to state 14
+    DIV  shift, and go to state 15
+
+    $default  reduce using rule 7 (exp)
+
+
+state 21
+
+    6 exp: exp . ADD exp
+    7    | exp . SUB exp
+    8    | exp . MUL exp
+    8    | exp MUL exp .
+    9    | exp . DIV exp
+
+    $default  reduce using rule 8 (exp)
+
+
+state 22
+
+    6 exp: exp . ADD exp
+    7    | exp . SUB exp
+    8    | exp . MUL exp
+    9    | exp . DIV exp
+    9    | exp DIV exp .
+
+    $default  reduce using rule 9 (exp)
+
+
+state 23
+
+    3 stmt: id ASSIGN exp . SEMICOLON
+    6 exp: exp . ADD exp
+    7    | exp . SUB exp
+    8    | exp . MUL exp
+    9    | exp . DIV exp
+
+    ADD        shift, and go to state 12
+    SUB        shift, and go to state 13
+    MUL        shift, and go to state 14
+    DIV        shift, and go to state 15
+    SEMICOLON  shift, and go to state 24
+
+
+state 24
+
+    3 stmt: id ASSIGN exp SEMICOLON .
+
+    $default  reduce using rule 3 (stmt)
