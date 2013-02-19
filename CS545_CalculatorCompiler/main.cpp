@@ -16,7 +16,7 @@
 
 #define ESC 27
 
-extern Statement* parse_result;
+extern Program* parse_result;
 extern void calset_in(FILE* f);
 extern void calparse();
 

@@ -136,4 +136,28 @@ public:
 	void print(FILE* output, int level);
 };
 
+class StatementBlock : public Statement {
+public:
+	Statements *content;
+	StatementBlock() {
+		content = NULL;
+	}
+	~StatementBlock();
+	void evaluate(EvalContext* context);
+	void genasm(AsmContext* context);
+	void print(FILE* output, int level);
+};
+
+class Program : public Node {
+public:
+	StatementBlock *block;
+	Program() {
+		block = NULL;
+	}
+	~Program();
+	void evaluate(EvalContext* context);
+	void genasm(AsmContext* context);
+	void print(FILE* output, int level);
+};
+
 #endif /* NODE_H_ */

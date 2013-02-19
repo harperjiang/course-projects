@@ -16,6 +16,8 @@ extern void calerror(char* input);
 ";"						{return SEMICOLON;}
 "("                 	{return LP;}
 ")"                 	{return RP;}
+"{"						{return LB;}
+"}"						{return RB;}
 "+"                 	{return ADD;}
 "-"                 	{return SUB;}
 "*"                 	{return MUL;}

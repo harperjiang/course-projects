@@ -45,10 +45,12 @@
      DIV = 263,
      ASSIGN = 264,
      SEMICOLON = 265,
-     NUM = 266,
-     ID = 267,
-     LOW = 268,
-     HIGH = 269
+     LB = 266,
+     RB = 267,
+     NUM = 268,
+     ID = 269,
+     LOW = 270,
+     HIGH = 271
    };
 #endif
 /* Tokens.  */
@@ -60,10 +62,12 @@
 #define DIV 263
 #define ASSIGN 264
 #define SEMICOLON 265
-#define NUM 266
-#define ID 267
-#define LOW 268
-#define HIGH 269
+#define LB 266
+#define RB 267
+#define NUM 268
+#define ID 269
+#define LOW 270
+#define HIGH 271
 
 
 
@@ -76,7 +80,9 @@ typedef union YYSTYPE
 #line 15 "calculator.yacc"
 
     char* stringTerm;
+    Program* program;
     Statements*	stmts;
+    StatementBlock* block;
     Statement* stmt;
     Expression* exp;
     Identifier* id;
@@ -84,7 +90,7 @@ typedef union YYSTYPE
 
 
 /* Line 2068 of yacc.c  */
-#line 88 "parser.h"
+#line 94 "parser.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
