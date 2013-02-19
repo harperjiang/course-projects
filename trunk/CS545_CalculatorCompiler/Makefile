@@ -4,7 +4,7 @@ YACC=yacc
 
 CXXFLAGS =	-O0 -g -Wall -fmessage-length=0
 
-OBJS =	main.o node.o scanner.o parser.o eval_context.o asm_context.o
+OBJS =	main.o node.o scanner.o parser.o eval_context.o asm_context.o symbol_table.o
 
 LIBS =
 
@@ -17,16 +17,19 @@ eval_context.o:
 	$(CXX) $(CXXFLAGS) -c eval_context.cpp -o eval_context.o
 asm_context.o:
 	$(CXX) $(CXXFLAGS) -c asm_context.cpp -o asm_context.o
+symbol_table.o:
+	$(CXX) $(CXXFLAGS) -c symbol_table.cpp -o symbol_table.o
 node.o:	
 	$(CXX) $(CXXFLAGS) -c node.cpp -o node.o
 main.o:	 parser.o scanner.o asm_context.o
 	$(CXX) $(CXXFLAGS) -c main.cpp -o main.o
+	
 scanner.o:
 	$(LEX) --prefix=cal -o scanner.cpp calculator.lex
-	$(CXX) $(CXXFLAGS) -c scanner.cpp -o scanner.o
-parser.o:
+parser.o: scanner.o
 	$(YACC) --defines=parser.h -v -p cal -o parser.cpp calculator.yacc
 	$(CXX) $(CXXFLAGS) -c parser.cpp -o parser.o
+	$(CXX) $(CXXFLAGS) -c scanner.cpp -o scanner.o
 
 all:	$(TARGET)
 	./$(TARGET) input -o output.s

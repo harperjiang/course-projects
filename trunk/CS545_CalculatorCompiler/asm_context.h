@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "common.h"
+#include "symbol_table.h"
 
 #define INDIRECT  1
 #define DIRECT  0
@@ -21,40 +22,10 @@ typedef enum _Register {
 	eax, ebx, ecx, edx
 } Register;
 
-class MemoryUnit {
-private:
-	int position;
-	int size;
-public:
-	MemoryUnit(int pos, int siz) {
-		this->position = pos;
-		this->size = siz;
-	}
-
-	int getPosition() {
-		return position;
-	}
-
-	int getSize() {
-		return size;
-	}
-
-	long getEnd() {
-		return position + size;
-	}
-};
-
-struct charComp {
-public:
-	bool operator()(const char* a, const char*b) {
-		return strcmp(a, b) < 0;
-	}
-};
-
 class AsmContext {
 private:
 	FILE* output;
-	std::map<char*, MemoryUnit*, charComp> *symbolTable;
+	SymbolTable *symbolTable;
 	std::list<MemoryUnit*> *memoryMap;
 
 	std::vector<char*> *labels;
@@ -69,8 +40,13 @@ public:
 
 	void dealloc(MemoryUnit*);
 
+	void pushFrame();
+
+	void popFrame();
+
 // Return the allocated address for the given id, allocate if not allocated
 	MemoryUnit* find(char* id);
+	MemoryUnit* find(char* id, int level);
 
 	char* genlabel();
 
@@ -104,10 +80,10 @@ public:
 	virtual void mul(Register target);
 	virtual void div(Register target);
 
-	virtual void land(Register,int);
-	virtual void lor(Register,int);
+	virtual void land(Register, int);
+	virtual void lor(Register, int);
 	virtual void lnot(Register);
-	virtual void lxor(Register,int);
+	virtual void lxor(Register, int);
 
 	virtual void neg(Register target);
 
@@ -160,10 +136,10 @@ public:
 	virtual void mul(Register target);
 	virtual void div(Register target);
 
-	virtual void land(Register,int);
-	virtual void lor(Register,int);
+	virtual void land(Register, int);
+	virtual void lor(Register, int);
 	virtual void lnot(Register);
-	virtual void lxor(Register,int);
+	virtual void lxor(Register, int);
 
 	virtual void inc(Register target);
 	virtual void dec(Register target);

@@ -21,7 +21,7 @@ struct comparator {
 
 class EvalContext {
 private:
-	std::map<char*, char*, comparator> *idTable;
+	std::vector<std::map<char*, char*, comparator> *> *idTable;
 	std::map<int, std::vector<char*>*> *errors;
 	int error;
 protected:
@@ -33,6 +33,9 @@ public:
 	void check(char* id);
 	int geterror();
 	void showerror(FILE* output);
+
+	void pushFrame();
+	void popFrame();
 };
 
 #endif /* EVAL_CONTEXT_H_ */

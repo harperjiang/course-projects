@@ -10,8 +10,10 @@
 
 EvalContext::EvalContext() {
 	error = 0;
-	idTable = new std::map<char*, char*, comparator>();
+	idTable = new std::vector<std::map<char*, char*, comparator>*>();
 	errors = new std::map<int, std::vector<char*>*>();
+
+	idTable->push_back(new std::map<char*, char*, comparator>());
 }
 
 EvalContext::~EvalContext() {
@@ -23,15 +25,20 @@ EvalContext::~EvalContext() {
 }
 
 void EvalContext::addId(char* id) {
-	this->idTable->insert(std::pair<char*, char*>(id, id));
+	this->idTable->back()->insert(std::pair<char*, char*>(id, id));
 }
 
 void EvalContext::check(char* id) {
 	char* buffer = new char[100];
-	if (this->idTable->find(id) == this->idTable->end()) {
-		sprintf(buffer, "Variable %s was used before it was declared", id);
-		record(UNDEFINED_ID, buffer);
+	std::vector<std::map<char*, char*, comparator>*>::iterator ite =
+			idTable->begin();
+	for (; ite != idTable->end(); ite++) {
+		if ((*ite)->find(id) != (*ite)->end()) {
+			return;
+		}
 	}
+	sprintf(buffer, "Variable %s was used before it was declared", id);
+	record(UNDEFINED_ID, buffer);
 }
 
 void EvalContext::record(int type, char* context) {
@@ -59,4 +66,12 @@ void EvalContext::showerror(FILE* output) {
 			}
 		}
 	}
+}
+
+void EvalContext::pushFrame() {
+	idTable->push_back(new std::map<char*, char*, comparator>());
+}
+
+void EvalContext::popFrame() {
+	idTable->pop_back();
 }

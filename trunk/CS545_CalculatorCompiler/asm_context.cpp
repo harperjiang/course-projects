@@ -25,7 +25,7 @@ const char* regtoa(Register reg) {
 
 AsmContext::AsmContext(FILE* output) {
 	this->output = output;
-	symbolTable = new std::map<char*, MemoryUnit*, charComp>();
+	symbolTable = new SymbolTable();
 	memoryMap = new std::list<MemoryUnit*>();
 
 	labels = new std::vector<char*>();
@@ -35,7 +35,7 @@ AsmContext::~AsmContext() {
 	if (NULL != this->output) {
 		fclose(this->output);
 	}
-	symbolTable->clear();
+
 	delete symbolTable;
 
 	memoryMap->clear();
@@ -55,11 +55,19 @@ void AsmContext::init() {
 
 // Return the allocated address for the given id, -1 if not allocated
 MemoryUnit* AsmContext::find(char* id) {
-	if (symbolTable->find(id) == symbolTable->end()) {
+	if (NULL == symbolTable->find(id)) {
 		MemoryUnit* alloc = this->alloc(4); // 32 bit
-		symbolTable->insert(std::pair<char*, MemoryUnit*>(id, alloc));
+		symbolTable->add(id, alloc);
 	}
-	return symbolTable->find(id)->second;
+	return symbolTable->find(id);
+}
+
+MemoryUnit* AsmContext::find(char* id, int level) {
+	if (NULL == symbolTable->find(id, level)) {
+		MemoryUnit* alloc = this->alloc(4); // 32 bit
+		symbolTable->add(id, alloc);
+	}
+	return symbolTable->find(id, level);
 }
 
 MemoryUnit* AsmContext::alloc(int size) {
@@ -87,6 +95,14 @@ void AsmContext::dealloc(MemoryUnit* alloc) {
 			return;
 		}
 	}
+}
+
+void AsmContext::pushFrame() {
+	this->symbolTable->pushFrame();
+}
+
+void AsmContext::popFrame() {
+	this->symbolTable->popFrame();
 }
 
 char* AsmContext::genlabel() {
@@ -181,14 +197,14 @@ void AsmContext::mov(Register target, int valoraddr, int mode) {
 		break;
 	case 1: //01
 		add(edx, valoraddr);
-		fprintf(getOutput(), "\tmov %s,[edx]\n", regtoa(target), valoraddr);
+		fprintf(getOutput(), "\tmov %s,[edx]\n", regtoa(target));
 		break;
 	case 2: //10
 		fprintf(getOutput(), "\tmov [%s],%d\n", regtoa(target), valoraddr);
 		break;
 	case 3: // 11
 		add(edx, valoraddr);
-		fprintf(getOutput(), "\tmov [%s],[edx]\n", regtoa(target), valoraddr);
+		fprintf(getOutput(), "\tmov [%s],[edx]\n", regtoa(target));
 		break;
 	default:
 		break;
@@ -268,7 +284,7 @@ void AsmContext::add(Register target, int val) {
 }
 
 void AsmContext::add(Register target, Register source) {
-	fprintf(getOutput(), "\t%s %s,%d", "add", regtoa(target), regtoa(source));
+	fprintf(getOutput(), "\t%s %s,%s", "add", regtoa(target), regtoa(source));
 }
 
 void AsmContext::sub(Register target, int val) {
@@ -276,7 +292,7 @@ void AsmContext::sub(Register target, int val) {
 }
 
 void AsmContext::sub(Register target, Register source) {
-	fprintf(getOutput(), "\t%s %s,%d\n", "sub", regtoa(target), regtoa(source));
+	fprintf(getOutput(), "\t%s %s,%s\n", "sub", regtoa(target), regtoa(source));
 }
 
 void AsmContext::mul(Register target) {

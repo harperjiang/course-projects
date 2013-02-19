@@ -86,7 +86,7 @@ void AssignStatement::evaluate(EvalContext* context) {
 }
 
 void AssignStatement::genasm(AsmContext* context) {
-	MemoryUnit* idalloc = context->find(this->id->name);
+	MemoryUnit* idalloc = context->find(this->id->name, 0);
 	this->value->genasm(context);
 	context->mov(idalloc->getPosition(), eax, 0);
 }
@@ -216,15 +216,12 @@ void Statements::evaluate(EvalContext* context) {
 }
 
 void Statements::genasm(AsmContext* context) {
-// Generate
-	context->header();
 	for (std::vector<Statement*>::iterator it = this->statements->begin();
 			it != this->statements->end(); it++) {
 		(*it)->genasm(context);
 		// For Debugging purpose
 		context->nop();
 	}
-	context->tail();
 }
 
 void Statements::print(FILE* output, int level) {
@@ -234,4 +231,48 @@ void Statements::print(FILE* output, int level) {
 			iterator != this->statements->end(); iterator++) {
 		(*iterator)->print(output, level + 1);
 	}
+}
+
+StatementBlock::~StatementBlock() {
+	if (NULL != content)
+		delete content;
+}
+
+void StatementBlock::evaluate(EvalContext* context) {
+	context->pushFrame();
+	content->evaluate(context);
+	context->popFrame();
+}
+
+void StatementBlock::print(FILE* output, int level) {
+	Node::print(output, level);
+	fprintf(output, "%s\n", "[StatementBlock]");
+	this->content->print(output, level + 1);
+}
+
+void StatementBlock::genasm(AsmContext* context) {
+	context->pushFrame();
+	content->genasm(context);
+	context->popFrame();
+}
+
+Program::~Program() {
+	if (NULL != block)
+		delete block;
+}
+
+void Program::evaluate(EvalContext* context) {
+	block->evaluate(context);
+}
+
+void Program::print(FILE* output, int level) {
+	Node::print(output, level);
+	fprintf(output, "%s\n", "[Program]");
+	this->block->print(output, level + 1);
+}
+
+void Program::genasm(AsmContext* context) {
+	context->header();
+	block->genasm(context);
+	context->tail();
 }
