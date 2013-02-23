@@ -104,6 +104,101 @@ void PrintStatement::evaluate(EvalContext* context) {
 
 void PrintStatement::genasm(AsmContext* context) {
 	this->expression->genasm(context);
+	context->push(eax);
+	context->push(1);
+	context->call("_print");
+}
+
+void PrintStatement::print(FILE* output, int level) {
+	Node::print(output, level);
+	fprintf(output, "%s\n", "[PrintStatement]");
+	this->expression->print(output, level + 1);
+}
+
+Statements::~Statements() {
+	this->statements->clear();
+	delete this->statements;
+}
+
+void Statements::evaluate(EvalContext* context) {
+	for (std::vector<Statement*>::iterator iterator = this->statements->begin();
+			iterator != this->statements->end(); iterator++) {
+		(*iterator)->evaluate(context);
+	}
+}
+
+void Statements::genasm(AsmContext* context) {
+	for (std::vector<Statement*>::iterator it = this->statements->begin();
+			it != this->statements->end(); it++) {
+		(*it)->genasm(context);
+		// For Debugging purpose
+		context->nop();
+	}
+}
+
+void Statements::print(FILE* output, int level) {
+	Node::print(output, level);
+	fprintf(output, "%s\n", "[Statements]");
+	for (std::vector<Statement*>::iterator iterator = this->statements->begin();
+			iterator != this->statements->end(); iterator++) {
+		(*iterator)->print(output, level + 1);
+	}
+}
+
+StatementBlock::~StatementBlock() {
+	if (NULL != content)
+		delete content;
+}
+
+void StatementBlock::evaluate(EvalContext* context) {
+	context->pushFrame();
+	content->evaluate(context);
+	context->popFrame();
+}
+
+void StatementBlock::print(FILE* output, int level) {
+	Node::print(output, level);
+	fprintf(output, "%s\n", "[StatementBlock]");
+	this->content->print(output, level + 1);
+}
+
+void StatementBlock::genasm(AsmContext* context) {
+	context->pushFrame();
+	content->genasm(context);
+	context->popFrame();
+}
+
+Program::~Program() {
+	if (NULL != block)
+		delete block;
+}
+
+void Program::evaluate(EvalContext* context) {
+	block->evaluate(context);
+}
+
+void Program::print(FILE* output, int level) {
+	Node::print(output, level);
+	fprintf(output, "%s\n", "[Program]");
+	this->block->print(output, level + 1);
+}
+
+void Program::genasm(AsmContext* context) {
+	context->header();
+	context->label("_start");
+	block->genasm(context);
+	// Exit
+	context->mov(eax, 1);
+	context->mov(ebx, 0);
+	context->interrupt(0x80);
+	context->ret();
+	// Generate a print call
+
+	context->label("_print");
+	context->pop(ebx);
+	context->pop(eax);
+	context->pop(eax);
+	context->push(ebx);
 	MemoryUnit* buffer = context->alloc(20);
 	char* label0 = context->genlabel();
 	char* label1 = context->genlabel();
@@ -195,84 +290,8 @@ void PrintStatement::genasm(AsmContext* context) {
 	// edx has the length now
 	context->interrupt(0x80);
 	context->dealloc(buffer);
-}
+	context->ret();
 
-void PrintStatement::print(FILE* output, int level) {
-	Node::print(output, level);
-	fprintf(output, "%s\n", "[PrintStatement]");
-	this->expression->print(output, level + 1);
-}
 
-Statements::~Statements() {
-	this->statements->clear();
-	delete this->statements;
-}
-
-void Statements::evaluate(EvalContext* context) {
-	for (std::vector<Statement*>::iterator iterator = this->statements->begin();
-			iterator != this->statements->end(); iterator++) {
-		(*iterator)->evaluate(context);
-	}
-}
-
-void Statements::genasm(AsmContext* context) {
-	for (std::vector<Statement*>::iterator it = this->statements->begin();
-			it != this->statements->end(); it++) {
-		(*it)->genasm(context);
-		// For Debugging purpose
-		context->nop();
-	}
-}
-
-void Statements::print(FILE* output, int level) {
-	Node::print(output, level);
-	fprintf(output, "%s\n", "[Statements]");
-	for (std::vector<Statement*>::iterator iterator = this->statements->begin();
-			iterator != this->statements->end(); iterator++) {
-		(*iterator)->print(output, level + 1);
-	}
-}
-
-StatementBlock::~StatementBlock() {
-	if (NULL != content)
-		delete content;
-}
-
-void StatementBlock::evaluate(EvalContext* context) {
-	context->pushFrame();
-	content->evaluate(context);
-	context->popFrame();
-}
-
-void StatementBlock::print(FILE* output, int level) {
-	Node::print(output, level);
-	fprintf(output, "%s\n", "[StatementBlock]");
-	this->content->print(output, level + 1);
-}
-
-void StatementBlock::genasm(AsmContext* context) {
-	context->pushFrame();
-	content->genasm(context);
-	context->popFrame();
-}
-
-Program::~Program() {
-	if (NULL != block)
-		delete block;
-}
-
-void Program::evaluate(EvalContext* context) {
-	block->evaluate(context);
-}
-
-void Program::print(FILE* output, int level) {
-	Node::print(output, level);
-	fprintf(output, "%s\n", "[Program]");
-	this->block->print(output, level + 1);
-}
-
-void Program::genasm(AsmContext* context) {
-	context->header();
-	block->genasm(context);
 	context->tail();
 }

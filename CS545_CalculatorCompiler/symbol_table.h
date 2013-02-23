@@ -10,16 +10,23 @@
 
 #include <vector>
 #include <map>
+#include <list>
 #include <string.h>
 
 class MemoryUnit {
 private:
 	int position;
 	int size;
+	bool onHeap;
 public:
-	MemoryUnit(int pos, int siz) {
+	MemoryUnit(int pos, int siz,bool oh) {
 		this->position = pos;
 		this->size = siz;
+		this->onHeap = oh;
+	}
+
+	bool isOnHeap() {
+		return this->onHeap;
 	}
 
 	int getPosition() {
@@ -43,14 +50,25 @@ struct comp {
 
 class SymbolTable {
 private:
-	std::vector<std::map<char*, MemoryUnit*, comp> *> *idTable;
+	std::vector<std::map<const char*, MemoryUnit*, comp> *> *idTable;
+	std::vector<std::list<MemoryUnit*>*> *stackArea;
+
+	std::list<MemoryUnit*> *heap;
 public:
 	SymbolTable();
 	virtual ~SymbolTable();
 
-	void add(char* id, MemoryUnit* loc);
-	MemoryUnit* find(char* id);
-	MemoryUnit* find(char* id, int level);
+	void add(const char* id, MemoryUnit* loc);
+
+	MemoryUnit* allocOnStack(int size);
+	void releaseStack(MemoryUnit* unit);
+	int stackSize();
+
+	MemoryUnit* allocOnHeap(int size);
+	void releaseHeap(MemoryUnit* unit);
+
+	MemoryUnit* find(const char* id);
+	MemoryUnit* find(const char* id, int level);
 
 	void pushFrame();
 	void popFrame();

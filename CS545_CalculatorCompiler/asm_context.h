@@ -11,6 +11,7 @@
 #include <list>
 #include <map>
 #include <vector>
+#include <stack>
 
 #include "common.h"
 #include "symbol_table.h"
@@ -26,9 +27,8 @@ class AsmContext {
 private:
 	FILE* output;
 	SymbolTable *symbolTable;
-	std::list<MemoryUnit*> *memoryMap;
 
-	std::vector<char*> *labels;
+	int labelCount;
 public:
 	AsmContext(FILE* output);
 	virtual ~AsmContext();
@@ -45,8 +45,8 @@ public:
 	void popFrame();
 
 // Return the allocated address for the given id, allocate if not allocated
-	MemoryUnit* find(char* id);
-	MemoryUnit* find(char* id, int level);
+	MemoryUnit* find(const char* id);
+	MemoryUnit* find(const char* id, int level);
 
 	char* genlabel();
 
@@ -57,9 +57,13 @@ public:
 
 	virtual void section(const char* name);
 	virtual void reserve(const char* name, int size, int type);
-	virtual void ret();
 
-	virtual void label(char* label);
+
+	virtual void label(const char* label);
+
+	virtual void call(const char* label);
+	virtual void ret();
+	virtual void ret(int val);
 
 	virtual void cmp(Register source, Register target);
 	virtual void cmp(Register source, int val);
@@ -93,6 +97,7 @@ public:
 	virtual void interrupt(int number);
 
 	virtual void push(Register target);
+	virtual void push(int val);
 	virtual void pop(Register target);
 
 	virtual void jmp(char* label);
@@ -147,6 +152,7 @@ public:
 	virtual void interrupt(int number);
 
 	virtual void push(Register target);
+	virtual void push(int val);
 	virtual void pop(Register target);
 };
 
