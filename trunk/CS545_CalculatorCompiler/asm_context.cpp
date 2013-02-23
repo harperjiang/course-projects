@@ -26,9 +26,8 @@ const char* regtoa(Register reg) {
 AsmContext::AsmContext(FILE* output) {
 	this->output = output;
 	symbolTable = new SymbolTable();
-	memoryMap = new std::list<MemoryUnit*>();
 
-	labels = new std::vector<char*>();
+	labelCount = 0;
 }
 
 AsmContext::~AsmContext() {
@@ -37,12 +36,6 @@ AsmContext::~AsmContext() {
 	}
 
 	delete symbolTable;
-
-	memoryMap->clear();
-	delete memoryMap;
-
-	labels->clear();
-	delete labels;
 }
 
 FILE* AsmContext::getOutput() {
@@ -53,8 +46,16 @@ void AsmContext::init() {
 
 }
 
+MemoryUnit* AsmContext::alloc(int size) {
+	return this->symbolTable->allocOnHeap(size);
+}
+
+void AsmContext::dealloc(MemoryUnit* alloc) {
+	symbolTable->releaseHeap(alloc);
+}
+
 // Return the allocated address for the given id, -1 if not allocated
-MemoryUnit* AsmContext::find(char* id) {
+MemoryUnit* AsmContext::find(const char* id) {
 	if (NULL == symbolTable->find(id)) {
 		MemoryUnit* alloc = this->alloc(4); // 32 bit
 		symbolTable->add(id, alloc);
@@ -62,39 +63,12 @@ MemoryUnit* AsmContext::find(char* id) {
 	return symbolTable->find(id);
 }
 
-MemoryUnit* AsmContext::find(char* id, int level) {
+MemoryUnit* AsmContext::find(const char* id, int level) {
 	if (NULL == symbolTable->find(id, level)) {
 		MemoryUnit* alloc = this->alloc(4); // 32 bit
 		symbolTable->add(id, alloc);
 	}
 	return symbolTable->find(id, level);
-}
-
-MemoryUnit* AsmContext::alloc(int size) {
-	// TODO Check total available memory
-	std::list<MemoryUnit*>::iterator it = memoryMap->begin();
-	MemoryUnit* prev = NULL;
-	for (; it != memoryMap->end(); it++) {
-		if (prev != NULL && (*it)->getPosition() - prev->getEnd() >= size) {
-			MemoryUnit *m = new MemoryUnit((*it)->getEnd(), size);
-			memoryMap->insert(it, m);
-			return m;
-		}
-		prev = *it;
-	}
-	MemoryUnit* m = new MemoryUnit(((NULL == prev) ? 0 : prev->getEnd()), size);
-	memoryMap->push_back(m);
-	return m;
-}
-
-void AsmContext::dealloc(MemoryUnit* alloc) {
-	for (std::list<MemoryUnit*>::iterator it = memoryMap->begin();
-			it != memoryMap->end(); it++) {
-		if (*it == alloc) {
-			memoryMap->erase(it);
-			return;
-		}
-	}
 }
 
 void AsmContext::pushFrame() {
@@ -107,8 +81,7 @@ void AsmContext::popFrame() {
 
 char* AsmContext::genlabel() {
 	char* label = new char[10];
-	sprintf(label, "%s%lu", "label", this->labels->size());
-	this->labels->push_back(label);
+	sprintf(label, "%s%du", "label", labelCount++);
 	return label;
 }
 
@@ -120,7 +93,6 @@ void AsmContext::section(const char* name) {
 void AsmContext::header() {
 	section("text");
 	fprintf(getOutput(), "global _start\n");
-	fprintf(getOutput(), "_start:\n");
 }
 
 void AsmContext::reserve(const char* name, int size, int type) {
@@ -138,17 +110,21 @@ void AsmContext::ret() {
 	fprintf(getOutput(), "\t%s\n", "ret");
 }
 
+void AsmContext::ret(int val) {
+	fprintf(getOutput(), "\t%s %d\n", "ret", val);
+}
+
 void AsmContext::tail() {
-	mov(eax, 1);
-	mov(ebx, 0);
-	interrupt(0x80);
-	ret();
 	section("bss");
 	reserve("heap", 8192, 1);
 }
 
-void AsmContext::label(char* label) {
+void AsmContext::label(const char* label) {
 	fprintf(getOutput(), "%s:\n", label);
+}
+
+void AsmContext::call(const char* label) {
+	fprintf(getOutput(), "\t%s %s\n", "call", label);
 }
 
 void AsmContext::cmp(Register source, Register target) {
@@ -339,6 +315,11 @@ void AsmContext::interrupt(int number) {
 void AsmContext::push(Register target) {
 	fprintf(getOutput(), "\t%s %s\n", "push", regtoa(target));
 }
+
+void AsmContext::push(int val) {
+	fprintf(getOutput(), "\t%s %d\n", "push", val);
+}
+
 void AsmContext::pop(Register target) {
 	fprintf(getOutput(), "\t%s %s\n", "pop", regtoa(target));
 }
@@ -608,6 +589,9 @@ void ATTAsmContext::interrupt(int number) {
 
 void ATTAsmContext::push(Register target) {
 	fprintf(getOutput(), "\t%s %%%s\n", "pushl", regtoa(target));
+}
+void ATTAsmContext::push(int val) {
+	fprintf(getOutput(), "\t%s $%d\n", "pushl", val);
 }
 void ATTAsmContext::pop(Register target) {
 	fprintf(getOutput(), "\t%s %%%s\n", "popl", regtoa(target));
