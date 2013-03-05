@@ -12,7 +12,12 @@
 #include <stdio.h>
 
 typedef enum _OPR {
-	OADD, OSUB, OMUL, ODIV, OMOD
+	OINVALID = 0, OADD = 1, OSUB, OMUL, ODIV, OMOD, OCALL, OPARAM
 } OPR;
+
+typedef enum _ValueType {
+	TYPE_NUM, TYPE_VAR
+
+} ValueType;
 
 #endif /* COMMON_H_ */

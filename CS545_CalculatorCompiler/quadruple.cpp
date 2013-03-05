@@ -8,6 +8,8 @@
 #include "quadruple.h"
 
 Quadruple::~Quadruple() {
-
+	delete result;
+	delete left;
+	delete right;
 }
 
