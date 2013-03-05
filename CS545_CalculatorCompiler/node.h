@@ -13,14 +13,18 @@
 #include "common.h"
 #include "eval_context.h"
 #include "asm_context.h"
-
-
+#include "quad_context.h"
 
 class Node {
 public:
 	virtual void evaluate(EvalContext* context) {
 	}
 	virtual void genasm(AsmContext* context)=0;
+
+	virtual void genquad(QuadContext* context) {
+
+	}
+
 	virtual void print(FILE* output, int level) {
 		for (int i = 0; i < level; i++)
 			fprintf(output, "\t");
@@ -75,6 +79,7 @@ public:
 	}
 	void evaluate(EvalContext* context);
 	void genasm(AsmContext* context);
+	void genquad(QuadContext* context);
 	void print(FILE* output, int level);
 };
 
@@ -101,6 +106,7 @@ public:
 	}
 	void evaluate(EvalContext* context);
 	void genasm(AsmContext* context);
+	void genquad(QuadContext* context);
 	void print(FILE* output, int level);
 };
 
