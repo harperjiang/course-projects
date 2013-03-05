@@ -1,4 +1,5 @@
 #include "node.h"
+#include <typeinfo>
 
 const char* oprtoa(OPR input) {
 	switch (input) {
@@ -32,6 +33,10 @@ void Identifier::genasm(AsmContext* context) {
 	context->mov(eax, mu->getPosition(), 1);
 }
 
+void Identifier::genquad(QuadContext* context) {
+	context->add(new Quadruple(context->newvar(), OINVALID, NULL, new Value(this->name)));
+}
+
 void Identifier::print(FILE* output, int level) {
 	Node::print(output, level);
 	fprintf(output, "%s%s\n", "[Identifier]", this->name);
@@ -47,6 +52,10 @@ void NumConstant::evaluate(EvalContext* context) {
 
 void NumConstant::genasm(AsmContext* context) {
 	context->mov(eax, this->value);
+}
+
+void NumConstant::genquad(QuadContext *context){
+	context->add(new Quadruple(context->newvar(), OINVALID, NULL, new Value(this->value)));
 }
 
 void NumConstant::print(FILE* output, int level) {
@@ -72,6 +81,18 @@ void ArithExpression::genasm(AsmContext* context) {
 	context->mov(eax, ebx);
 }
 
+void ArithExpression::genquad(QuadContext* context) {
+	Value* leftresult = NULL;
+	Value* rightresult = NULL;
+	if(this->left != NULL) {
+		this->left->genquad(context);
+		leftresult = context->lastresult();
+	}
+	this->right->genquad(context);
+	rightresult = context->lastresult();
+	context->add(new Quadruple(context->newvar(),this->opr,leftresult,rightresult));
+}
+
 void ArithExpression::print(FILE*output, int level) {
 	Node::print(output, level);
 	fprintf(output, "%s%s\n", "[ArithExpression]", oprtoa(this->opr));
@@ -91,6 +112,12 @@ void AssignStatement::genasm(AsmContext* context) {
 	context->mov(idalloc->getPosition(), eax, 0);
 }
 
+void AssignStatement::genquad(QuadContext* context) {
+	this->value->genquad(context);
+	char* name = context->lastresult()->var;
+	context->add(new Quadruple(new Value(this->id->name), OINVALID, NULL, new Value(name)));	
+}
+
 void AssignStatement::print(FILE* output, int level) {
 	Node::print(output, level);
 	fprintf(output, "[AssignStatement]\n");
@@ -107,6 +134,12 @@ void PrintStatement::genasm(AsmContext* context) {
 	context->push(eax);
 	context->push(1);
 	context->call("_print");
+}
+
+void PrintStatement::genquad(QuadContext* context) {
+	this->expression->genquad(context);
+	context->add(new Quadruple(context->newvar(), OPARAM, NULL, context->lastresult()));
+	context->add(new Quadruple(context->newvar(), OCALL, NULL, new Value(1)));	
 }
 
 void PrintStatement::print(FILE* output, int level) {
@@ -128,11 +161,29 @@ void Statements::evaluate(EvalContext* context) {
 }
 
 void Statements::genasm(AsmContext* context) {
+	QuadContext* quads = new QuadContext();
 	for (std::vector<Statement*>::iterator it = this->statements->begin();
 			it != this->statements->end(); it++) {
-		(*it)->genasm(context);
-		// For Debugging purpose
-		context->nop();
+		Statement* stmt = *it;
+		AssignStatement* assign = dynamic_cast<AssignStatement*>(stmt);
+		if(assign) {
+			if(NULL == quads)
+				quads = new QuadContext();
+			assign->genquad(quads);
+		}
+		PrintStatement* print = dynamic_cast<PrintStatement*>(stmt);
+		if(print) {
+			if(NULL == quads)
+				quads = new QuadContext();
+			print->genquad(quads);
+		}
+		else {
+			if(quads != NULL) {
+				quads->genasm(context);
+				quads = NULL;
+			}
+			stmt->genasm(context);
+		}
 	}
 }
 

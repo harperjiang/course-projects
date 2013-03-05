@@ -7,13 +7,11 @@ _start:
 	mov $heap,%edx
 	movl %eax,0(%edx)
 	popl %edx
-	nop
 	movl $8,%eax
 	pushl %edx
 	mov $heap,%edx
 	movl %eax,4(%edx)
 	popl %edx
-	nop
 	pushl %edx
 	mov $heap,%edx
 	movl 0(%edx),%eax
@@ -24,56 +22,27 @@ _start:
 	movl 4(%edx),%eax
 	popl %edx
 	popl %ebx
-	pushl %ebx
-	pushl %ebx
-	pushl %eax
-	popl %ebx
-	popl %eax
-	mull %ebx
-	popl %ebx
-	movl %eax,%ebx
+	addl %eax,%ebx
 	movl %ebx,%eax
 	pushl %eax
-	pushl $1
-	call _print
-	nop
-	movl $6,%eax
+	movl $4,%eax
+	popl %ebx
+	subl %eax,%ebx
+	movl %ebx,%eax
 	pushl %edx
 	mov $heap,%edx
 	movl %eax,8(%edx)
 	popl %edx
-	nop
-	movl $8,%eax
+	movl $6,%eax
 	pushl %edx
 	mov $heap,%edx
 	movl %eax,12(%edx)
 	popl %edx
-	nop
+	movl $8,%eax
 	pushl %edx
 	mov $heap,%edx
-	movl 8(%edx),%eax
+	movl %eax,16(%edx)
 	popl %edx
-	pushl %eax
-	pushl %edx
-	mov $heap,%edx
-	movl 12(%edx),%eax
-	popl %edx
-	popl %ebx
-	addl %eax,%ebx
-	movl %ebx,%eax
-	pushl %eax
-	pushl $1
-	call _print
-	nop
-	nop
-	pushl %edx
-	mov $heap,%edx
-	movl 0(%edx),%eax
-	popl %edx
-	pushl %eax
-	pushl $1
-	call _print
-	nop
 	movl $1,%eax
 	movl $0,%ebx
 	int $0x80
@@ -84,7 +53,7 @@ _print:
 	popl %eax
 	pushl %ebx
 	mov $heap,%ecx
-	addl $16,%ecx
+	addl $20,%ecx
 	movl $1,%ebx
 	cmpl $0,%eax
 	jne label0u
@@ -159,7 +128,7 @@ label5u:
 	addl $4,%ecx
 	pushl %ecx
 	mov $heap,%ecx
-	addl $16,%ecx
+	addl $20,%ecx
 	popl %edx
 	subl %ecx,%edx
 	int $0x80

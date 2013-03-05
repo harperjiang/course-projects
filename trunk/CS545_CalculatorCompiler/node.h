@@ -48,6 +48,7 @@ public:
 	~Identifier();
 	void evaluate(EvalContext* context);
 	void genasm(AsmContext* context);
+	void genquad(QuadContext* context);
 	void print(FILE* output, int level);
 };
 
@@ -60,6 +61,7 @@ public:
 	~NumConstant();
 	void evaluate(EvalContext* context);
 	void genasm(AsmContext* context);
+	void genquad(QuadContext* context);
 	void print(FILE* output, int level);
 };
 
@@ -121,6 +123,7 @@ public:
 	}
 	void evaluate(EvalContext* context);
 	void genasm(AsmContext* context);
+	void genquad(QuadContext* context);
 	void print(FILE* output, int level);
 };
 
