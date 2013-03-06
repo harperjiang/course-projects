@@ -10,8 +10,10 @@
 
 QuadContext::QuadContext() {
 	quads = new std::vector<Quadruple*>();
-	symbolTable = new SymbolTable();
+	nodeMap = new std::map<char*, QuadNode*, comp>();
+	valueMap = new std::map<int, QuadNode*>();
 	varCount = 0;
+	root = NULL;
 }
 
 QuadContext::~QuadContext() {
@@ -36,7 +38,36 @@ void QuadContext::genasm(AsmContext* context) {
 	}
 }
 
+void QuadContext::get(Value* value) {
+
+
+}
 void QuadContext::add(Quadruple* quad) {
+	QuadNode* resultNode = NULL;
+	switch(quad->opr) {
+	case OASSIGN:
+	// If an assignment 
+		if(quad->right->type == TYPE_NUM) {
+			if(NULL == valueMap->find(quad->right->value)) {
+				resultNode = new QuadNode(quad->right);
+				valueMap->insert(std::map<int,QuadNode*>(quad->right->value, resultNode));
+			} else {
+				resultNode = valueMap->find(quad->right->value);
+			}
+		} else {
+			resultNode = nodeMap->find(quad->right->var);
+		}
+		resultNode->addSynonym(quad->result->var);
+		nodeMap->insert(std::map<char*, QuadNode*>(quad->result->var, resultNode));
+		break;
+	case OADD:
+	case OSUB:
+	case OMUL:
+	case ODIV:
+	case OMOD:
+	default:
+		break;
+	}	
 	quads->push_back(quad);
 }
 

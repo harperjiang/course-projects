@@ -12,7 +12,7 @@
 #include <stdio.h>
 
 typedef enum _OPR {
-	OINVALID = 0, OADD = 1, OSUB, OMUL, ODIV, OMOD, OCALL, OPARAM
+	OASSIGN = 0, OADD = 1, OSUB, OMUL, ODIV, OMOD, OCALL, OPARAM
 } OPR;
 
 typedef enum _ValueType {
