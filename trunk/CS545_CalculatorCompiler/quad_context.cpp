@@ -13,11 +13,14 @@ QuadContext::QuadContext() {
 	nodeMap = new std::map<char*, QuadNode*, comp>();
 	valueMap = new std::map<int, QuadNode*>();
 	varCount = 0;
-	root = NULL;
+	roots = new std::vector<QuadNode*>();
 }
 
 QuadContext::~QuadContext() {
 	delete quads;
+	delete roots;
+	delete nodeMap;
+	delete valueMap;
 }
 
 
@@ -38,36 +41,68 @@ void QuadContext::genasm(AsmContext* context) {
 	}
 }
 
-void QuadContext::get(Value* value) {
-
-
+QuadNode* QuadContext::get(Value* value) {
+	if(value->type == TYPE_NUM) {
+		if(NULL == valueMap->find(value->value)) {
+			resultNode = new QuadNode(value);
+			valueMap->insert(std::pair<int,QuadNode*>(value->value, resultNode));
+		} else {
+			resultNode = valueMap->find(value->value);
+		}
+	} else {
+		resultNode = nodeMap->find(value->var);
+	}
+	return resultNode;
 }
+
+QuadNode* QuadContext::get(OPR opr, QuadNode* left, QuadNode* right) {
+	char* key = new char[30];
+	QuadNode* result = NULL;
+	sprintf(key, "%d %d %d",left->number,opr,right->number);
+	if((result = nodeMap->find(key))!= NULL) {
+		delete key;
+	} else {
+		result = new QuadNode(opr,left,right);
+		nodeMap->insert(std::pair<char*, QuadNode*>(key,result));
+	}
+	return result;
+}
+
 void QuadContext::add(Quadruple* quad) {
 	QuadNode* resultNode = NULL;
 	switch(quad->opr) {
 	case OASSIGN:
-	// If an assignment 
-		if(quad->right->type == TYPE_NUM) {
-			if(NULL == valueMap->find(quad->right->value)) {
-				resultNode = new QuadNode(quad->right);
-				valueMap->insert(std::map<int,QuadNode*>(quad->right->value, resultNode));
-			} else {
-				resultNode = valueMap->find(quad->right->value);
-			}
-		} else {
-			resultNode = nodeMap->find(quad->right->var);
-		}
-		resultNode->addSynonym(quad->result->var);
-		nodeMap->insert(std::map<char*, QuadNode*>(quad->result->var, resultNode));
+		// If an assignment 
+		resultNode = get(quad->right->value);
+		break;
+	case OPARAM:
+	case OCALL:
+		// Do nothing for these now
 		break;
 	case OADD:
 	case OSUB:
 	case OMUL:
 	case ODIV:
 	case OMOD:
+		// If a binary operation
+		QuadNode* left = get(quad->left);
+		QuadNode* right = get(quad->right);
+		// Try to find an existing operator, create one if fails
+		resultNode = get(quad->opr,left,right);
+		break;
 	default:
 		break;
 	}	
+	if(NULL != resultNode) {
+		QuadNode* someExist = nodeMap->find(quad->result->var);
+		if(someExist != NULL && someExist != resultNode) {
+			// An name comes with some new value, remove it from the original value
+			someExist->removeSynonym(quad->result->var);
+		}
+		nodeMap->insert(std::map<char*,QuadNode*>(quad->result->var,resultNode);
+		resultNode->addSynonym(quad->result->var);
+	}
+
 	quads->push_back(quad);
 }
 
