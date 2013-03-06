@@ -20,4 +20,10 @@ typedef enum _ValueType {
 
 } ValueType;
 
+struct comp {
+	bool operator()(const char* a, const char* b) {
+		return strcmp(a, b) < 0;
+	}
+};
+
 #endif /* COMMON_H_ */
