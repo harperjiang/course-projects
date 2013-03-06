@@ -21,7 +21,7 @@ private:
 	std::map<char*, QuadNode*, comp>* nodeMap;	
 	std::map<int, QuadNode*>* valueMap;
 	int varCount;
-	QuadNode* root;
+	std::vector<QuadNode*> *roots;
 protected:
 	QuadNode* get(Value* value);
 public:

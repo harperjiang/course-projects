@@ -63,22 +63,43 @@ public:
 	virtual ~Quadruple();
 };
 
+static int QUAD_COUNTER = 0;
+
 class QuadNode {
 public:
+	int number;
 	Value* value;	
 	std::vector<char*>* synonym;
 	QuadNode* left;
 	QuadNode* right;
 	OPR opr;
+
 	QuadNode(Value* value) {
+		number = QUAD_COUNTER ++; 
 		this->value = value;
 		this->left = NULL;
 		this->right = NULL; 
-		this->synonym = new std::vector<Value*>();
-		this->opr = quad->opr;
+		this->synonym = new std::vector<char*>();
 	}
-	void add(char* name) {
+
+	QuadNode(OPR opr, QuadNode* left, QuadNode* right) {
+		number = QUAD_COUNTER ++;
+		this->opr = opr;
+		this->left = left;
+		this->right = right;
+		this->synonym = new std::vector<char*>();
+	}
+
+	void addSynonym(char* name) {
 		synonym->push_back(name);
+	}
+
+	void removeSynonym(char* name) {
+		for(std::vector<char*>::iterator it = synonym->begin();it!= synonym->end();it++) {
+			if(strcmp(name,*it)==0)
+				synonym->erase(it);
+				break;
+		}
 	}
 };
 
