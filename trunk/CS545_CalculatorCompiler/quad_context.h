@@ -11,11 +11,13 @@
 #include "asm_context.h"
 #include "quadruple.h"
 #include <vector>
+#include "symbol_table.h"
 
 class QuadContext {
 
 private:
 	std::vector<Quadruple*>* quads;
+	SymbolTable* symbolTable;
 	int varCount;
 public:
 	QuadContext();

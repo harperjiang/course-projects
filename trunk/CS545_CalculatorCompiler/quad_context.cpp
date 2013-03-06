@@ -10,6 +10,7 @@
 
 QuadContext::QuadContext() {
 	quads = new std::vector<Quadruple*>();
+	symbolTable = new SymbolTable();
 	varCount = 0;
 }
 
@@ -42,7 +43,9 @@ void QuadContext::add(Quadruple* quad) {
 Value* QuadContext::newvar() {
 	char* name= new char[10];
 	sprintf(name,"%s%d","var",varCount++);
-	return new Value(name);	
+	Value* val = new Value(name);
+	val->temp = true;
+	return val;
 }
 
 Value* QuadContext::lastresult() {

@@ -16,16 +16,21 @@
 class Value {
 public:
 	ValueType type;
+	bool temp;
 	int value;
 	char* var;
 	Value(int val) {
 		this->type = TYPE_NUM;
 		this->value = val;
+		this->var = NULL;
+		temp = false;
 	}	
 	Value(const char* name) {
 		this->type = TYPE_VAR;
 		this->var = new char[strlen(name)];
 		strcpy(var,name);		
+		this->value = 0;
+		temp = false;
 	}	
 	char* content() {
 		char* buffer = new char[20];
@@ -56,6 +61,11 @@ public:
 		this->right = right;
 	}
 	virtual ~Quadruple();
+};
+
+class QuadNode {
+public:
+	Value* value;
 };
 
 

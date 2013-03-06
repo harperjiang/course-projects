@@ -12,6 +12,7 @@
 #include <map>
 #include <list>
 #include <string.h>
+#include "common.h"
 
 class MemoryUnit {
 private:
@@ -39,12 +40,6 @@ public:
 
 	long getEnd() {
 		return position + size;
-	}
-};
-
-struct comp {
-	bool operator()(const char* a, const char* b) {
-		return strcmp(a, b) < 0;
 	}
 };
 
