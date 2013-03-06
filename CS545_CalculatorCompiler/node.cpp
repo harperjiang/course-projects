@@ -34,7 +34,7 @@ void Identifier::genasm(AsmContext* context) {
 }
 
 void Identifier::genquad(QuadContext* context) {
-	context->add(new Quadruple(context->newvar(), OINVALID, NULL, new Value(this->name)));
+	context->add(new Quadruple(context->newvar(), OASSIGN, NULL, new Value(this->name)));
 }
 
 void Identifier::print(FILE* output, int level) {
@@ -55,7 +55,7 @@ void NumConstant::genasm(AsmContext* context) {
 }
 
 void NumConstant::genquad(QuadContext *context){
-	context->add(new Quadruple(context->newvar(), OINVALID, NULL, new Value(this->value)));
+	context->add(new Quadruple(context->newvar(), OASSIGN, NULL, new Value(this->value)));
 }
 
 void NumConstant::print(FILE* output, int level) {
@@ -115,7 +115,7 @@ void AssignStatement::genasm(AsmContext* context) {
 void AssignStatement::genquad(QuadContext* context) {
 	this->value->genquad(context);
 	char* name = context->lastresult()->var;
-	context->add(new Quadruple(new Value(this->id->name), OINVALID, NULL, new Value(name)));	
+	context->add(new Quadruple(new Value(this->id->name), OASSIGN, NULL, new Value(name)));	
 }
 
 void AssignStatement::print(FILE* output, int level) {
@@ -166,18 +166,16 @@ void Statements::genasm(AsmContext* context) {
 			it != this->statements->end(); it++) {
 		Statement* stmt = *it;
 		AssignStatement* assign = dynamic_cast<AssignStatement*>(stmt);
+		PrintStatement* print = dynamic_cast<PrintStatement*>(stmt);
 		if(assign) {
 			if(NULL == quads)
 				quads = new QuadContext();
 			assign->genquad(quads);
-		}
-		PrintStatement* print = dynamic_cast<PrintStatement*>(stmt);
-		if(print) {
+		} else if(print) {
 			if(NULL == quads)
 				quads = new QuadContext();
 			print->genquad(quads);
-		}
-		else {
+		} else {
 			if(quads != NULL) {
 				quads->genasm(context);
 				quads = NULL;

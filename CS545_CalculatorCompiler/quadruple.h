@@ -65,7 +65,21 @@ public:
 
 class QuadNode {
 public:
-	Value* value;
+	Value* value;	
+	std::vector<char*>* synonym;
+	QuadNode* left;
+	QuadNode* right;
+	OPR opr;
+	QuadNode(Value* value) {
+		this->value = value;
+		this->left = NULL;
+		this->right = NULL; 
+		this->synonym = new std::vector<Value*>();
+		this->opr = quad->opr;
+	}
+	void add(char* name) {
+		synonym->push_back(name);
+	}
 };
 
 

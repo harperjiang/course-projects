@@ -11,14 +11,19 @@
 #include "asm_context.h"
 #include "quadruple.h"
 #include <vector>
+#include <map>
 #include "symbol_table.h"
 
 class QuadContext {
 
 private:
 	std::vector<Quadruple*>* quads;
-	SymbolTable* symbolTable;
+	std::map<char*, QuadNode*, comp>* nodeMap;	
+	std::map<int, QuadNode*>* valueMap;
 	int varCount;
+	QuadNode* root;
+protected:
+	QuadNode* get(Value* value);
 public:
 	QuadContext();
 	virtual ~QuadContext();
