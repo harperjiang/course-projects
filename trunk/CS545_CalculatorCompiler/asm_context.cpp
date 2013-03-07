@@ -293,7 +293,7 @@ void AsmContext::lor(Register target, int val) {
 }
 
 void AsmContext::lnot(Register target) {
-	fprintf(getOutput(), "\tnot %s,%d\n", regtoa(target));
+	fprintf(getOutput(), "\tnot %s,%s\n", regtoa(target),regtoa(target));
 }
 
 void AsmContext::lxor(Register target, int val) {
@@ -408,27 +408,31 @@ void ATTAsmContext::mov(int address, Register source, int mode) {
 }
 
 void ATTAsmContext::mov(Register target, int valoraddr, int mode) {
-	push(edx);
-	mov(edx, "heap");
+	Register buffer = edx;
+	if(target == buffer) {
+		buffer = ecx;
+	}	
+	push(buffer);
+	mov(buffer, "heap");
 	switch (mode) {
 	case 0: //00
 		fprintf(getOutput(), "\tmovl $%d,%%%s\n", valoraddr, regtoa(target));
 		break;
 	case 1: //01
-		fprintf(getOutput(), "\tmovl %d(%%edx),%%%s\n", valoraddr,
+		fprintf(getOutput(), "\tmovl %d(%%%s),%%%s\n", valoraddr, regtoa(buffer),
 				regtoa(target));
 		break;
 	case 2: //10
 		fprintf(getOutput(), "\tmovl $%d,(%%%s)\n", valoraddr, regtoa(target));
 		break;
 	case 3: // 11
-		fprintf(getOutput(), "\tmovl %d(%%edx),(%%%s)\n", valoraddr,
+		fprintf(getOutput(), "\tmovl %d(%%%s),(%%%s)\n", valoraddr,regtoa(buffer),
 				regtoa(target));
 		break;
 	default:
 		break;
 	}
-	pop(edx);
+	pop(buffer);
 }
 void ATTAsmContext::mov(Register target, Register source, int mode) {
 	switch (mode) {

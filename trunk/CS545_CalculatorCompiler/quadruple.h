@@ -79,18 +79,89 @@ public:
 
 static int QUAD_COUNTER = 0;
 
+class RegContext {
+public:
+	std::map<int,QuadNode*>* nodes;
+	int* lock;
+	RegContext() {
+		nodes = new std::map<int,QuadNode*>();
+		lock = new int[4];
+	}
+	virtual ~RegContext() {
+		delete nodes;
+		delete lock;
+	}
+	
+	int get() {
+		for(int i = 0; i < 4; i++) {
+			if(nodes->end() == nodes->find(i))
+				return i;
+		}
+		return -1;
+	}
+
+	int next() {
+		for(int i = 0 ; i < 4; i++) {
+			if(!lock[i])
+				return i;
+		}
+		return -1;
+	}
+
+	QuadNode* get(int i) {
+		return nodes->find(i)->second;
+	}
+
+	void put(int reg, QuadNode* node) {
+		nodes->insert(std::pair<int,QuadNode*>(reg,node));
+	}
+
+	void lock(int reg) {
+		lock[reg] = 1;
+	}
+
+	void unlock(int reg) {
+		lock[reg] = 0;
+	}
+	
+	Register reg(int index) {
+		switch(index) {
+		case 0:
+			return eax;
+		case 1:
+			return ebx;
+		case 2:
+			return ecx;
+		case 3:
+			return edx;
+		default:
+			return NULL;
+		}
+	}
+}
+
 class QuadNode {
 public:
+	// For uniquely identify the nodes
 	int number;
 
+	// For storing quadruple infos
 	Value* value;
 	std::vector<Value*>* synonym;
 	QuadNode* left;
 	QuadNode* right;
 	OPR opr;
 
+	// For quadruple generation
 	bool processed;
 	Quadruple* origin;
+
+	// For labeling
+	int label;
+
+	// For code generation
+	int loc;
+	bool memory;
 
 	QuadNode(Value* value) {
 		number = QUAD_COUNTER++;
@@ -100,6 +171,10 @@ public:
 		this->synonym = new std::vector<Value*>();
 		origin = NULL;
 		processed = false;
+
+		label = 0;
+		loc = 0;
+		memory = false;
 	}
 
 	QuadNode(OPR opr, QuadNode* left, QuadNode* right) {
@@ -111,6 +186,10 @@ public:
 		this->value = NULL;
 		origin = NULL;
 		processed = false;
+	
+		label = 0;
+		loc= 0;
+		memory = false;
 	}
 
 	void addSynonym(Value* name) {
@@ -143,6 +222,171 @@ public:
 		}
 		delete this->synonym;
 		this->synonym = newnames;
+	}
+
+	void label(int flag) {
+		int llabel = 0;
+		int rlabel = 0;
+		if(left == NULL && right == NULL) {// leaf
+			label = flag; // rightmost has 1, other has 0
+			return;
+		}
+		int newflag = 1;
+		if(left != NULL) {
+			left->label(newflag--);
+			llabel = left->label;
+		}
+		if(right != NULL) {
+			right->label(newflag--);
+			rlabel =right->label;
+		}
+		this->label = (llabel == rlabel)?llabel+1:(llabel>=rlabel?llabel:rlabel);
+	}
+
+
+	void genasm(AsmContext* context, RegContext* regc) {
+		if(left == NULL && right == NULL) {
+			// leaf
+			// move it to register		
+			int avail = regc->get();	
+			if(-1 == avail) {
+				// Clean an unlock register 	
+				int next = regc->next();
+				QuadNode* curEax = regc->get(next);
+				if(!(curEax->memory)) {
+					// Save to memory
+					MemoryUnit* memLoc = context->find(curEax->synonym->at(0)->var);
+					context->mov(memLoc->position,regc->reg(next),2);
+					curEax->memory = true;
+				}
+				avail = next;
+			}
+			regc->put(avail, this);
+			this->loc = avail;
+			if(value->type == TYPE_NUM) {
+				context->mov(regc->reg(avail), value->value);
+			} else {
+				this->memory = true;
+				MemoryUnit* memloc = context->find(value->var);
+				context->mov(regc->reg(avail),memloc->position,1); 
+			}
+		} else if(left == NULL) {
+			right->genasm(context,regc);
+			// Uniary operations, call and param
+			switch(opr) {
+			case OCALL:
+				context->push(1);
+				context->call("_print");
+				break;
+			case OPARAM:
+				context->push(regc->reg(right->loc));
+				break;
+			default:
+				break;
+			}
+		} else {
+			right->genasm(context,regc);
+			regc->lock(right->loc);
+			left->genasm(context,regc);
+			regc->unlock(right->loc);
+			Register dest = regc->reg(left->loc);
+			Register src = regc->reg(right->loc);
+			switch(opr) {
+			case OADD:
+				context->add(dest,src);
+				this->loc = left->loc;
+				this->memory = false;
+				break;
+			case OSUB:
+				context->sub(dest,src);
+				this->loc = left->loc;
+				this->memory = false;
+				break;
+			case OMUL:
+				if(dest != edx)
+					context->push(edx);
+				context->push(eax);
+				if(dest != eax)
+					context->mov(eax,dest);
+				context->mul(src);
+				context->mov(dest,eax);	
+				if(dest == eax) {
+					context->pop(edx);
+				} else {
+					context->pop(eax);
+				}
+				if(dest != edx) {
+					context->pop(edx);
+				}
+				break;	
+			case ODIV:
+				context->push(edx);
+				context->push(eax);
+				if(dest != eax)
+					context->mov(eax,dest);
+				if(src == edx) {
+					context->push(ebx);
+					context->mov(ebx,src);
+				}
+				context->mov(edx,0);
+				
+				if(src == edx) {
+					context->div(ebx);
+				} else {
+					context->div(src);
+				}
+				context->mov(dest,eax);	
+
+				if(edx == src && ebx != dest) {
+					context->pop(ebx);	
+				} else {
+					context->pop(edx);
+				}
+				if(dest == eax) {
+					context->pop(edx);
+				} else {
+					context->pop(eax);
+				}
+				context->pop(edx);
+				break;
+			case OMOD:
+				context->push(edx);
+				context->push(eax);
+				if(dest != eax) {
+					context->mov(eax,dest);
+				}
+				if(src == edx) {
+					context->push(ebx);
+					context->mov(ebx,src);	
+				}
+				context->mov(edx,0);
+				if(src == edx) {
+					context->div(ebx);
+				} else {
+					context->div(src);
+				}
+				context->mov(dest,edx);
+				
+				if(edx == src && ebx != dest) {
+					context->pop(ebx);
+				} else {
+					context->pop(edx);
+				}
+				if(dest == eax) {
+					context->pop(edx);
+				} else {
+					context->pop(eax);
+				}
+				context->pop(edx);
+				break;
+			default:
+				break;
+			}
+			this->loc = left->loc;
+			MemoryUnit* mu = context->find(this->value->var);
+			context->mov(mu->position,regc->reg(this->loc));
+			this->memory = true;
+		}
 	}
 
 	void genQuads(std::vector<Quadruple*>* quads) {

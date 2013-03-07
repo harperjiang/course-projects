@@ -39,13 +39,16 @@ void QuadContext::genasm(AsmContext* context) {
 			it != roots->end(); it++) {
 		(*it)->cleanSynonym();
 		(*it)->genQuads(quads);
+		(*it)->label();
+		// All registers are available
+		(*it)->genasm(context,15);
 	}
 
-	for (std::vector<Quadruple*>::iterator it = quads->begin();
+/*	for (std::vector<Quadruple*>::iterator it = quads->begin();
 			it != quads->end(); it++) {
 		(*it)->genasm(context);
 	}
-
+*/
 //	for (std::vector<Quadruple*>::iterator it = quads->begin();
 //			it != quads->end(); it++) {
 //		Quadruple* quad = *it;
