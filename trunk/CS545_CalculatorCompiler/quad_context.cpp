@@ -35,15 +35,21 @@ void QuadContext::removeRoot(QuadNode* node) {
 void QuadContext::genasm(AsmContext* context) {
 	quads = new std::vector<Quadruple*>();
 	// Remove unused variable from QuadNodes, and generate new quadruples
+	RegContext* regc = new RegContext();
 	for (std::vector<QuadNode*>::iterator it = roots->begin();
 			it != roots->end(); it++) {
 		(*it)->cleanSynonym();
 		(*it)->genQuads(quads);
-		(*it)->label();
+		(*it)->label(0);
 		// All registers are available
-		(*it)->genasm(context,15);
+		(*it)->genasm(context,regc);
 	}
-
+/*	
+	for(std::vector<QuadNode*>::iterator it = roots->begin();it != roots->end();it++){
+		if((*it)->opr != OCALL)
+			(*it)->store(context);
+	}
+*/
 /*	for (std::vector<Quadruple*>::iterator it = quads->begin();
 			it != quads->end(); it++) {
 		(*it)->genasm(context);
@@ -137,7 +143,7 @@ void QuadContext::add(Quadruple* quad) {
 		break;
 	case OCALL:
 		// Save the origin call
-		resultNode = new QuadNode(OCALL, NULL, NULL);
+		resultNode = new QuadNode(OCALL, NULL, new QuadNode(quad->right));
 		resultNode->origin = quad;
 		break;
 	case OADD:

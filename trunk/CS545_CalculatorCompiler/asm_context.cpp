@@ -23,6 +23,10 @@ const char* regtoa(Register reg) {
 	}
 }
 
+Register reg(int index) {
+	return (Register)index;
+}
+
 AsmContext::AsmContext(FILE* output) {
 	this->output = output;
 	symbolTable = new SymbolTable();

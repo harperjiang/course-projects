@@ -2,6 +2,90 @@
 .globl main
 main:
 _start:
+	movl $3,%eax
+	pushl %edx
+	mov $heap,%edx
+	movl %eax,0(%edx)
+	popl %edx
+	movl $7,%ebx
+	pushl %edx
+	mov $heap,%edx
+	movl %ebx,4(%edx)
+	popl %edx
+	movl $5,%ecx
+	pushl %edx
+	mov $heap,%edx
+	movl %ecx,8(%edx)
+	popl %edx
+	addl %ebx,%ecx
+	pushl %edx
+	mov $heap,%edx
+	movl %ecx,12(%edx)
+	popl %edx
+	subl %eax,%ecx
+	pushl %edx
+	mov $heap,%edx
+	movl %ecx,16(%edx)
+	popl %edx
+	pushl %ecx
+	movl $1,%edx
+	pushl $1
+	call _print
+	pushl %edx
+	mov $heap,%edx
+	popl %edx
+	movl $5,%eax
+	pushl %edx
+	mov $heap,%edx
+	movl %eax,8(%edx)
+	popl %edx
+	pushl %eax
+	movl $1,%eax
+	pushl $1
+	call _print
+	pushl %edx
+	mov $heap,%edx
+	movl 4(%edx),%eax
+	popl %edx
+	movl $6,%ebx
+	pushl %edx
+	mov $heap,%edx
+	movl %ebx,20(%edx)
+	popl %edx
+	pushl %eax
+	pushl %eax
+	pushl %ebx
+	popl %eax
+	popl %edx
+	mull %edx
+	movl %eax,%ebx
+	popl %eax
+	pushl %edx
+	mov $heap,%edx
+	movl %ebx,12(%edx)
+	popl %edx
+	movl $3,%ecx
+	pushl %edx
+	mov $heap,%edx
+	movl %ecx,24(%edx)
+	popl %edx
+	addl %ebx,%ecx
+	pushl %edx
+	mov $heap,%edx
+	movl %ecx,0(%edx)
+	popl %edx
+	pushl %ecx
+	movl $1,%edx
+	pushl $1
+	call _print
+	pushl %edx
+	mov $heap,%edx
+	movl 8(%edx),%eax
+	popl %edx
+	pushl %eax
+	movl $1,%ebx
+	pushl $1
+	call _print
 	movl $1,%eax
 	movl $0,%ebx
 	int $0x80
@@ -12,7 +96,7 @@ _print:
 	popl %eax
 	pushl %ebx
 	mov $heap,%ecx
-	addl $0,%ecx
+	addl $28,%ecx
 	movl $1,%ebx
 	cmpl $0,%eax
 	jne label0u
@@ -87,7 +171,7 @@ label5u:
 	addl $4,%ecx
 	pushl %ecx
 	mov $heap,%ecx
-	addl $0,%ecx
+	addl $28,%ecx
 	popl %edx
 	subl %ecx,%edx
 	int $0x80
