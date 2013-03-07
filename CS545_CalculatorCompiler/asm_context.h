@@ -44,13 +44,13 @@ public:
 
 	void popFrame();
 
-// Return the allocated address for the given id, allocate if not allocated
+	// Return the allocated address for the given id, allocate if not allocated
 	MemoryUnit* find(const char* id);
 	MemoryUnit* find(const char* id, int level);
 
 	char* genlabel();
 
-// Utilities methods for generating ASM code
+	// Utilities methods for generating ASM code
 	virtual void header();
 
 	virtual void tail();
