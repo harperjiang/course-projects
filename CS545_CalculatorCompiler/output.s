@@ -43,6 +43,41 @@ _start:
 	movl $1,%eax
 	pushl $1
 	call _print
+	movl $5,%eax
+	pushl %edx
+	mov $heap,%edx
+	movl %eax,8(%edx)
+	popl %edx
+	pushl %edx
+	mov $heap,%edx
+	popl %edx
+	movl $4,%ebx
+	pushl %edx
+	mov $heap,%edx
+	movl %ebx,20(%edx)
+	popl %edx
+	pushl %eax
+	pushl %eax
+	pushl %ebx
+	popl %eax
+	popl %edx
+	mull %edx
+	movl %eax,%ebx
+	popl %eax
+	pushl %edx
+	mov $heap,%edx
+	movl %ebx,24(%edx)
+	popl %edx
+	movl $7,%edx
+	addl %ebx,%edx
+	pushl %edx
+	mov $heap,%edx
+	movl %edx,28(%edx)
+	popl %edx
+	pushl %edx
+	movl $1,%eax
+	pushl $1
+	call _print
 	pushl %edx
 	mov $heap,%edx
 	movl 4(%edx),%eax
@@ -50,7 +85,7 @@ _start:
 	movl $6,%ebx
 	pushl %edx
 	mov $heap,%edx
-	movl %ebx,20(%edx)
+	movl %ebx,32(%edx)
 	popl %edx
 	pushl %eax
 	pushl %eax
@@ -67,7 +102,7 @@ _start:
 	movl $3,%ecx
 	pushl %edx
 	mov $heap,%edx
-	movl %ecx,24(%edx)
+	movl %ecx,36(%edx)
 	popl %edx
 	addl %ebx,%ecx
 	pushl %edx
@@ -96,7 +131,7 @@ _print:
 	popl %eax
 	pushl %ebx
 	mov $heap,%ecx
-	addl $28,%ecx
+	addl $40,%ecx
 	movl $1,%ebx
 	cmpl $0,%eax
 	jne label0u
@@ -171,7 +206,7 @@ label5u:
 	addl $4,%ecx
 	pushl %ecx
 	mov $heap,%ecx
-	addl $28,%ecx
+	addl $40,%ecx
 	popl %edx
 	subl %ecx,%edx
 	int $0x80

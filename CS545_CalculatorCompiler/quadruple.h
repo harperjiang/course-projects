@@ -240,7 +240,7 @@ public:
 	void clearReg(AsmContext* context,RegContext* regc, int regindex) {
 		QuadNode* regNode = regc->get(regindex);
 		if(regNode != NULL) {
-			if(!regNode->memory) {
+			if(!regNode->memory && regNode->synonym->size() != 0) {
 				MemoryUnit* mu = context->find(regNode->value->var);
 				context->mov(mu->getPosition(),reg(regindex),0);	
 				regNode->memory = true;
