@@ -23,14 +23,15 @@ private:
 	int varCount;
 	std::vector<QuadNode*> *roots;
 protected:
+	QuadNode* get(OPR opr, QuadNode* left, QuadNode* right);
 	QuadNode* get(Value* value);
+	void removeRoot(QuadNode* node);
 public:
 	QuadContext();
 	virtual ~QuadContext();
 
 	void add(Quadruple* quad);
 	Value* lastresult();	
-
 	Value* newvar();
 
 	void genasm(AsmContext* context);
