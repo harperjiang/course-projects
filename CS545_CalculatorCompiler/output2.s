@@ -2,6 +2,11 @@
 .globl main
 main:
 _start:
+	movl $5,%eax
+	pushl %eax
+	movl $1,%ebx
+	pushl $1
+	call _print
 	movl $1,%eax
 	movl $0,%ebx
 	int $0x80
