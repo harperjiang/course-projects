@@ -260,7 +260,7 @@ public:
 				// Clean an unlock register 	
 				int next = regc->next();
 				QuadNode* curEax = regc->get(next);
-				if(!(curEax->memory)) {
+				if(!(curEax->memory) && curEax->synonym->size() > 0) {
 					// Save to memory
 					MemoryUnit* memLoc = context->find(curEax->synonym->at(0)->var);
 					context->mov(memLoc->getPosition(),reg(next),2);
