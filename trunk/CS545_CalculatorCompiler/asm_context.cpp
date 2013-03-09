@@ -152,44 +152,47 @@ void AsmContext::mov(Register target, Register source) {
 }
 
 void AsmContext::mov(int address, Register source, int mode) {
-	push(edx);
-	mov(edx, "heap");
-	add(edx, address);
+	Register buffer = edx;
+	if(source == buffer)
+		buffer = ecx;
+	push(buffer);
+	mov(buffer, "heap");
 	switch (mode) {
 	case 0: //00
-		fprintf(getOutput(), "\tmov [edx],%s\n", regtoa(source));
+		fprintf(getOutput(), "\tmov [%s+%d],%s\n", regtoa(buffer), address, regtoa(source));
 		break;
 	case 1: //01
-		fprintf(getOutput(), "\tmov [edx],[%s]\n", regtoa(source));
+		fprintf(getOutput(), "\tmov [%s+%d],[%s]\n", regtoa(buffer), address, regtoa(source));
 		break;
 	default:
 		break;
 	}
-	pop(edx);
+	pop(buffer);
 }
 
 void AsmContext::mov(Register target, int valoraddr, int mode) {
-	push(edx);
-	mov(edx, "heap");
+	Register buffer = edx;
+	if(target == buffer)
+		buffer = ecx;
+	push(buffer);
+	mov(buffer, "heap");
 	switch (mode) {
 	case 0: //00
 		fprintf(getOutput(), "\tmov %s,%d\n", regtoa(target), valoraddr);
 		break;
 	case 1: //01
-		add(edx, valoraddr);
-		fprintf(getOutput(), "\tmov %s,[edx]\n", regtoa(target));
+		fprintf(getOutput(), "\tmov %s,[%s+%d]\n", regtoa(target), regtoa(buffer),valoraddr);
 		break;
 	case 2: //10
 		fprintf(getOutput(), "\tmov [%s],%d\n", regtoa(target), valoraddr);
 		break;
 	case 3: // 11
-		add(edx, valoraddr);
-		fprintf(getOutput(), "\tmov [%s],[edx]\n", regtoa(target));
+		fprintf(getOutput(), "\tmov [%s],[%s+%d]\n", regtoa(target),regtoa(buffer),valoraddr);
 		break;
 	default:
 		break;
 	}
-	pop(edx);
+	pop(buffer);
 }
 void AsmContext::mov(Register target, Register source, int mode) {
 	switch (mode) {
@@ -210,61 +213,12 @@ void AsmContext::mov(Register target, Register source, int mode) {
 	}
 }
 
-void AsmContext::arith(Register target, int val, OPR opr) {
-	switch (opr) {
-	case OADD:
-		fprintf(getOutput(), "\t%s %s,%d\n", "add", regtoa(target), val);
-		break;
-	case OSUB:
-		fprintf(getOutput(), "\t%s %s,%d\n", "sub", regtoa(target), val);
-		break;
-	case OMUL:
-		fprintf(getOutput(), "\t%s %s,%d\n", "mul", regtoa(target), val);
-		break;
-	case ODIV:
-		fprintf(getOutput(), "\t%s %s,%d\n", "div", regtoa(target), val);
-		break;
-	case OMOD:
-		fprintf(getOutput(), "\t%s %s,%d\n", "mod", regtoa(target), val);
-		break;
-	default:
-		break;
-	}
-}
-
-void AsmContext::arith(Register target, Register source, OPR opr) {
-	switch (opr) {
-	case OADD:
-		fprintf(getOutput(), "\t%s %s,%s\n", "add", regtoa(target),
-				regtoa(source));
-		break;
-	case OSUB:
-		fprintf(getOutput(), "\t%s %s,%s\n", "sub", regtoa(target),
-				regtoa(source));
-		break;
-	case OMUL:
-		fprintf(getOutput(), "\t%s %s,%s\n", "mul", regtoa(target),
-				regtoa(source));
-		break;
-	case ODIV:
-		fprintf(getOutput(), "\t%s %s,%s\n", "div", regtoa(target),
-				regtoa(source));
-		break;
-	case OMOD:
-		fprintf(getOutput(), "\t%s %s,%s\n", "mod", regtoa(target),
-				regtoa(source));
-		break;
-	default:
-		break;
-	}
-}
-
 void AsmContext::add(Register target, int val) {
-	fprintf(getOutput(), "\t%s %s,%d", "add", regtoa(target), val);
+	fprintf(getOutput(), "\t%s %s,%d\n", "add", regtoa(target), val);
 }
 
 void AsmContext::add(Register target, Register source) {
-	fprintf(getOutput(), "\t%s %s,%s", "add", regtoa(target), regtoa(source));
+	fprintf(getOutput(), "\t%s %s,%s\n", "add", regtoa(target), regtoa(source));
 }
 
 void AsmContext::sub(Register target, int val) {
@@ -461,86 +415,6 @@ void ATTAsmContext::mov(Register target, Register source, int mode) {
 	case 3: // 11
 		fprintf(getOutput(), "\tmovl (%%%s),(%%%s)\n", regtoa(source),
 				regtoa(target));
-		break;
-	default:
-		break;
-	}
-}
-
-void ATTAsmContext::arith(Register target, int val, OPR opr) {
-	switch (opr) {
-	case OADD:
-		fprintf(getOutput(), "\t%s $%d,%%%s\n", "addl", val, regtoa(target));
-		break;
-	case OSUB:
-		fprintf(getOutput(), "\t%s $%d,%%%s\n", "subl", val, regtoa(target));
-		break;
-	case OMUL:
-		mov(eax, target);
-		mov(edx, val);
-		fprintf(getOutput(), "\t%s %%%s\n", "mull", regtoa(edx));
-		mov(target, eax);
-		break;
-	case ODIV:
-		mov(edx, 0);
-		mov(eax, target);
-		mov(ebx, val);
-		fprintf(getOutput(), "\t%s %%%s\n", "divl", regtoa(ebx));
-		mov(target, eax);
-		break;
-	case OMOD:
-		mov(edx, 0);
-		mov(eax, target);
-		mov(ebx, val);
-		fprintf(getOutput(), "\t%s %%%s\n", "divl", regtoa(ebx));
-		mov(target, edx);
-		break;
-	default:
-		break;
-	}
-}
-
-void ATTAsmContext::arith(Register target, Register source, OPR opr) {
-	switch (opr) {
-	case OADD:
-		fprintf(getOutput(), "\t%s %%%s,%%%s\n", "addl", regtoa(source),
-				regtoa(target));
-		break;
-	case OSUB:
-		fprintf(getOutput(), "\t%s %%%s,%%%s\n", "subl", regtoa(source),
-				regtoa(target));
-		break;
-	case OMUL:
-		push(ebx);
-		push(target);
-		push(source);
-		pop(ebx);
-		pop(eax);
-		fprintf(getOutput(), "\t%s %%%s\n", "mull", regtoa(ebx));
-		pop(ebx);
-		mov(target, eax);
-		break;
-	case ODIV:
-		push(ebx);
-		push(target);
-		push(source);
-		pop(ebx);
-		pop(eax);
-		mov(edx, 0);
-		fprintf(getOutput(), "\t%s %%%s\n", "divl", regtoa(ebx));
-		pop(ebx);
-		mov(target, eax);
-		break;
-	case OMOD:
-		push(ebx);
-		push(target);
-		push(source);
-		pop(ebx);
-		pop(eax);
-		mov(edx, 0);
-		fprintf(getOutput(), "\t%s %%%s\n", "divl", regtoa(ebx));
-		pop(ebx);
-		mov(target, edx);
 		break;
 	default:
 		break;
