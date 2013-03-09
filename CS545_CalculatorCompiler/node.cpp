@@ -29,8 +29,6 @@ void Identifier::evaluate(EvalContext* context) {
 }
 
 void Identifier::genasm(AsmContext* context) {
-	MemoryUnit* mu = context->find(this->name);
-	context->mov(eax, mu->getPosition(), 1);
 }
 
 void Identifier::genquad(QuadContext* context) {
@@ -53,7 +51,6 @@ void NumConstant::evaluate(EvalContext* context) {
 }
 
 void NumConstant::genasm(AsmContext* context) {
-	context->mov(eax, this->value);
 }
 
 void NumConstant::genquad(QuadContext *context) {
@@ -74,15 +71,6 @@ void ArithExpression::evaluate(EvalContext* context) {
 }
 
 void ArithExpression::genasm(AsmContext* context) {
-	if (this->left == NULL)
-		context->mov(eax, 0);
-	else
-		this->left->genasm(context);
-	context->push(eax);
-	this->right->genasm(context);
-	context->pop(ebx);
-	context->arith(ebx, eax, this->opr);
-	context->mov(eax, ebx);
 }
 
 void ArithExpression::genquad(QuadContext* context) {

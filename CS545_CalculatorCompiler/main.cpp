@@ -20,22 +20,27 @@ extern Program* parse_result;
 extern void calset_in(FILE* f);
 extern void calparse();
 
-static const char* opts = "o:ht";
+static const char* opts = "o:hti";
 
 typedef enum _OUTPUT_FLAG {
 	TREE = 1, ASM
 } OUTPUT_FLAG;
 
+typedef enum _ASM_STYLE {
+	ATT = 1, INTEL
+} ASM_STYLE;
+
 void error(const char* info);
 
 void print_help_info();
 void parse_input(const char* inputfile, const char* outputFile,
-		const int outputFormat);
+		const int outputFormat,const int asmstyle);
 
 int main(int argc, char** argv) {
 	char* outputFile = NULL;
 	int opt = -1;
 	int outputFormat = ASM;
+	int asmstyle = ATT;
 	while ((opt = getopt(argc, argv, opts)) != -1) {
 		switch (opt) {
 		case 'o':
@@ -44,6 +49,9 @@ int main(int argc, char** argv) {
 		case 'h':
 			print_help_info();
 			exit(0);
+		case 'i':
+			asmstyle = INTEL;
+			break;
 		case 't':
 			// print tree structure
 			outputFormat = TREE;
@@ -60,7 +68,7 @@ int main(int argc, char** argv) {
 	}
 
 	try {
-		parse_input(argv[optind], outputFile, outputFormat);
+		parse_input(argv[optind], outputFile, outputFormat,asmstyle);
 	} catch (int e) {
 		switch (e) {
 		case FILE_NOT_FOUND:
@@ -83,12 +91,14 @@ void print_help_info() {
 			"Indicate output files");
 	fprintf(stdout, "\t%c[1m%s%c[0m\t\t\t%s\n", ESC, "-t", ESC,
 			"Output Tree Structure");
+	fprintf(stdout, "\t%c[1m%s%c[0m\t\t\t%s\n", ESC, "-i", ESC,
+			"Generate Intel Style Assembly (default AT&T)");
 	fprintf(stdout, "\t%c[1m%s%c[0m\t\t\t%s\n", ESC, "-h", ESC,
 			"Display help options");
 }
 
 void parse_input(const char* inputName, const char* outputName,
-		const int format) {
+		const int format, const int asmstyle) {
 	// Dealing with I/O
 	FILE* inputFile = fopen(inputName, "r");
 	if (NULL == inputFile)
@@ -116,7 +126,7 @@ void parse_input(const char* inputName, const char* outputName,
 	delete context;
 
 	// Generate output
-	AsmContext* asmcontext = new ATTAsmContext(outputFile);
+	AsmContext* asmcontext = (asmstyle == ATT)?new ATTAsmContext(outputFile): new AsmContext(outputFile);
 	switch (format) {
 	case ASM:
 		parse_result->genasm(asmcontext);

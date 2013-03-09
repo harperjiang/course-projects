@@ -75,8 +75,6 @@ public:
 	virtual void mov(Register target, int valoraddr, int mode);
 	virtual void mov(Register target, Register source, int mode);
 
-	virtual void arith(Register target, int val, OPR opr);
-	virtual void arith(Register target, Register source, OPR opr);
 	virtual void add(Register target, int val);
 	virtual void add(Register target, Register source);
 	virtual void sub(Register target, int val);
@@ -132,8 +130,6 @@ public:
 	virtual void mov(Register target, int valoraddr, int mode);
 	virtual void mov(Register target, Register source, int mode);
 
-	virtual void arith(Register target, int val, OPR opr);
-	virtual void arith(Register target, Register source, OPR opr);
 	virtual void add(Register target, int val);
 	virtual void add(Register target, Register source);
 	virtual void sub(Register target, int val);
