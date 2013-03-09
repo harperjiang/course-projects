@@ -1,0 +1,60 @@
++===================================+
+|      Usage Brief                  |
++===================================+
+
+./calc -h to check the help options
+./calc -t to print syntax tree
+./calc <input> to generate assembly
+./calc <input> -o <output> to indicate output file
+
+
++===================================+
+|      Function Implemented         |
++===================================+
+
+1. Use lex & yacc to parse input file, generate syntax tree
+2. Do syntax check on syntax tree.
+3. Generate quadruple from syntax tree
+4. Construct DAG from quadruple, eliminate duplicate expressions
+5. Generate optimized assembly output.
+6. Support variable namespace
+7. Use heap-style dynamic memory management.
+
++===================================+
+|      File Index                   |
++===================================+
+
+asm_context.cpp:       
+	Class for generating asm code. Include a symbol table
+	
+calculator.lex & calculator.yacc:
+	Lex & Yacc source file
+
+parser.cpp & scanner.cpp: 
+	Generated scanner and parser file
+
+eval_context.cpp
+	Class for syntax check
+
+main.cpp:
+	Entry
+
+node.cpp
+	Syntax Tree node structure
+
+quad_context.cpp:
+	Class for generating quadruples
+
+quadruple.cpp:
+	Quadruple definition. Include functions to generate asm code from quadruple
+
+symbol_table.cpp:
+	Symbol Table
+
++===================================+
+|      Other Feature                |
++===================================+
+
+1. Support output syntax tree using "-t" option
+2. Support output both AT&T style assembly (default) and Intel style assembly(experimental, use "-i")
+
