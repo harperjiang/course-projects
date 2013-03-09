@@ -148,6 +148,8 @@ void PrintStatement::genquad(QuadContext* context) {
 	this->expression->genquad(context);
 	context->add(new Quadruple(NULL, OPARAM, NULL, context->lastresult()));
 	context->add(new Quadruple(NULL, OCALL, NULL, new Value(1)));
+	context->genasm();
+	context->reset();
 }
 
 void PrintStatement::print(FILE* output, int level) {
@@ -169,32 +171,12 @@ void Statements::evaluate(EvalContext* context) {
 }
 
 void Statements::genasm(AsmContext* context) {
-	QuadContext* quads = new QuadContext();
+	QuadContext* quads = new QuadContext(context);
 	for (std::vector<Statement*>::iterator it = this->statements->begin();
 			it != this->statements->end(); it++) {
-		Statement* stmt = *it;
-		AssignStatement* assign = dynamic_cast<AssignStatement*>(stmt);
-		PrintStatement* print = dynamic_cast<PrintStatement*>(stmt);
-		if (assign) {
-			if (NULL == quads)
-				quads = new QuadContext();
-			assign->genquad(quads);
-		} else if (print) {
-			if (NULL == quads)
-				quads = new QuadContext();
-			print->genquad(quads);
-		} else {
-			if (quads != NULL) {
-				quads->genasm(context);
-				quads = NULL;
-			}
-			stmt->genasm(context);
-		}
+		(*it)->genquad(quads);
 	}
-	if (quads != NULL) {
-		quads->genasm(context);
-		quads = NULL;
-	}
+	quads->genasm();
 }
 
 void Statements::print(FILE* output, int level) {
@@ -227,6 +209,12 @@ void StatementBlock::genasm(AsmContext* context) {
 	context->pushFrame();
 	content->genasm(context);
 	context->popFrame();
+}
+
+
+void StatementBlock::genquad(QuadContext* context) {
+	context->genasm();
+	genasm(context->getAsmContext());
 }
 
 Program::~Program() {

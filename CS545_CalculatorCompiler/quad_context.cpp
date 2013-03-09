@@ -9,19 +9,50 @@
 #include <algorithm>
 #include "quad_context.h"
 
-QuadContext::QuadContext() {
+
+template<class V> 
+void clearVector(V* avec) {
+    for (typename V::iterator it = avec->begin(); it != avec->end(); ++it ) {
+        delete (*it);
+    }
+    avec->clear();
+}
+
+template<class M> 
+void clearMap(M* amap) {
+    for (typename M::iterator it = amap->begin(); it != amap->end(); ++it ) {
+        delete it->second;
+    }
+    amap->clear();
+}
+
+
+QuadContext::QuadContext(AsmContext* conc) {
 	quads = new std::vector<Quadruple*>();
 	nodeMap = new std::map<char*, QuadNode*, comp>();
 	valueMap = new std::map<int, QuadNode*>();
 	varCount = 0;
 	roots = new std::vector<QuadNode*>();
+	asmContext = conc;
 }
 
 QuadContext::~QuadContext() {
+	quads->clear();
 	delete quads;
-	delete roots;
+	nodeMap->clear();
 	delete nodeMap;
+	valueMap->clear();
 	delete valueMap;
+	roots->clear();
+	delete roots;
+}
+
+void QuadContext::reset() {
+	quads->clear();
+	nodeMap->clear();
+	valueMap->clear();
+	roots->clear();
+	varCount = 0;
 }
 
 void QuadContext::removeRoot(QuadNode* node) {
@@ -32,57 +63,16 @@ void QuadContext::removeRoot(QuadNode* node) {
 	}
 }
 
-void QuadContext::genasm(AsmContext* context) {
-	quads = new std::vector<Quadruple*>();
-	// Remove unused variable from QuadNodes, and generate new quadruples
+void QuadContext::genasm() {
 	RegContext* regc = new RegContext();
 	for (std::vector<QuadNode*>::iterator it = roots->begin();
 			it != roots->end(); it++) {
 		(*it)->cleanSynonym();
-		(*it)->genQuads(quads);
 		(*it)->label(0);
 		// All registers are available
-		(*it)->genasm(context,regc);
+		(*it)->genasm(asmContext,regc);
 	}
-/*	
-	for(std::vector<QuadNode*>::iterator it = roots->begin();it != roots->end();it++){
-		if((*it)->opr != OCALL)
-			(*it)->store(context);
-	}
-*/
-/*	for (std::vector<Quadruple*>::iterator it = quads->begin();
-			it != quads->end(); it++) {
-		(*it)->genasm(context);
-	}
-*/
-//	for (std::vector<Quadruple*>::iterator it = quads->begin();
-//			it != quads->end(); it++) {
-//		Quadruple* quad = *it;
-//		char* leftc = NULL;
-//		if (quad->left != NULL)
-//			leftc = quad->left->content();
-//		char* rightc = quad->right->content();
-//		char* resultc = NULL;
-//		if (quad->result != NULL)
-//			resultc = quad->result->content();
-//		if (quad->result != NULL) {
-//			if (leftc != NULL)
-//				printf("%s = %s %d %s\n", quad->result->var, leftc, quad->opr,
-//						rightc);
-//			else
-//				printf("%s = %d %s\n", quad->result->var, quad->opr, rightc);
-//		} else {
-//			if (leftc != NULL)
-//				printf(" = %s %d %s\n", leftc, quad->opr, rightc);
-//			else
-//				printf(" = %d %s\n", quad->opr, rightc);
-//		}
-//		if (NULL != leftc)
-//			delete leftc;
-//		if (NULL != resultc)
-//			delete resultc;
-//		delete rightc;
-//	}
+	delete regc;
 }
 
 QuadNode* QuadContext::get(Value* value) {
