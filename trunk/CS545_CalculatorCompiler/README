@@ -7,6 +7,16 @@
 ./calc <input> to generate assembly
 ./calc <input> -o <output> to indicate output file
 
++===================================+
+|      Syntax Format Brief          |
++===================================+
+
+program = {statements}
+statments = statements statement | statement
+statement = exp; | id = exp;  // the first one means print
+exp = (exp) | exp + exp | exp-exp | exp*exp | exp/exp | ID | NUM
+
+See attached input file for examples
 
 +===================================+
 |      Function Implemented         |
@@ -19,13 +29,14 @@
 5. Generate optimized assembly output.
 6. Support variable namespace
 7. Use heap-style dynamic memory management.
+8. Pure assembly implementation, use interrupt to output content
 
 +===================================+
 |      File Index                   |
 +===================================+
 
 asm_context.cpp:       
-	Class for generating asm code. Include a symbol table
+	Class for generating asm code. Include a symbol table and dynamic memory management
 	
 calculator.lex & calculator.yacc:
 	Lex & Yacc source file

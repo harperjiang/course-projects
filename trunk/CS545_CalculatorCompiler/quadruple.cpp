@@ -51,6 +51,7 @@ QuadNode::~QuadNode() {
 		delete right;
 	synonym->clear();
 	delete synonym;
+	synonym = NULL;
 	origin = NULL;
 }
 
@@ -73,7 +74,7 @@ void QuadNode::cleanSynonym() {
 		left->cleanSynonym();
 	if (right != NULL)
 		right->cleanSynonym();
-	if(synonym->size() == 0)
+	if(synonym == NULL || synonym->size() == 0)
 		return;
 	refCount = synonym->size();
 	Value* reserve = NULL;
@@ -91,6 +92,7 @@ void QuadNode::cleanSynonym() {
 	
 	synonym->clear();
 	delete synonym;
+	synonym = NULL;
 	
 	if(this->value != NULL && this->value->type == TYPE_NUM) {
 		value->var = new char[strlen(reserve->var)];
