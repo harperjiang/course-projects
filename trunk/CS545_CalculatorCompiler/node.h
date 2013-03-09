@@ -89,6 +89,7 @@ class Statement: public Node {
 public:
 	virtual void evaluate(EvalContext* context)=0;
 	virtual void genasm(AsmContext* context)=0;
+	virtual void genquad(QuadContext* context)=0;
 	virtual void print(FILE*output, int level)=0;
 	virtual ~Statement() {
 	}
@@ -154,6 +155,7 @@ public:
 	~StatementBlock();
 	void evaluate(EvalContext* context);
 	void genasm(AsmContext* context);
+	void genquad(QuadContext* context);
 	void print(FILE* output, int level);
 };
 

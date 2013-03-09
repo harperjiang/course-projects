@@ -20,7 +20,7 @@
 #define DIRECT  0
 
 typedef enum _Register {
-	eax, ebx, ecx, edx
+	eax, ebx, ecx, edx, esp, unknown
 } Register;
 
 class AsmContext {

@@ -390,25 +390,31 @@ void ATTAsmContext::mov(Register target, int val) {
 
 }
 void ATTAsmContext::mov(Register target, Register source) {
+	if(target == source)
+		return;
 	fprintf(getOutput(), "\tmovl %%%s,%%%s\n", regtoa(source), regtoa(target));
 }
 
 void ATTAsmContext::mov(int address, Register source, int mode) {
-	push(edx);
-	mov(edx, "heap");
+	Register buffer = edx;
+	if(source == buffer) {
+		buffer = ecx;
+	}	
+	push(buffer);
+	mov(buffer, "heap");
 	switch (mode) {
 	case 0: //00
-		fprintf(getOutput(), "\tmovl %%%s,%d(%%edx)\n", regtoa(source),
-				address);
+		fprintf(getOutput(), "\tmovl %%%s,%d(%%%s)\n", regtoa(source),
+				address, regtoa(buffer));
 		break;
 	case 1: //01
-		fprintf(getOutput(), "\tmovl (%%%s),%d(%%edx),\n", regtoa(source),
-				address);
+		fprintf(getOutput(), "\tmovl (%%%s),%d(%%%s),\n", regtoa(source),
+				address, regtoa(buffer));
 		break;
 	default:
 		break;
 	}
-	pop(edx);
+	pop(buffer);
 }
 
 void ATTAsmContext::mov(Register target, int valoraddr, int mode) {
