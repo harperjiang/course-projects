@@ -46,7 +46,7 @@
      THEN = 264,
      WHILE = 265,
      DO = 266,
-     BEGIN = 267,
+     BGIN = 267,
      END = 268,
      SEMICOLON = 269,
      COMMA = 270,
@@ -57,28 +57,34 @@
      RP = 275,
      LSQ = 276,
      RSQ = 277,
-     ARRAY = 278,
-     TINT = 279,
-     TREAL = 280,
-     OF = 281,
-     ASSIGN = 282,
-     ADD = 283,
-     SUB = 284,
-     MUL = 285,
-     DIV = 286,
-     MOD = 287,
-     AND = 288,
-     OR = 289,
-     NOT = 290,
-     GT = 291,
-     LT = 292,
-     EQ = 293,
-     NEQ = 294,
-     GTE = 295,
-     LTE = 296,
-     INT = 297,
-     REAL = 298,
-     ID = 299
+     READ = 278,
+     WRITE = 279,
+     ARRAY = 280,
+     TINT = 281,
+     TREAL = 282,
+     OF = 283,
+     ASSIGN = 284,
+     ADD = 285,
+     SUB = 286,
+     MUL = 287,
+     DIV = 288,
+     MOD = 289,
+     AND = 290,
+     OR = 291,
+     NOT = 292,
+     GT = 293,
+     LT = 294,
+     EQ = 295,
+     NEQ = 296,
+     GTE = 297,
+     LTE = 298,
+     INT = 299,
+     REAL = 300,
+     ID = 301,
+     TRUE = 302,
+     FALSE = 303,
+     BREAK = 304,
+     UMINUS = 305
    };
 #endif
 /* Tokens.  */
@@ -91,7 +97,7 @@
 #define THEN 264
 #define WHILE 265
 #define DO 266
-#define BEGIN 267
+#define BGIN 267
 #define END 268
 #define SEMICOLON 269
 #define COMMA 270
@@ -102,34 +108,69 @@
 #define RP 275
 #define LSQ 276
 #define RSQ 277
-#define ARRAY 278
-#define TINT 279
-#define TREAL 280
-#define OF 281
-#define ASSIGN 282
-#define ADD 283
-#define SUB 284
-#define MUL 285
-#define DIV 286
-#define MOD 287
-#define AND 288
-#define OR 289
-#define NOT 290
-#define GT 291
-#define LT 292
-#define EQ 293
-#define NEQ 294
-#define GTE 295
-#define LTE 296
-#define INT 297
-#define REAL 298
-#define ID 299
+#define READ 278
+#define WRITE 279
+#define ARRAY 280
+#define TINT 281
+#define TREAL 282
+#define OF 283
+#define ASSIGN 284
+#define ADD 285
+#define SUB 286
+#define MUL 287
+#define DIV 288
+#define MOD 289
+#define AND 290
+#define OR 291
+#define NOT 292
+#define GT 293
+#define LT 294
+#define EQ 295
+#define NEQ 296
+#define GTE 297
+#define LTE 298
+#define INT 299
+#define REAL 300
+#define ID 301
+#define TRUE 302
+#define FALSE 303
+#define BREAK 304
+#define UMINUS 305
 
 
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef int YYSTYPE;
+typedef union YYSTYPE
+{
+
+/* Line 2068 of yacc.c  */
+#line 36 "pascal.yacc"
+
+	char* stringTerm;
+	Program* program;
+	std::vector<Declare*>* declares;
+	std::vector<Subprogram*>* subs;
+	Subprogram* sub;
+	std::vector<Param*>* params;
+	StatementBlock* program_body;
+	std::vector<Statement*>* stmts;
+	Statement* stmt;
+	std::vector<Expression*>* exp_list;
+	Expression* exp;
+	CallExpression* call;
+	Variable* var;
+	Type* type;
+	std::vector<Identifier*>* id_list;			
+	Identifier* id;
+	NumConstant* num;
+	int inte;
+
+
+
+/* Line 2068 of yacc.c  */
+#line 173 "parser.h"
+} YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
