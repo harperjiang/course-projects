@@ -1,0 +1,1848 @@
+Grammar
+
+    0 $accept: program $end
+
+    1 program: PROGRAM id SEMICOLON declares subs program_body DOT
+
+    2 declares: declares var id_lists COLON type SEMICOLON
+    3         | VAR id_lists COLON type SEMICOLON
+
+    4 subs: subs sub
+    5     | /* empty */
+
+    6 sub: function
+    7    | procedure
+
+    8 function: FUNCTION LP args RP COLON stdtype program_body SEMICOLON
+
+    9 procedure: PROCEDURE LP args RP program_body SEMICOLON
+
+   10 args: args SEMICOLON id_lists COLON type
+   11     | id_lists COLON type
+
+   12 program_body: BEGIN stmts END
+
+   13 stmts: stmts SEMICOLON stmt
+   14      | /* empty */
+
+   15 stmt: var ASSIGN exp
+   16     | id LP exp_list RP
+   17     | id
+   18     | IF exp THEN stmt ELSE stmt
+   19     | IF exp THEN stmt
+   20     | WHILE exp DO stmt
+   21     | BEGIN stmts END
+
+   22 exp_list: exp_list COMMA exp
+   23         | exp
+
+   24 exp: exp ADD exp
+   25    | exp SUB exp
+   26    | SUB exp
+   27    | exp MUL exp
+   28    | exp DIV exp
+   29    | exp MOD exp
+   30    | LP exp RP
+   31    | exp AND exp
+   32    | exp OR exp
+   33    | NOT exp
+   34    | exp GT exp
+   35    | exp LT exp
+   36    | exp GTE exp
+   37    | exp LTE exp
+   38    | exp EQ exp
+   39    | exp NEQ exp
+   40    | id
+   41    | num
+
+   42 var: id
+   43    | id LSQ exp RSQ
+
+   44 type: stdtype
+   45     | ARRAY LSQ INT DOTDOT INT RSQ OF stdtype
+
+   46 stdtype: TREAL
+   47        | TINT
+
+   48 id_lists: id_lists COMMA id
+   49         | /* empty */
+
+   50 id: ID
+
+   51 num: INT
+   52    | REAL
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+PROGRAM (258) 1
+FUNCTION (259) 8
+PROCEDURE (260) 9
+VAR (261) 3
+IF (262) 18 19
+ELSE (263) 18
+THEN (264) 18 19
+WHILE (265) 20
+DO (266) 20
+BEGIN (267) 12 21
+END (268) 12 21
+SEMICOLON (269) 1 2 3 8 9 10 13
+COMMA (270) 22 48
+COLON (271) 2 3 8 10 11
+DOT (272) 1
+DOTDOT (273) 45
+LP (274) 8 9 16 30
+RP (275) 8 9 16 30
+LSQ (276) 43 45
+RSQ (277) 43 45
+ARRAY (278) 45
+TINT (279) 47
+TREAL (280) 46
+OF (281) 45
+ASSIGN (282) 15
+ADD (283) 24
+SUB (284) 25 26
+MUL (285) 27
+DIV (286) 28
+MOD (287) 29
+AND (288) 31
+OR (289) 32
+NOT (290) 33
+GT (291) 34
+LT (292) 35
+EQ (293) 38
+NEQ (294) 39
+GTE (295) 36
+LTE (296) 37
+INT (297) 45 51
+REAL (298) 52
+ID (299) 50
+
+
+Nonterminals, with rules where they appear
+
+$accept (45)
+    on left: 0
+program (46)
+    on left: 1, on right: 0
+declares (47)
+    on left: 2 3, on right: 1 2
+subs (48)
+    on left: 4 5, on right: 1 4
+sub (49)
+    on left: 6 7, on right: 4
+function (50)
+    on left: 8, on right: 6
+procedure (51)
+    on left: 9, on right: 7
+args (52)
+    on left: 10 11, on right: 8 9 10
+program_body (53)
+    on left: 12, on right: 1 8 9
+stmts (54)
+    on left: 13 14, on right: 12 13 21
+stmt (55)
+    on left: 15 16 17 18 19 20 21, on right: 13 18 19 20
+exp_list (56)
+    on left: 22 23, on right: 16 22
+exp (57)
+    on left: 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41,
+    on right: 15 18 19 20 22 23 24 25 26 27 28 29 30 31 32 33 34 35
+    36 37 38 39 43
+var (58)
+    on left: 42 43, on right: 2 15
+type (59)
+    on left: 44 45, on right: 2 3 10 11
+stdtype (60)
+    on left: 46 47, on right: 8 44 45
+id_lists (61)
+    on left: 48 49, on right: 2 3 10 11 48
+id (62)
+    on left: 50, on right: 1 16 17 40 42 43 48
+num (63)
+    on left: 51 52, on right: 41
+
+
+state 0
+
+    0 $accept: . program $end
+
+    PROGRAM  shift, and go to state 1
+
+    program  go to state 2
+
+
+state 1
+
+    1 program: PROGRAM . id SEMICOLON declares subs program_body DOT
+
+    ID  shift, and go to state 3
+
+    id  go to state 4
+
+
+state 2
+
+    0 $accept: program . $end
+
+    $end  shift, and go to state 5
+
+
+state 3
+
+   50 id: ID .
+
+    $default  reduce using rule 50 (id)
+
+
+state 4
+
+    1 program: PROGRAM id . SEMICOLON declares subs program_body DOT
+
+    SEMICOLON  shift, and go to state 6
+
+
+state 5
+
+    0 $accept: program $end .
+
+    $default  accept
+
+
+state 6
+
+    1 program: PROGRAM id SEMICOLON . declares subs program_body DOT
+
+    VAR  shift, and go to state 7
+
+    declares  go to state 8
+
+
+state 7
+
+    3 declares: VAR . id_lists COLON type SEMICOLON
+
+    $default  reduce using rule 49 (id_lists)
+
+    id_lists  go to state 9
+
+
+state 8
+
+    1 program: PROGRAM id SEMICOLON declares . subs program_body DOT
+    2 declares: declares . var id_lists COLON type SEMICOLON
+
+    ID  shift, and go to state 3
+
+    $default  reduce using rule 5 (subs)
+
+    subs  go to state 10
+    var   go to state 11
+    id    go to state 12
+
+
+state 9
+
+    3 declares: VAR id_lists . COLON type SEMICOLON
+   48 id_lists: id_lists . COMMA id
+
+    COMMA  shift, and go to state 13
+    COLON  shift, and go to state 14
+
+
+state 10
+
+    1 program: PROGRAM id SEMICOLON declares subs . program_body DOT
+    4 subs: subs . sub
+
+    FUNCTION   shift, and go to state 15
+    PROCEDURE  shift, and go to state 16
+    BEGIN      shift, and go to state 17
+
+    sub           go to state 18
+    function      go to state 19
+    procedure     go to state 20
+    program_body  go to state 21
+
+
+state 11
+
+    2 declares: declares var . id_lists COLON type SEMICOLON
+
+    $default  reduce using rule 49 (id_lists)
+
+    id_lists  go to state 22
+
+
+state 12
+
+   42 var: id .
+   43    | id . LSQ exp RSQ
+
+    LSQ  shift, and go to state 23
+
+    $default  reduce using rule 42 (var)
+
+
+state 13
+
+   48 id_lists: id_lists COMMA . id
+
+    ID  shift, and go to state 3
+
+    id  go to state 24
+
+
+state 14
+
+    3 declares: VAR id_lists COLON . type SEMICOLON
+
+    ARRAY  shift, and go to state 25
+    TINT   shift, and go to state 26
+    TREAL  shift, and go to state 27
+
+    type     go to state 28
+    stdtype  go to state 29
+
+
+state 15
+
+    8 function: FUNCTION . LP args RP COLON stdtype program_body SEMICOLON
+
+    LP  shift, and go to state 30
+
+
+state 16
+
+    9 procedure: PROCEDURE . LP args RP program_body SEMICOLON
+
+    LP  shift, and go to state 31
+
+
+state 17
+
+   12 program_body: BEGIN . stmts END
+
+    $default  reduce using rule 14 (stmts)
+
+    stmts  go to state 32
+
+
+state 18
+
+    4 subs: subs sub .
+
+    $default  reduce using rule 4 (subs)
+
+
+state 19
+
+    6 sub: function .
+
+    $default  reduce using rule 6 (sub)
+
+
+state 20
+
+    7 sub: procedure .
+
+    $default  reduce using rule 7 (sub)
+
+
+state 21
+
+    1 program: PROGRAM id SEMICOLON declares subs program_body . DOT
+
+    DOT  shift, and go to state 33
+
+
+state 22
+
+    2 declares: declares var id_lists . COLON type SEMICOLON
+   48 id_lists: id_lists . COMMA id
+
+    COMMA  shift, and go to state 13
+    COLON  shift, and go to state 34
+
+
+state 23
+
+   43 var: id LSQ . exp RSQ
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 40
+    id   go to state 41
+    num  go to state 42
+
+
+state 24
+
+   48 id_lists: id_lists COMMA id .
+
+    $default  reduce using rule 48 (id_lists)
+
+
+state 25
+
+   45 type: ARRAY . LSQ INT DOTDOT INT RSQ OF stdtype
+
+    LSQ  shift, and go to state 43
+
+
+state 26
+
+   47 stdtype: TINT .
+
+    $default  reduce using rule 47 (stdtype)
+
+
+state 27
+
+   46 stdtype: TREAL .
+
+    $default  reduce using rule 46 (stdtype)
+
+
+state 28
+
+    3 declares: VAR id_lists COLON type . SEMICOLON
+
+    SEMICOLON  shift, and go to state 44
+
+
+state 29
+
+   44 type: stdtype .
+
+    $default  reduce using rule 44 (type)
+
+
+state 30
+
+    8 function: FUNCTION LP . args RP COLON stdtype program_body SEMICOLON
+
+    $default  reduce using rule 49 (id_lists)
+
+    args      go to state 45
+    id_lists  go to state 46
+
+
+state 31
+
+    9 procedure: PROCEDURE LP . args RP program_body SEMICOLON
+
+    $default  reduce using rule 49 (id_lists)
+
+    args      go to state 47
+    id_lists  go to state 46
+
+
+state 32
+
+   12 program_body: BEGIN stmts . END
+   13 stmts: stmts . SEMICOLON stmt
+
+    END        shift, and go to state 48
+    SEMICOLON  shift, and go to state 49
+
+
+state 33
+
+    1 program: PROGRAM id SEMICOLON declares subs program_body DOT .
+
+    $default  reduce using rule 1 (program)
+
+
+state 34
+
+    2 declares: declares var id_lists COLON . type SEMICOLON
+
+    ARRAY  shift, and go to state 25
+    TINT   shift, and go to state 26
+    TREAL  shift, and go to state 27
+
+    type     go to state 50
+    stdtype  go to state 29
+
+
+state 35
+
+   30 exp: LP . exp RP
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 51
+    id   go to state 41
+    num  go to state 42
+
+
+state 36
+
+   26 exp: SUB . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 52
+    id   go to state 41
+    num  go to state 42
+
+
+state 37
+
+   33 exp: NOT . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 53
+    id   go to state 41
+    num  go to state 42
+
+
+state 38
+
+   51 num: INT .
+
+    $default  reduce using rule 51 (num)
+
+
+state 39
+
+   52 num: REAL .
+
+    $default  reduce using rule 52 (num)
+
+
+state 40
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+   43 var: id LSQ exp . RSQ
+
+    RSQ  shift, and go to state 54
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+    AND  shift, and go to state 60
+    OR   shift, and go to state 61
+    GT   shift, and go to state 62
+    LT   shift, and go to state 63
+    EQ   shift, and go to state 64
+    NEQ  shift, and go to state 65
+    GTE  shift, and go to state 66
+    LTE  shift, and go to state 67
+
+
+state 41
+
+   40 exp: id .
+
+    $default  reduce using rule 40 (exp)
+
+
+state 42
+
+   41 exp: num .
+
+    $default  reduce using rule 41 (exp)
+
+
+state 43
+
+   45 type: ARRAY LSQ . INT DOTDOT INT RSQ OF stdtype
+
+    INT  shift, and go to state 68
+
+
+state 44
+
+    3 declares: VAR id_lists COLON type SEMICOLON .
+
+    $default  reduce using rule 3 (declares)
+
+
+state 45
+
+    8 function: FUNCTION LP args . RP COLON stdtype program_body SEMICOLON
+   10 args: args . SEMICOLON id_lists COLON type
+
+    SEMICOLON  shift, and go to state 69
+    RP         shift, and go to state 70
+
+
+state 46
+
+   11 args: id_lists . COLON type
+   48 id_lists: id_lists . COMMA id
+
+    COMMA  shift, and go to state 13
+    COLON  shift, and go to state 71
+
+
+state 47
+
+    9 procedure: PROCEDURE LP args . RP program_body SEMICOLON
+   10 args: args . SEMICOLON id_lists COLON type
+
+    SEMICOLON  shift, and go to state 69
+    RP         shift, and go to state 72
+
+
+state 48
+
+   12 program_body: BEGIN stmts END .
+
+    $default  reduce using rule 12 (program_body)
+
+
+state 49
+
+   13 stmts: stmts SEMICOLON . stmt
+
+    IF     shift, and go to state 73
+    WHILE  shift, and go to state 74
+    BEGIN  shift, and go to state 75
+    ID     shift, and go to state 3
+
+    stmt  go to state 76
+    var   go to state 77
+    id    go to state 78
+
+
+state 50
+
+    2 declares: declares var id_lists COLON type . SEMICOLON
+
+    SEMICOLON  shift, and go to state 79
+
+
+state 51
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   30    | LP exp . RP
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    RP   shift, and go to state 80
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+    AND  shift, and go to state 60
+    OR   shift, and go to state 61
+    GT   shift, and go to state 62
+    LT   shift, and go to state 63
+    EQ   shift, and go to state 64
+    NEQ  shift, and go to state 65
+    GTE  shift, and go to state 66
+    LTE  shift, and go to state 67
+
+
+state 52
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   26    | SUB exp .
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+
+    $default  reduce using rule 26 (exp)
+
+
+state 53
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   33    | NOT exp .
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+    GT   shift, and go to state 62
+    LT   shift, and go to state 63
+    EQ   shift, and go to state 64
+    NEQ  shift, and go to state 65
+    GTE  shift, and go to state 66
+    LTE  shift, and go to state 67
+
+    $default  reduce using rule 33 (exp)
+
+
+state 54
+
+   43 var: id LSQ exp RSQ .
+
+    $default  reduce using rule 43 (var)
+
+
+state 55
+
+   24 exp: exp ADD . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 81
+    id   go to state 41
+    num  go to state 42
+
+
+state 56
+
+   25 exp: exp SUB . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 82
+    id   go to state 41
+    num  go to state 42
+
+
+state 57
+
+   27 exp: exp MUL . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 83
+    id   go to state 41
+    num  go to state 42
+
+
+state 58
+
+   28 exp: exp DIV . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 84
+    id   go to state 41
+    num  go to state 42
+
+
+state 59
+
+   29 exp: exp MOD . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 85
+    id   go to state 41
+    num  go to state 42
+
+
+state 60
+
+   31 exp: exp AND . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 86
+    id   go to state 41
+    num  go to state 42
+
+
+state 61
+
+   32 exp: exp OR . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 87
+    id   go to state 41
+    num  go to state 42
+
+
+state 62
+
+   34 exp: exp GT . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 88
+    id   go to state 41
+    num  go to state 42
+
+
+state 63
+
+   35 exp: exp LT . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 89
+    id   go to state 41
+    num  go to state 42
+
+
+state 64
+
+   38 exp: exp EQ . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 90
+    id   go to state 41
+    num  go to state 42
+
+
+state 65
+
+   39 exp: exp NEQ . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 91
+    id   go to state 41
+    num  go to state 42
+
+
+state 66
+
+   36 exp: exp GTE . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 92
+    id   go to state 41
+    num  go to state 42
+
+
+state 67
+
+   37 exp: exp LTE . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 93
+    id   go to state 41
+    num  go to state 42
+
+
+state 68
+
+   45 type: ARRAY LSQ INT . DOTDOT INT RSQ OF stdtype
+
+    DOTDOT  shift, and go to state 94
+
+
+state 69
+
+   10 args: args SEMICOLON . id_lists COLON type
+
+    $default  reduce using rule 49 (id_lists)
+
+    id_lists  go to state 95
+
+
+state 70
+
+    8 function: FUNCTION LP args RP . COLON stdtype program_body SEMICOLON
+
+    COLON  shift, and go to state 96
+
+
+state 71
+
+   11 args: id_lists COLON . type
+
+    ARRAY  shift, and go to state 25
+    TINT   shift, and go to state 26
+    TREAL  shift, and go to state 27
+
+    type     go to state 97
+    stdtype  go to state 29
+
+
+state 72
+
+    9 procedure: PROCEDURE LP args RP . program_body SEMICOLON
+
+    BEGIN  shift, and go to state 17
+
+    program_body  go to state 98
+
+
+state 73
+
+   18 stmt: IF . exp THEN stmt ELSE stmt
+   19     | IF . exp THEN stmt
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 99
+    id   go to state 41
+    num  go to state 42
+
+
+state 74
+
+   20 stmt: WHILE . exp DO stmt
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 100
+    id   go to state 41
+    num  go to state 42
+
+
+state 75
+
+   21 stmt: BEGIN . stmts END
+
+    $default  reduce using rule 14 (stmts)
+
+    stmts  go to state 101
+
+
+state 76
+
+   13 stmts: stmts SEMICOLON stmt .
+
+    $default  reduce using rule 13 (stmts)
+
+
+state 77
+
+   15 stmt: var . ASSIGN exp
+
+    ASSIGN  shift, and go to state 102
+
+
+state 78
+
+   16 stmt: id . LP exp_list RP
+   17     | id .
+   42 var: id .
+   43    | id . LSQ exp RSQ
+
+    LP   shift, and go to state 103
+    LSQ  shift, and go to state 23
+
+    ASSIGN    reduce using rule 42 (var)
+    $default  reduce using rule 17 (stmt)
+
+
+state 79
+
+    2 declares: declares var id_lists COLON type SEMICOLON .
+
+    $default  reduce using rule 2 (declares)
+
+
+state 80
+
+   30 exp: LP exp RP .
+
+    $default  reduce using rule 30 (exp)
+
+
+state 81
+
+   24 exp: exp . ADD exp
+   24    | exp ADD exp .
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+
+    $default  reduce using rule 24 (exp)
+
+
+state 82
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   25    | exp SUB exp .
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+
+    $default  reduce using rule 25 (exp)
+
+
+state 83
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   27    | exp MUL exp .
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    $default  reduce using rule 27 (exp)
+
+
+state 84
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   28    | exp DIV exp .
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    $default  reduce using rule 28 (exp)
+
+
+state 85
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   29    | exp MOD exp .
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    $default  reduce using rule 29 (exp)
+
+
+state 86
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   31    | exp AND exp .
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+    GT   shift, and go to state 62
+    LT   shift, and go to state 63
+    EQ   shift, and go to state 64
+    NEQ  shift, and go to state 65
+    GTE  shift, and go to state 66
+    LTE  shift, and go to state 67
+
+    $default  reduce using rule 31 (exp)
+
+
+state 87
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   32    | exp OR exp .
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+    GT   shift, and go to state 62
+    LT   shift, and go to state 63
+    EQ   shift, and go to state 64
+    NEQ  shift, and go to state 65
+    GTE  shift, and go to state 66
+    LTE  shift, and go to state 67
+
+    $default  reduce using rule 32 (exp)
+
+
+state 88
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   34    | exp GT exp .
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+
+    $default  reduce using rule 34 (exp)
+
+
+state 89
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   35    | exp LT exp .
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+
+    $default  reduce using rule 35 (exp)
+
+
+state 90
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   38    | exp EQ exp .
+   39    | exp . NEQ exp
+
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+
+    $default  reduce using rule 38 (exp)
+
+
+state 91
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+   39    | exp NEQ exp .
+
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+
+    $default  reduce using rule 39 (exp)
+
+
+state 92
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   36    | exp GTE exp .
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+
+    $default  reduce using rule 36 (exp)
+
+
+state 93
+
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   37    | exp LTE exp .
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+
+    $default  reduce using rule 37 (exp)
+
+
+state 94
+
+   45 type: ARRAY LSQ INT DOTDOT . INT RSQ OF stdtype
+
+    INT  shift, and go to state 104
+
+
+state 95
+
+   10 args: args SEMICOLON id_lists . COLON type
+   48 id_lists: id_lists . COMMA id
+
+    COMMA  shift, and go to state 13
+    COLON  shift, and go to state 105
+
+
+state 96
+
+    8 function: FUNCTION LP args RP COLON . stdtype program_body SEMICOLON
+
+    TINT   shift, and go to state 26
+    TREAL  shift, and go to state 27
+
+    stdtype  go to state 106
+
+
+state 97
+
+   11 args: id_lists COLON type .
+
+    $default  reduce using rule 11 (args)
+
+
+state 98
+
+    9 procedure: PROCEDURE LP args RP program_body . SEMICOLON
+
+    SEMICOLON  shift, and go to state 107
+
+
+state 99
+
+   18 stmt: IF exp . THEN stmt ELSE stmt
+   19     | IF exp . THEN stmt
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    THEN  shift, and go to state 108
+    ADD   shift, and go to state 55
+    SUB   shift, and go to state 56
+    MUL   shift, and go to state 57
+    DIV   shift, and go to state 58
+    MOD   shift, and go to state 59
+    AND   shift, and go to state 60
+    OR    shift, and go to state 61
+    GT    shift, and go to state 62
+    LT    shift, and go to state 63
+    EQ    shift, and go to state 64
+    NEQ   shift, and go to state 65
+    GTE   shift, and go to state 66
+    LTE   shift, and go to state 67
+
+
+state 100
+
+   20 stmt: WHILE exp . DO stmt
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    DO   shift, and go to state 109
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+    AND  shift, and go to state 60
+    OR   shift, and go to state 61
+    GT   shift, and go to state 62
+    LT   shift, and go to state 63
+    EQ   shift, and go to state 64
+    NEQ  shift, and go to state 65
+    GTE  shift, and go to state 66
+    LTE  shift, and go to state 67
+
+
+state 101
+
+   13 stmts: stmts . SEMICOLON stmt
+   21 stmt: BEGIN stmts . END
+
+    END        shift, and go to state 110
+    SEMICOLON  shift, and go to state 49
+
+
+state 102
+
+   15 stmt: var ASSIGN . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 111
+    id   go to state 41
+    num  go to state 42
+
+
+state 103
+
+   16 stmt: id LP . exp_list RP
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp_list  go to state 112
+    exp       go to state 113
+    id        go to state 41
+    num       go to state 42
+
+
+state 104
+
+   45 type: ARRAY LSQ INT DOTDOT INT . RSQ OF stdtype
+
+    RSQ  shift, and go to state 114
+
+
+state 105
+
+   10 args: args SEMICOLON id_lists COLON . type
+
+    ARRAY  shift, and go to state 25
+    TINT   shift, and go to state 26
+    TREAL  shift, and go to state 27
+
+    type     go to state 115
+    stdtype  go to state 29
+
+
+state 106
+
+    8 function: FUNCTION LP args RP COLON stdtype . program_body SEMICOLON
+
+    BEGIN  shift, and go to state 17
+
+    program_body  go to state 116
+
+
+state 107
+
+    9 procedure: PROCEDURE LP args RP program_body SEMICOLON .
+
+    $default  reduce using rule 9 (procedure)
+
+
+state 108
+
+   18 stmt: IF exp THEN . stmt ELSE stmt
+   19     | IF exp THEN . stmt
+
+    IF     shift, and go to state 73
+    WHILE  shift, and go to state 74
+    BEGIN  shift, and go to state 75
+    ID     shift, and go to state 3
+
+    stmt  go to state 117
+    var   go to state 77
+    id    go to state 78
+
+
+state 109
+
+   20 stmt: WHILE exp DO . stmt
+
+    IF     shift, and go to state 73
+    WHILE  shift, and go to state 74
+    BEGIN  shift, and go to state 75
+    ID     shift, and go to state 3
+
+    stmt  go to state 118
+    var   go to state 77
+    id    go to state 78
+
+
+state 110
+
+   21 stmt: BEGIN stmts END .
+
+    $default  reduce using rule 21 (stmt)
+
+
+state 111
+
+   15 stmt: var ASSIGN exp .
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+    AND  shift, and go to state 60
+    OR   shift, and go to state 61
+    GT   shift, and go to state 62
+    LT   shift, and go to state 63
+    EQ   shift, and go to state 64
+    NEQ  shift, and go to state 65
+    GTE  shift, and go to state 66
+    LTE  shift, and go to state 67
+
+    $default  reduce using rule 15 (stmt)
+
+
+state 112
+
+   16 stmt: id LP exp_list . RP
+   22 exp_list: exp_list . COMMA exp
+
+    COMMA  shift, and go to state 119
+    RP     shift, and go to state 120
+
+
+state 113
+
+   23 exp_list: exp .
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+    AND  shift, and go to state 60
+    OR   shift, and go to state 61
+    GT   shift, and go to state 62
+    LT   shift, and go to state 63
+    EQ   shift, and go to state 64
+    NEQ  shift, and go to state 65
+    GTE  shift, and go to state 66
+    LTE  shift, and go to state 67
+
+    $default  reduce using rule 23 (exp_list)
+
+
+state 114
+
+   45 type: ARRAY LSQ INT DOTDOT INT RSQ . OF stdtype
+
+    OF  shift, and go to state 121
+
+
+state 115
+
+   10 args: args SEMICOLON id_lists COLON type .
+
+    $default  reduce using rule 10 (args)
+
+
+state 116
+
+    8 function: FUNCTION LP args RP COLON stdtype program_body . SEMICOLON
+
+    SEMICOLON  shift, and go to state 122
+
+
+state 117
+
+   18 stmt: IF exp THEN stmt . ELSE stmt
+   19     | IF exp THEN stmt .
+
+    ELSE  shift, and go to state 123
+
+    $default  reduce using rule 19 (stmt)
+
+
+state 118
+
+   20 stmt: WHILE exp DO stmt .
+
+    $default  reduce using rule 20 (stmt)
+
+
+state 119
+
+   22 exp_list: exp_list COMMA . exp
+
+    LP    shift, and go to state 35
+    SUB   shift, and go to state 36
+    NOT   shift, and go to state 37
+    INT   shift, and go to state 38
+    REAL  shift, and go to state 39
+    ID    shift, and go to state 3
+
+    exp  go to state 124
+    id   go to state 41
+    num  go to state 42
+
+
+state 120
+
+   16 stmt: id LP exp_list RP .
+
+    $default  reduce using rule 16 (stmt)
+
+
+state 121
+
+   45 type: ARRAY LSQ INT DOTDOT INT RSQ OF . stdtype
+
+    TINT   shift, and go to state 26
+    TREAL  shift, and go to state 27
+
+    stdtype  go to state 125
+
+
+state 122
+
+    8 function: FUNCTION LP args RP COLON stdtype program_body SEMICOLON .
+
+    $default  reduce using rule 8 (function)
+
+
+state 123
+
+   18 stmt: IF exp THEN stmt ELSE . stmt
+
+    IF     shift, and go to state 73
+    WHILE  shift, and go to state 74
+    BEGIN  shift, and go to state 75
+    ID     shift, and go to state 3
+
+    stmt  go to state 126
+    var   go to state 77
+    id    go to state 78
+
+
+state 124
+
+   22 exp_list: exp_list COMMA exp .
+   24 exp: exp . ADD exp
+   25    | exp . SUB exp
+   27    | exp . MUL exp
+   28    | exp . DIV exp
+   29    | exp . MOD exp
+   31    | exp . AND exp
+   32    | exp . OR exp
+   34    | exp . GT exp
+   35    | exp . LT exp
+   36    | exp . GTE exp
+   37    | exp . LTE exp
+   38    | exp . EQ exp
+   39    | exp . NEQ exp
+
+    ADD  shift, and go to state 55
+    SUB  shift, and go to state 56
+    MUL  shift, and go to state 57
+    DIV  shift, and go to state 58
+    MOD  shift, and go to state 59
+    AND  shift, and go to state 60
+    OR   shift, and go to state 61
+    GT   shift, and go to state 62
+    LT   shift, and go to state 63
+    EQ   shift, and go to state 64
+    NEQ  shift, and go to state 65
+    GTE  shift, and go to state 66
+    LTE  shift, and go to state 67
+
+    $default  reduce using rule 22 (exp_list)
+
+
+state 125
+
+   45 type: ARRAY LSQ INT DOTDOT INT RSQ OF stdtype .
+
+    $default  reduce using rule 45 (type)
+
+
+state 126
+
+   18 stmt: IF exp THEN stmt ELSE stmt .
+
+    $default  reduce using rule 18 (stmt)
