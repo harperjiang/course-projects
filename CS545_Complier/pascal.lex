@@ -17,7 +17,7 @@ ID						[a-zA-Z_][a-zA-Z0-9_]*
 "program"				{return PROGRAM;}
 "function"				{return FUNCTION;}
 "procedure"				{return PROCEDURE;}
-"begin"					{return BEGIN;}
+"begin"					{return BGIN;}
 "end"					{return END;}
 "if"					{return IF;}
 "then"					{return THEN;}
@@ -31,6 +31,9 @@ ID						[a-zA-Z_][a-zA-Z0-9_]*
 "int"					{return TINT;}
 "array"					{return ARRAY;}
 "of"					{return OF;}
+"true"					{return TRUE;}
+"false"					{return FALSE;}
+"break"					{return BREAK;}
 "."						{return DOT;}
 ".."					{return DOTDOT;}
 ","						{return COMMA;}
@@ -40,8 +43,6 @@ ID						[a-zA-Z_][a-zA-Z0-9_]*
 ")"                 	{return RP;}
 "["						{return LSQ;}
 "]"						{return RSQ;}
-"{"						{return LB;}
-"}"						{return RB;}
 "+"                 	{return ADD;}
 "-"                 	{return SUB;}
 "*"                 	{return MUL;}
