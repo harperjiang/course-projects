@@ -1,10 +1,31 @@
 %{
 #include <stdio.h>
+#include <string.h>
 #include "node.h"
 #include "parser.h"
 
-extern void paserror(char* input);
+extern void paserror(const char* input);
+extern void error(const char* info);
 
+int yyline = 1;
+int yycol = 0;
+
+void handle_line() {
+	paslloc.first_line = yyline;
+	paslloc.last_line = yyline;
+	paslloc.first_column = yycol;
+	paslloc.last_column = yycol + strlen(pastext);
+	yycol += strlen(pastext);
+}
+
+#define YY_USER_ACTION handle_line();
+
+void lex_error() {
+	char* buffer = new char[200];
+	sprintf(buffer,"Parse error: unrecognized token `%s' at line %d, col %d",pastext, yyline,yycol - strlen(pastext));
+	error(buffer);
+	delete buffer;
+}
 %}
 
 NUMBER					[0-9]+
@@ -12,8 +33,8 @@ ID						[a-zA-Z_][a-zA-Z0-9_]*
 %option noyywrap
 
 %%
-{NUMBER}.{NUMBER} 	 	{paslval.stringTerm = pastext; return REAL;}
-{NUMBER}				{paslval.stringTerm = pastext; return INT;}
+{NUMBER}"."{NUMBER} 	{paslval.tokenval = pastext; return REAL;}
+{NUMBER}				{paslval.tokenval = pastext; return INT;}
 "program"				{return PROGRAM;}
 "function"				{return FUNCTION;}
 "procedure"				{return PROCEDURE;}
@@ -56,7 +77,8 @@ ID						[a-zA-Z_][a-zA-Z0-9_]*
 "<"						{return LT;}
 ">="					{return GTE;}
 "<="					{return LTE;}
-{ID}				 	{paslval.stringTerm = pastext; return ID;}
-[\t\n ]					{/* ignore*/;}
-.                  		{paserror(pastext);}
+{ID}				 	{paslval.tokenval = pastext; return ID;}
+[\t ]					{;}
+\n						{yyline++;yycol = 0;}
+.                  		{lex_error();}
 %%

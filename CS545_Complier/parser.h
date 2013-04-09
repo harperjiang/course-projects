@@ -145,9 +145,9 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 36 "pascal.yacc"
+#line 43 "pascal.yacc"
 
-	char* stringTerm;
+	char* tokenval;
 	Program* program;
 	std::vector<Declare*>* declares;
 	std::vector<Subprogram*>* subs;
@@ -178,4 +178,18 @@ typedef union YYSTYPE
 
 extern YYSTYPE paslval;
 
+#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
+typedef struct YYLTYPE
+{
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+} YYLTYPE;
+# define yyltype YYLTYPE /* obsolescent; will be withdrawn */
+# define YYLTYPE_IS_DECLARED 1
+# define YYLTYPE_IS_TRIVIAL 1
+#endif
+
+extern YYLTYPE paslloc;
 

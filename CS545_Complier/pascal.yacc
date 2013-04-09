@@ -2,9 +2,15 @@
 #include <stdio.h>
 #include <vector>
 #include "node.h"
-    
-void paserror(char* s) {
-	fprintf(stderr,"%s",s);
+#include "parser.h"
+
+extern void error(const char* info);
+
+void paserror(const char* s) {
+  	char* buffer = new char[200];
+  	sprintf(buffer,"Parse error: `%s' at line %d, col %d",s, paslloc.first_line, paslloc.first_column);
+  	error(buffer);
+	delete buffer;
 }
     
 extern int paslex();
@@ -33,8 +39,9 @@ Program* parse_result;
 %left MUL DIV MOD
 %right UMINUS
 
+
 %union {
-	char* stringTerm;
+	char* tokenval;
 	Program* program;
 	std::vector<Declare*>* declares;
 	std::vector<Subprogram*>* subs;
@@ -53,6 +60,9 @@ Program* parse_result;
 	NumConstant* num;
 	int inte;
 }
+
+%locations
+%error-verbose
 
 %type<program> program
 %type<declares> declares
@@ -82,7 +92,7 @@ Program* parse_result;
 program		:	PROGRAM id LP id_list RP SEMICOLON declares subs program_body DOT 	{parse_result = new Program($2,$4,$7,$8,$9);};
 
 declares	: 	declares VAR id_list COLON type SEMICOLON	{for(std::vector<Identifier*>::iterator ite = $3->begin();ite != $3->end();ite++) {Declare* dec = new Declare($5,*ite); $1->push_back(dec); $$ = $1;}}
-			|	VAR id_list COLON type SEMICOLON			{$$ = new std::vector<Declare*>(); for(std::vector<Identifier*>::iterator ite = $2->begin();ite!=$2->end();ite++){ Declare* dec = new Declare($4,*ite); $$->push_back(dec);}};
+			|						{$$ = new std::vector<Declare*>(); };
 			
 subs		:	subs sub 			{$$ = $1; $$->push_back($2);}
 			|			 			{$$ = new std::vector<Subprogram*>();};
@@ -148,14 +158,14 @@ stdtype		:	TREAL				{$$ = TYPE_REAL;}
 			|	TINT				{$$ = TYPE_INT;};
 
 id_list		:	id_list COMMA id	{$$ = $1; $$->push_back($3);}
-			|						{$$ = new std::vector<Identifier*>();};
+			|	id					{$$ = new std::vector<Identifier*>();$$->push_back($1);};
 
 boolexp		:	TRUE	{$$ = new BoolConstant(true);}
 			|	FALSE	{$$ = new BoolConstant(false);};
 
-id			:	ID	{$$ = new Identifier(paslval.stringTerm);};
+id			:	ID	{$$ = new Identifier(paslval.tokenval);};
 
 num			:	int {$$ = new IntConstant($1);}
-			|   REAL {$$ = new RealConstant(atof(paslval.stringTerm));};
-int			:	INT {$$ = atoi(paslval.stringTerm);};
+			|   REAL {$$ = new RealConstant(atof(paslval.tokenval));};
+int			:	INT {$$ = atoi(paslval.tokenval);};
 %%
