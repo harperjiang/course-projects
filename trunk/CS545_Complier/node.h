@@ -13,12 +13,23 @@
 
 class Node {
 public:
+	int beginRow;
+	int endRow;
+	int beginColumn;
+	int endColumn;
 	Node() {
+		beginRow = 0;
+		endRow = 0;
+		beginColumn = 0;
+		endColumn = 0;
 	}
-	;
 	virtual ~Node() {
 	}
-	;
+	virtual void print(FILE* file, int level) {
+		for (int i = 0; i < level; i++)
+			fprintf(file, "\t");
+	}
+
 };
 /**
  * Program Structures
@@ -41,6 +52,7 @@ public:
 	Program(Identifier*, std::vector<Identifier*>*, std::vector<Declare*>*,
 			std::vector<Subprogram*>*, StatementBlock*);
 	virtual ~Program();
+	void print(FILE*, int);
 };
 
 class Subprogram: public Node {
@@ -58,6 +70,8 @@ public:
 	Function(Identifier*, std::vector<Param*>*, Type*, std::vector<Declare*>*,
 			StatementBlock*);
 	virtual ~Function();
+
+	void print(FILE*, int);
 };
 
 class Procedure: public Subprogram {
@@ -65,6 +79,8 @@ public:
 	Procedure(Identifier*, std::vector<Param*>*, std::vector<Declare*>*,
 			StatementBlock*);
 	virtual ~Procedure();
+
+	void print(FILE*, int);
 };
 
 /**
@@ -76,6 +92,8 @@ public:
 	std::tr1::shared_ptr<Type> type;
 	Declare(Type* type, Identifier* name);
 	virtual ~Declare();
+
+	void print(FILE*, int);
 };
 
 class Param: public Node {
@@ -84,6 +102,8 @@ public:
 	std::tr1::shared_ptr<Type> type;
 	Param(Type*, Identifier*);
 	virtual ~Param();
+
+	void print(FILE*, int);
 };
 
 class Type: public Node {
@@ -103,6 +123,8 @@ public:
 		type = t;
 	}
 	virtual ~BasicType();
+
+	void print(FILE* file, int level);
 };
 
 class ArrayType: public Type {
@@ -113,6 +135,8 @@ public:
 
 	ArrayType(Type* basic, int begin, int end);
 	virtual ~ArrayType();
+
+	void print(FILE* file, int level);
 };
 /**
  * Statements
@@ -139,6 +163,8 @@ public:
 
 	IfStatement(Expression*, Statement*, Statement*);
 	virtual ~IfStatement();
+
+	void print(FILE* file, int level);
 };
 
 class WhileStatement: public Statement {
@@ -148,6 +174,8 @@ public:
 
 	WhileStatement(Expression*, Statement*);
 	virtual ~WhileStatement();
+
+	void print(FILE* file, int level);
 };
 
 class AssignStatement: public Statement {
@@ -157,6 +185,8 @@ public:
 
 	AssignStatement(Variable*, Expression*);
 	virtual ~AssignStatement();
+
+	void print(FILE* file, int level);
 };
 
 class StatementBlock: public Statement {
@@ -165,6 +195,8 @@ public:
 
 	StatementBlock(std::vector<Statement*>*);
 	virtual ~StatementBlock();
+
+	void print(FILE* file, int level);
 };
 
 class CallStatement: public Statement {
@@ -173,12 +205,16 @@ public:
 
 	CallStatement(CallExpression*);
 	virtual ~CallStatement();
+
+	void print(FILE* file, int level);
 };
 
 class BreakStatement: public Statement {
 public:
 	BreakStatement();
 	virtual ~BreakStatement();
+
+	void print(FILE* file, int level);
 };
 
 /**
@@ -201,6 +237,8 @@ public:
 
 	CallExpression(Identifier* callname, std::vector<Expression*>* params);
 	virtual ~CallExpression();
+
+	void print(FILE*, int);
 };
 
 typedef enum _AOPR {
@@ -215,6 +253,8 @@ public:
 
 	ArithExpression(Expression* l, AOPR opr, Expression* r);
 	virtual ~ArithExpression();
+
+	void print(FILE*, int);
 };
 
 typedef enum _ROPR {
@@ -229,6 +269,8 @@ public:
 
 	RelExpression(Expression*, ROPR, Expression*);
 	virtual ~RelExpression();
+
+	void print(FILE*, int);
 };
 
 typedef enum _LOPR {
@@ -243,6 +285,8 @@ public:
 
 	LogicExpression(Expression*, LOPR, Expression*);
 	virtual ~LogicExpression();
+
+	void print(FILE*, int);
 };
 
 class Variable: public Expression {
@@ -270,6 +314,8 @@ public:
 	int value;
 	IntConstant(int val);
 	virtual ~IntConstant();
+
+	void print(FILE*, int);
 };
 
 class RealConstant: public NumConstant {
@@ -277,6 +323,8 @@ public:
 	double value;
 	RealConstant(double val);
 	virtual ~RealConstant();
+
+	void print(FILE*, int);
 };
 
 class BoolConstant: public Expression {
@@ -284,6 +332,8 @@ public:
 	bool value;
 	BoolConstant(bool val);
 	virtual ~BoolConstant();
+
+	void print(FILE*, int);
 };
 
 class Identifier: public Variable {
@@ -291,6 +341,8 @@ public:
 	char* name;
 	Identifier(char* name);
 	virtual ~Identifier();
+
+	void print(FILE*, int);
 };
 
 class ArrayElement: public Variable {
@@ -300,6 +352,8 @@ public:
 
 	ArrayElement(Identifier*, Expression* index);
 	virtual ~ArrayElement();
+
+	void print(FILE*, int);
 };
 
 #endif /* NODE_H_ */
