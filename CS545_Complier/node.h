@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <tr1/memory>
+#include "eval_context.h"
 
 class Node {
 public:
@@ -29,7 +30,9 @@ public:
 		for (int i = 0; i < level; i++)
 			fprintf(file, "\t");
 	}
-
+	virtual void evaluate(EvalContext* context) {
+	}
+	;
 };
 /**
  * Program Structures
@@ -53,6 +56,7 @@ public:
 			std::vector<Subprogram*>*, StatementBlock*);
 	virtual ~Program();
 	void print(FILE*, int);
+	void evaluate(EvalContext* context);
 };
 
 class Subprogram: public Node {
@@ -61,6 +65,8 @@ public:
 	std::vector<Param*>* params;
 	std::vector<Declare*>* declares;
 	StatementBlock* body;
+
+	void evaluate(EvalContext* context);
 };
 
 class Function: public Subprogram {
@@ -90,18 +96,15 @@ class Declare: public Node {
 public:
 	Identifier* name;
 	std::tr1::shared_ptr<Type> type;
-	Declare(Type* type, Identifier* name);
+	Declare(Type*, Identifier*);
 	virtual ~Declare();
 
 	void print(FILE*, int);
 };
 
-class Param: public Node {
+class Param: public Declare {
 public:
-	Identifier* name;
-	std::tr1::shared_ptr<Type> type;
 	Param(Type*, Identifier*);
-	virtual ~Param();
 
 	void print(FILE*, int);
 };
@@ -110,10 +113,9 @@ class Type: public Node {
 public:
 	Type() {
 	}
-	;
 	virtual ~Type() {
 	}
-	;
+	virtual const char* description() = 0;
 };
 
 class BasicType: public Type {
@@ -125,18 +127,25 @@ public:
 	virtual ~BasicType();
 
 	void print(FILE* file, int level);
+	const char* description();
 };
 
 class ArrayType: public Type {
+private:
+	char* desc;
 public:
 	std::tr1::shared_ptr<Type> basic;
 	int begin;
 	int end;
 
-	ArrayType(Type* basic, int begin, int end);
+	ArrayType(Type*, int, int);
 	virtual ~ArrayType();
 
 	void print(FILE* file, int level);
+
+	// overloading == operator
+	bool operator ==(const ArrayType& another) const;
+	const char* description();
 };
 /**
  * Statements
@@ -149,10 +158,8 @@ class Statement: public Node {
 public:
 	Statement() {
 	}
-	;
 	virtual ~Statement() {
 	}
-	;
 };
 
 class IfStatement: public Statement {
@@ -165,6 +172,7 @@ public:
 	virtual ~IfStatement();
 
 	void print(FILE* file, int level);
+	void evaluate(EvalContext* context);
 };
 
 class WhileStatement: public Statement {
@@ -176,6 +184,7 @@ public:
 	virtual ~WhileStatement();
 
 	void print(FILE* file, int level);
+	void evaluate(EvalContext* context);
 };
 
 class AssignStatement: public Statement {
@@ -187,6 +196,7 @@ public:
 	virtual ~AssignStatement();
 
 	void print(FILE* file, int level);
+	void evaluate(EvalContext* context);
 };
 
 class StatementBlock: public Statement {
@@ -197,6 +207,7 @@ public:
 	virtual ~StatementBlock();
 
 	void print(FILE* file, int level);
+	void evaluate(EvalContext* context);
 };
 
 class CallStatement: public Statement {
@@ -207,6 +218,7 @@ public:
 	virtual ~CallStatement();
 
 	void print(FILE* file, int level);
+	void evaluate(EvalContext* context);
 };
 
 class BreakStatement: public Statement {
@@ -215,6 +227,7 @@ public:
 	virtual ~BreakStatement();
 
 	void print(FILE* file, int level);
+	void evaluate(EvalContext* context);
 };
 
 /**
@@ -224,13 +237,15 @@ class Expression: public Node {
 public:
 	Expression() {
 	}
-	;
 	virtual ~Expression() {
 	}
-	;
+
+	virtual Type* getType() = 0;
 };
 
 class CallExpression: public Expression {
+private:
+	Subprogram* source;
 public:
 	Identifier* callname;
 	std::vector<Expression*>* params;
@@ -239,6 +254,8 @@ public:
 	virtual ~CallExpression();
 
 	void print(FILE*, int);
+	void evaluate(EvalContext* context);
+	Type* getType();
 };
 
 typedef enum _AOPR {
@@ -255,6 +272,8 @@ public:
 	virtual ~ArithExpression();
 
 	void print(FILE*, int);
+	void evaluate(EvalContext* context);
+	Type* getType();
 };
 
 typedef enum _ROPR {
@@ -271,6 +290,8 @@ public:
 	virtual ~RelExpression();
 
 	void print(FILE*, int);
+	void evaluate(EvalContext* context);
+	Type* getType();
 };
 
 typedef enum _LOPR {
@@ -287,26 +308,30 @@ public:
 	virtual ~LogicExpression();
 
 	void print(FILE*, int);
+	void evaluate(EvalContext* context);
+	Type* getType();
 };
 
 class Variable: public Expression {
+protected:
+	Declare* declare;
 public:
 	Variable() {
+		declare = NULL;
 	}
-	;
 	virtual ~Variable() {
 	}
-	;
 };
 
 class NumConstant: public Expression {
 public:
 	NumConstant() {
 	}
-	;
 	virtual ~NumConstant() {
 	}
-	;
+	virtual void evaluate(EvalContext* context) {
+		// Do nothing
+	}
 };
 
 class IntConstant: public NumConstant {
@@ -316,6 +341,7 @@ public:
 	virtual ~IntConstant();
 
 	void print(FILE*, int);
+	Type* getType();
 };
 
 class RealConstant: public NumConstant {
@@ -325,6 +351,7 @@ public:
 	virtual ~RealConstant();
 
 	void print(FILE*, int);
+	Type* getType();
 };
 
 class BoolConstant: public Expression {
@@ -334,6 +361,7 @@ public:
 	virtual ~BoolConstant();
 
 	void print(FILE*, int);
+	Type* getType();
 };
 
 class Identifier: public Variable {
@@ -343,6 +371,8 @@ public:
 	virtual ~Identifier();
 
 	void print(FILE*, int);
+	void evaluate(EvalContext*);
+	Type* getType();
 };
 
 class ArrayElement: public Variable {
@@ -354,6 +384,8 @@ public:
 	virtual ~ArrayElement();
 
 	void print(FILE*, int);
+	void evaluate(EvalContext*);
+	Type* getType();
 };
 
 #endif /* NODE_H_ */

@@ -12,6 +12,7 @@
 #include <getopt.h>
 #include <string.h>
 #include "node.h"
+#include "eval_context.h"
 #include "exception.h"
 
 #define ESC 27
@@ -34,7 +35,7 @@ void error(const char* info);
 
 void print_help_info();
 void parse_input(const char* inputfile, const char* outputFile,
-		const int outputFormat,const int asmstyle);
+		const int outputFormat, const int asmstyle);
 
 int main(int argc, char** argv) {
 	char* outputFile = NULL;
@@ -63,12 +64,13 @@ int main(int argc, char** argv) {
 
 	if (optind == argc) {
 		fprintf(stderr, "%c[31;1m%s%c[0m\n", ESC,
-				"Error: No input file specified. Use -h to see available options", ESC);
+				"Error: No input file specified. Use -h to see available options",
+				ESC);
 		exit(1);
 	}
 
 	try {
-		parse_input(argv[optind], outputFile, outputFormat,asmstyle);
+		parse_input(argv[optind], outputFile, outputFormat, asmstyle);
 	} catch (int e) {
 		switch (e) {
 		case FILE_NOT_FOUND:
@@ -84,8 +86,7 @@ int main(int argc, char** argv) {
 }
 
 void print_help_info() {
-	fprintf(stdout, "%c[1mUsage%c[0m: pasc [OPTION] <input file>\n", ESC,
-			ESC);
+	fprintf(stdout, "%c[1mUsage%c[0m: pasc [OPTION] <input file>\n", ESC, ESC);
 	fprintf(stdout, "Options:\n");
 	fprintf(stdout, "\t%c[1m%s%c[0m%s\t%s\n", ESC, "-o", ESC, " <output file>",
 			"Indicate output files");
@@ -114,9 +115,20 @@ void parse_input(const char* inputName, const char* outputName,
 	// Parse input
 	passet_in(inputFile);
 	pasparse();
+	if (parse_result == NULL)
+		return;
+	// Evaulate the parse result
+	EvalContext* evalcontext = new EvalContext();
 
-	// Check the parse result
+	parse_result->evaluate(evalcontext);
 
+	bool haserror = 0;
+	if ((haserror = evalcontext->haserror())) {
+		evalcontext->showerror(outputFile);
+	}
+	delete evalcontext;
+	if (haserror)
+		return;
 
 	// Generate output
 	switch (format) {
@@ -128,6 +140,7 @@ void parse_input(const char* inputName, const char* outputName,
 	default:
 		throw ILLEGAL_FORMAT;
 	}
+	delete parse_result;
 }
 
 void error(const char* info) {

@@ -10,11 +10,27 @@
 #include <stdio.h>
 #include <tr1/memory>
 #include "node.h"
+#include "exception.h"
 
 #define _TYPE_REAL 1
 #define _TYPE_INT 2
-BasicType* TYPE_REAL = new BasicType(_TYPE_REAL);
-BasicType* TYPE_INT = new BasicType(_TYPE_INT);
+#define _TYPE_BOOL 3
+Type* TYPE_REAL = new BasicType(_TYPE_REAL);
+Type* TYPE_INT = new BasicType(_TYPE_INT);
+Type* TYPE_BOOL = new BasicType(_TYPE_BOOL);
+std::tr1::shared_ptr<Type> TYPE_REAL_P = std::tr1::shared_ptr<Type>(TYPE_REAL);
+std::tr1::shared_ptr<Type> TYPE_INT_P = std::tr1::shared_ptr<Type>(TYPE_INT);
+std::tr1::shared_ptr<Type> TYPE_BOOL_P = std::tr1::shared_ptr<Type>(TYPE_BOOL);
+
+std::tr1::shared_ptr<Type> get_type_pointer(Type* type) {
+	if(type == TYPE_REAL)
+		return TYPE_REAL_P;
+	if(type == TYPE_INT)
+		return TYPE_INT_P;
+	if(type == TYPE_BOOL)
+		return TYPE_BOOL_P;
+	return std::tr1::shared_ptr<Type>(type);
+}
 
 template<class V>
 void clearVector(V* avec) {
@@ -60,11 +76,31 @@ void Program::print(FILE* file, int level) {
 	body->print(file, level + 1);
 }
 
+void Program::evaluate(EvalContext* context) {
+	for (std::vector<Declare*>::iterator ite = declares->begin();
+			ite != declares->end(); ite++) {
+		context->addDeclare((*ite)->name->name, (*ite));
+	}
+	for (std::vector<Subprogram*>::iterator ite = subs->begin();
+			ite != subs->end(); ite++) {
+		context->addSub((*ite)->id->name, *ite);
+	}
+	// Evaluate Subprograms
+	for (std::vector<Subprogram*>::iterator ite = subs->begin();
+			ite != subs->end(); ite++) {
+		context->pushFrame();
+		(*ite)->evaluate(context);
+		context->popFrame();
+	}
+	// Evaluate body
+	body->evaluate(context);
+}
+
 Function::Function(Identifier* id, std::vector<Param*>* params, Type* rettype,
 		std::vector<Declare*>* declares, StatementBlock* body) {
 	this->id = id;
 	this->params = params;
-	this->rettype = std::tr1::shared_ptr<Type>(rettype);
+	this->rettype = get_type_pointer(rettype);
 	this->declares = declares;
 	this->body = body;
 }
@@ -90,6 +126,18 @@ void Function::print(FILE* file, int level) {
 		(*ite)->print(file, level + 1);
 	}
 	body->print(file, level + 1);
+}
+
+void Subprogram::evaluate(EvalContext* context) {
+	for (std::vector<Declare*>::iterator ite = declares->begin();
+			ite != declares->end(); ite++) {
+		context->addDeclare((*ite)->name->name, (*ite));
+	}
+	for (std::vector<Param*>::iterator ite = params->begin();
+			ite != params->end(); ite++) {
+		context->addDeclare((*ite)->name->name, (*ite));
+	}
+	body->evaluate(context);
 }
 
 Procedure::Procedure(Identifier* id, std::vector<Param*>* params,
@@ -121,9 +169,9 @@ void Procedure::print(FILE* file, int level) {
 	body->print(file, level + 1);
 }
 
-Declare::Declare(Type* type, Identifier* id) {
+Declare::Declare(Type* t, Identifier* id) {
 	this->name = id;
-	this->type = std::tr1::shared_ptr<Type>(type);
+	this->type = get_type_pointer(t);
 }
 
 Declare::~Declare() {
@@ -138,15 +186,9 @@ void Declare::print(FILE* file, int level) {
 	name->print(file, level + 1);
 }
 
-Param::Param(Type* type, Identifier* id) {
-	this->type = std::tr1::shared_ptr<Type>(type);
-	this->name = id;
+Param::Param(Type* e, Identifier* id):Declare(e,id) {
 }
 
-Param::~Param() {
-	type.reset();
-	delete name;
-}
 
 void Param::print(FILE* file, int level) {
 	Node::print(file, level);
@@ -171,20 +213,45 @@ void BasicType::print(FILE* file, int level) {
 	}
 }
 
-ArrayType::ArrayType(Type* type, int begin, int end) {
-	this->basic = std::tr1::shared_ptr<Type>(type);
+const char* BasicType::description() {
+	switch(this->type) {
+	case _TYPE_INT:
+		return "Int";
+	case _TYPE_BOOL:
+		return "Bool";
+	case _TYPE_REAL:
+		return "Real";
+	default:
+		throw ILLEGAL_TYPE;
+	}
+}
+
+ArrayType::ArrayType(Type* t, int begin, int end) {
+	this->basic = get_type_pointer(t);
 	this->begin = begin;
 	this->end = end;
+	this->desc = new char[20 + strlen(t->description())];
+	strcpy(desc,"Array of ");
+	strcat(desc,t->description());
 }
 
 ArrayType::~ArrayType() {
 	basic.reset();
+	delete desc;
 }
 
 void ArrayType::print(FILE* file, int level) {
 	Node::print(file, level);
 	fprintf(file, "%s\n", "[ArrayType]");
 	basic.get()->print(file, level + 1);
+}
+
+bool ArrayType::operator ==(const ArrayType& another) const {
+	return basic.get() == another.basic.get();
+}
+
+const char* ArrayType::description() {
+	return desc;
 }
 
 IfStatement::IfStatement(Expression* cond, Statement* thenbody,
@@ -209,6 +276,17 @@ void IfStatement::print(FILE* file, int level) {
 		elsebody->print(file, level + 1);
 }
 
+void IfStatement::evaluate(EvalContext* context) {
+	condition->evaluate(context);
+	// Condition must be boolean type
+	if (TYPE_BOOL != condition->getType()) {
+		context->record(error_type_mismatch(condition, TYPE_BOOL));
+	}
+	thenbody->evaluate(context);
+	if (elsebody != NULL)
+		elsebody->evaluate(context);
+}
+
 WhileStatement::WhileStatement(Expression* cond, Statement* body) {
 	this->condition = cond;
 	this->body = body;
@@ -224,6 +302,15 @@ void WhileStatement::print(FILE* file, int level) {
 	fprintf(file, "%s\n", "[WhileStatement]");
 	condition->print(file, level + 1);
 	body->print(file, level + 1);
+}
+
+void WhileStatement::evaluate(EvalContext* context) {
+	condition->evaluate(context);
+	// Condition must be boolean type
+	if (TYPE_BOOL != condition->getType()) {
+		context->record(error_type_mismatch(condition, TYPE_BOOL));
+	}
+	body->evaluate(context);
 }
 
 AssignStatement::AssignStatement(Variable* lval, Expression* rval) {
@@ -243,6 +330,14 @@ void AssignStatement::print(FILE* file, int level) {
 	rightval->print(file, level + 1);
 }
 
+void AssignStatement::evaluate(EvalContext* context) {
+	leftval->evaluate(context);
+	rightval->evaluate(context);
+	if (leftval->getType() != rightval->getType()) {
+		context->record(error_type_mismatch(leftval, rightval->getType()));
+	}
+}
+
 StatementBlock::StatementBlock(std::vector<Statement*>* stmts) {
 	this->statements = stmts;
 }
@@ -260,6 +355,13 @@ void StatementBlock::print(FILE* file, int level) {
 	}
 }
 
+void StatementBlock::evaluate(EvalContext* context) {
+	for (std::vector<Statement*>::iterator ite = statements->begin();
+			ite != statements->end(); ite++) {
+		(*ite)->evaluate(context);
+	}
+}
+
 CallStatement::CallStatement(CallExpression* call) {
 	this->callexp = call;
 }
@@ -272,6 +374,10 @@ void CallStatement::print(FILE* file, int level) {
 	Node::print(file, level);
 	fprintf(file, "%s\n", "[CallStatement]");
 	callexp->print(file, level + 1);
+}
+
+void CallStatement::evaluate(EvalContext* context) {
+	callexp->evaluate(context);
 }
 
 BreakStatement::BreakStatement() {
@@ -287,10 +393,15 @@ void BreakStatement::print(FILE* file, int level) {
 	fprintf(file, "%s\n", "[BreakStatement]");
 }
 
+void BreakStatement::evaluate(EvalContext* context) {
+	// Do nothing
+}
+
 CallExpression::CallExpression(Identifier* name,
 		std::vector<Expression*>* params) {
 	this->callname = name;
 	this->params = params;
+	this->source = NULL;
 }
 
 CallExpression::~CallExpression() {
@@ -305,6 +416,22 @@ void CallExpression::print(FILE* file, int level) {
 			ite != params->end(); ite++) {
 		(*ite)->print(file, level + 1);
 	}
+}
+
+void CallExpression::evaluate(EvalContext* context) {
+	Subprogram* sub = context->getSub(callname->name);
+	if (sub != NULL) {
+		source = sub;
+	} else {
+		context->record(error_no_sub(this));
+	}
+}
+
+Type* CallExpression::getType() {
+	if (NULL == source || typeid(source) == typeid(Procedure))
+		return NULL;
+	Function* function = (Function*) source;
+	return function->rettype.get();
 }
 
 ArithExpression::ArithExpression(Expression* l, AOPR opr, Expression* r) {
@@ -326,6 +453,19 @@ void ArithExpression::print(FILE* file, int level) {
 	right->print(file, level + 1);
 }
 
+void ArithExpression::evaluate(EvalContext* context) {
+	if(left != NULL)
+		left->evaluate(context);
+	right->evaluate(context);
+	if(left != NULL && (left->getType() != right->getType())) {
+		context->record(error_type_mismatch(this));
+	}
+}
+
+Type* ArithExpression::getType() {
+	return right->getType();
+}
+
 RelExpression::RelExpression(Expression* l, ROPR opr, Expression* r) {
 	this->left = l;
 	this->opr = opr;
@@ -343,6 +483,19 @@ void RelExpression::print(FILE* file, int level) {
 
 	left->print(file, level + 1);
 	right->print(file, level + 1);
+}
+
+void RelExpression::evaluate(EvalContext* context) {
+	if(left != NULL)
+		left->evaluate(context);
+	right->evaluate(context);
+	if(left != NULL && (left->getType() != right->getType())) {
+		context->record(error_type_mismatch(this));
+	}
+}
+
+Type* RelExpression::getType() {
+	return TYPE_BOOL;
 }
 
 LogicExpression::LogicExpression(Expression* l, LOPR opr, Expression* r) {
@@ -364,12 +517,32 @@ void LogicExpression::print(FILE* file, int level) {
 	right->print(file, level + 1);
 }
 
+void LogicExpression::evaluate(EvalContext* context) {
+	if(left != NULL)
+		left->evaluate(context);
+	right->evaluate(context);
+	if(left !=NULL && left->getType() != TYPE_BOOL) {
+		context->record(error_type_mismatch(left,TYPE_BOOL));
+	}
+	if(right->getType() != TYPE_BOOL) {
+		context->record(error_type_mismatch(right,TYPE_BOOL));
+	}
+}
+
+Type* LogicExpression::getType() {
+	return TYPE_BOOL;
+}
+
 IntConstant::IntConstant(int val) {
 	this->value = val;
 }
 
 IntConstant::~IntConstant() {
 
+}
+
+Type* IntConstant::getType() {
+	return TYPE_INT;
 }
 
 void IntConstant::print(FILE* file, int level) {
@@ -389,6 +562,10 @@ void RealConstant::print(FILE* file, int level) {
 	fprintf(file, "%s\n", "[RealConstant]");
 }
 
+Type* RealConstant::getType() {
+	return TYPE_REAL;
+}
+
 BoolConstant::BoolConstant(bool val) {
 	this->value = val;
 }
@@ -402,9 +579,14 @@ void BoolConstant::print(FILE* file, int level) {
 	fprintf(file, "%s\n", "[BoolConstant]");
 }
 
-Identifier::Identifier(char* name) {
+Type* BoolConstant::getType() {
+	return TYPE_BOOL;
+}
+
+Identifier::Identifier(char* name):Variable() {
 	this->name = new char[strlen(name)];
 	strcpy(this->name, name);
+	declare = NULL;
 }
 
 Identifier::~Identifier() {
@@ -416,7 +598,22 @@ void Identifier::print(FILE* file, int level) {
 	fprintf(file, "%s%s\n", "[Identifier]", name);
 }
 
-ArrayElement::ArrayElement(Identifier* id, Expression* val) {
+void Identifier::evaluate(EvalContext* context) {
+	Declare* dec = context->getDeclare(this->name);
+	if(NULL == dec){
+		context->record(error_undefined_id(this));
+	} else {
+		this->declare = dec;
+	}
+}
+
+Type* Identifier::getType() {
+	if(declare == NULL)
+		return NULL;
+	return declare->type.get();
+}
+
+ArrayElement::ArrayElement(Identifier* id, Expression* val):Variable() {
 	this->name = id;
 	this->index = val;
 }
@@ -430,4 +627,20 @@ void ArrayElement::print(FILE* file, int level) {
 	fprintf(file, "%s\n", "[ArrayElement]");
 	name->print(file, level + 1);
 	index->print(file, level + 1);
+}
+
+void ArrayElement::evaluate(EvalContext* context) {
+	Declare* dec = context->getDeclare(this->name->name);
+	if(NULL == dec){
+		context->record(error_undefined_id(this->name));
+	} else {
+		this->declare = dec;
+	}
+}
+
+Type* ArrayElement::getType() {
+	if(NULL == declare) {
+		return NULL;
+	}
+	return declare->type.get();
 }

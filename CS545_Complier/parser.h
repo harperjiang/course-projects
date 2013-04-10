@@ -145,7 +145,7 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 43 "pascal.yacc"
+#line 45 "pascal.yacc"
 
 	char* tokenval;
 	Program* program;

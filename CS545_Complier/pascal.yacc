@@ -1,6 +1,7 @@
 %{
 #include <stdio.h>
 #include <vector>
+#include <tr1/memory>
 #include "node.h"
 #include "parser.h"
 
@@ -14,8 +15,9 @@ void paserror(const char* s) {
 }
     
 extern int paslex();
-extern BasicType* TYPE_REAL;
-extern BasicType* TYPE_INT;
+extern Type* TYPE_REAL;
+extern Type* TYPE_INT;
+
 Program* parse_result;
 %}
 

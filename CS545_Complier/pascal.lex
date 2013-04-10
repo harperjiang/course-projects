@@ -60,6 +60,7 @@ ID						[a-zA-Z_][a-zA-Z0-9_]*
 ","						{return COMMA;}
 ":="					{return ASSIGN;}
 ";"						{return SEMICOLON;}
+":"						{return COLON;}
 "("                 	{return LP;}
 ")"                 	{return RP;}
 "["						{return LSQ;}

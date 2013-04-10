@@ -4,7 +4,7 @@ YACC=yacc
 
 CXXFLAGS =	-O0 -g -Wall -fmessage-length=0
 
-OBJS =	main.o scanner.o parser.o node.o
+OBJS =	main.o scanner.o parser.o node.o exception.o eval_context.o
 
 LIBS =
 
@@ -13,6 +13,10 @@ TARGET = pasc
 $(TARGET):	$(OBJS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
 	
+eval_context.o:
+	$(CXX) $(CXXFLAGS) -c eval_context.cpp -o eval_context.o
+exception.o:
+	$(CXX) $(CXXFLAGS) -c exception.cpp -o exception.o
 node.o:  
 	$(CXX) $(CXXFLAGS) -c node.cpp -o node.o
 main.o:	 parser.o scanner.o node.o
