@@ -4,8 +4,11 @@
 #include <tr1/memory>
 #include "node.h"
 #include "parser.h"
+#define _CALL_READ 1
+#define _CALL_WRITE 2
 
 extern void error(const char* info);
+
 
 void paserror(const char* s) {
   	char* buffer = new char[200];
@@ -107,7 +110,8 @@ params		:	params SEMICOLON id_list COLON type	{$$ = $1; for(std::vector<Identifi
 
 program_body:	BGIN stmts END	{$$ = new StatementBlock($2);};
 
-stmts		:	stmts SEMICOLON stmt	{$$ = $1; $$->push_back($3);}
+stmts		:	stmt SEMICOLON stmts	{$$ = $3; $$->push_back($1);}
+			|	stmt					{$$ = new std::vector<Statement*>();$$->push_back($1);}
 			|							{$$ = new std::vector<Statement*>();};
 
 stmt		:	var ASSIGN exp 				{$$ = new AssignStatement($1,$3);}
@@ -145,8 +149,8 @@ exp			:	exp ADD exp					{$$ = new ArithExpression($1,_ADD, $3);}
 call		:	syscall 	{$$ = $1;}
 			| 	usercall	{$$ = $1;};
 							
-syscall		: 	READ LP RP  {$$ = new CallExpression(new Identifier("read"),NULL);} 
-			|	WRITE LP exp_list RP {$$ = new CallExpression(new Identifier("write"),$3);};
+syscall		: 	READ LP RP  {$$ = new SysCall(_CALL_READ,new std::vector<Expression*>());} 
+			|	WRITE LP exp_list RP {$$ = new SysCall(_CALL_WRITE,$3);};
 
 usercall	:	id LP exp_list RP {$$ = new CallExpression($1,$3);};
 

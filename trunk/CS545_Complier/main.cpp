@@ -124,7 +124,7 @@ void parse_input(const char* inputName, const char* outputName,
 
 	bool haserror = 0;
 	if ((haserror = evalcontext->haserror())) {
-		evalcontext->showerror(outputFile);
+		evalcontext->showerror();
 	}
 	delete evalcontext;
 	if (haserror)

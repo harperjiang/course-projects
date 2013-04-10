@@ -1,4 +1,6 @@
 program aad(input,output);
-var am,bm:intd;
+var a,b:int;
 begin
+a:=5;
+a:=read()
 end.

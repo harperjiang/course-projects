@@ -100,6 +100,7 @@ public:
 	virtual ~Declare();
 
 	void print(FILE*, int);
+	Type* getType();
 };
 
 class Param: public Declare {
@@ -254,6 +255,16 @@ public:
 	virtual ~CallExpression();
 
 	void print(FILE*, int);
+	void evaluate(EvalContext* context);
+	Type* getType();
+};
+
+class SysCall: public CallExpression {
+public:
+	int type;
+	SysCall(int, std::vector<Expression*>*);
+	virtual ~SysCall();
+	void print(FILE*,int);
 	void evaluate(EvalContext* context);
 	Type* getType();
 };

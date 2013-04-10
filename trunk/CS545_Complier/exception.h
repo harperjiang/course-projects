@@ -27,5 +27,5 @@ char* error_dup_id(Declare*);
 char* error_no_sub(CallExpression*);
 char* error_type_mismatch(Expression*);
 char* error_type_mismatch(Expression*, Type*);
-
+char* error_arg_mismatch(CallExpression*);
 #endif /* EXCEPTION_H_ */
