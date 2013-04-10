@@ -14,4 +14,18 @@
 
 #define ILLEGAL_FORMAT 200
 
+#define ILLEGAL_TYPE 250
+
+class Identifier;
+class Declare;
+class CallExpression;
+class Expression;
+class Type;
+
+char* error_undefined_id(Identifier*);
+char* error_dup_id(Declare*);
+char* error_no_sub(CallExpression*);
+char* error_type_mismatch(Expression*);
+char* error_type_mismatch(Expression*, Type*);
+
 #endif /* EXCEPTION_H_ */

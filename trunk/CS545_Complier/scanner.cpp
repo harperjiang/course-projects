@@ -391,8 +391,8 @@ static void yy_fatal_error (yyconst char msg[]  );
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
 
-#define YY_NUM_RULES 49
-#define YY_END_OF_BUFFER 50
+#define YY_NUM_RULES 50
+#define YY_END_OF_BUFFER 51
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -402,19 +402,19 @@ struct yy_trans_info
 	};
 static yyconst flex_int16_t yy_accept[116] =
     {   0,
-        0,    0,   50,   48,   46,   47,   38,   48,   28,   29,
-       34,   32,   25,   33,   23,   35,    2,   48,   27,   42,
-       39,   41,   45,   30,   31,   45,   45,   45,   45,   45,
-       45,   45,   45,   45,   45,   45,   45,   48,   40,   36,
-       24,    0,    2,   26,   44,   43,   45,   45,   45,   45,
-       12,   45,   45,   45,   45,    8,   45,   19,   45,   45,
-       45,   45,   45,   45,   45,   37,    1,   45,   45,   45,
-       45,    7,   45,   45,   17,   45,   45,   45,   45,   15,
-       45,   45,   45,   45,   45,   10,   45,   45,   45,   45,
-       13,   16,    9,   20,   45,   45,   18,    6,   22,   21,
+        0,    0,   51,   49,   47,   48,   39,   49,   29,   30,
+       35,   33,   25,   34,   23,   36,    2,   28,   27,   43,
+       40,   42,   46,   31,   32,   46,   46,   46,   46,   46,
+       46,   46,   46,   46,   46,   46,   46,   49,   41,   37,
+       24,    0,    2,   26,   45,   44,   46,   46,   46,   46,
+       12,   46,   46,   46,   46,    8,   46,   19,   46,   46,
+       46,   46,   46,   46,   46,   38,    1,   46,   46,   46,
+       46,    7,   46,   46,   17,   46,   46,   46,   46,   15,
+       46,   46,   46,   46,   46,   10,   46,   46,   46,   46,
+       13,   16,    9,   20,   46,   46,   18,    6,   22,   21,
 
-       45,   45,   45,   11,   14,   45,   45,   45,   45,   45,
-        3,    4,   45,    5,    0
+       46,   46,   46,   11,   14,   46,   46,   46,   46,   46,
+        3,    4,   46,    5,    0
     } ;
 
 static yyconst flex_int32_t yy_ec[256] =
@@ -991,115 +991,120 @@ YY_RULE_SETUP
 case 28:
 YY_RULE_SETUP
 #line 63 "pascal.lex"
-{return LP;}
+{return COLON;}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
 #line 64 "pascal.lex"
-{return RP;}
+{return LP;}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
 #line 65 "pascal.lex"
-{return LSQ;}
+{return RP;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
 #line 66 "pascal.lex"
-{return RSQ;}
+{return LSQ;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
 #line 67 "pascal.lex"
-{return ADD;}
+{return RSQ;}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
 #line 68 "pascal.lex"
-{return SUB;}
+{return ADD;}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
 #line 69 "pascal.lex"
-{return MUL;}
+{return SUB;}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
 #line 70 "pascal.lex"
-{return DIV;}
+{return MUL;}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
 #line 71 "pascal.lex"
-{return AND;}
+{return DIV;}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
 #line 72 "pascal.lex"
-{return OR;}
+{return AND;}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
 #line 73 "pascal.lex"
-{return NOT;}
+{return OR;}
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
 #line 74 "pascal.lex"
-{return EQ;}
+{return NOT;}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
 #line 75 "pascal.lex"
-{return NEQ;}
+{return EQ;}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
 #line 76 "pascal.lex"
-{return GT;}
+{return NEQ;}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
 #line 77 "pascal.lex"
-{return LT;}
+{return GT;}
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
 #line 78 "pascal.lex"
-{return GTE;}
+{return LT;}
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
 #line 79 "pascal.lex"
-{return LTE;}
+{return GTE;}
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
 #line 80 "pascal.lex"
-{paslval.tokenval = pastext; return ID;}
+{return LTE;}
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
 #line 81 "pascal.lex"
-{;}
+{paslval.tokenval = pastext; return ID;}
 	YY_BREAK
 case 47:
-/* rule 47 can match eol */
 YY_RULE_SETUP
 #line 82 "pascal.lex"
-{yyline++;yycol = 0;}
+{;}
 	YY_BREAK
 case 48:
+/* rule 48 can match eol */
 YY_RULE_SETUP
 #line 83 "pascal.lex"
-{lex_error();}
+{yyline++;yycol = 0;}
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
 #line 84 "pascal.lex"
+{lex_error();}
+	YY_BREAK
+case 50:
+YY_RULE_SETUP
+#line 85 "pascal.lex"
 ECHO;
 	YY_BREAK
-#line 1103 "scanner.cpp"
+#line 1108 "scanner.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2097,6 +2102,6 @@ void pasfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 84 "pascal.lex"
+#line 85 "pascal.lex"
 
 

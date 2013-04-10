@@ -78,6 +78,7 @@
 
 #include <stdio.h>
 #include <vector>
+#include <tr1/memory>
 #include "node.h"
 #include "parser.h"
 
@@ -91,13 +92,14 @@ void paserror(const char* s) {
 }
     
 extern int paslex();
-extern BasicType* TYPE_REAL;
-extern BasicType* TYPE_INT;
+extern Type* TYPE_REAL;
+extern Type* TYPE_INT;
+
 Program* parse_result;
 
 
 /* Line 268 of yacc.c  */
-#line 101 "parser.cpp"
+#line 103 "parser.cpp"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -232,7 +234,7 @@ typedef union YYSTYPE
 {
 
 /* Line 293 of yacc.c  */
-#line 43 "pascal.yacc"
+#line 45 "pascal.yacc"
 
 	char* tokenval;
 	Program* program;
@@ -256,7 +258,7 @@ typedef union YYSTYPE
 
 
 /* Line 293 of yacc.c  */
-#line 260 "parser.cpp"
+#line 262 "parser.cpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -281,7 +283,7 @@ typedef struct YYLTYPE
 
 
 /* Line 343 of yacc.c  */
-#line 285 "parser.cpp"
+#line 287 "parser.cpp"
 
 #ifdef short
 # undef short
@@ -601,13 +603,13 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    92,    92,    94,    95,    97,    98,   100,   101,   103,
-     104,   106,   108,   109,   111,   112,   113,   114,   115,   116,
-     117,   119,   120,   122,   123,   124,   125,   126,   127,   128,
-     129,   130,   131,   132,   133,   134,   135,   136,   137,   138,
-     139,   140,   141,   143,   144,   146,   147,   149,   151,   152,
-     154,   155,   157,   158,   160,   161,   163,   164,   166,   168,
-     169,   170
+       0,    94,    94,    96,    97,    99,   100,   102,   103,   105,
+     106,   108,   110,   111,   113,   114,   115,   116,   117,   118,
+     119,   121,   122,   124,   125,   126,   127,   128,   129,   130,
+     131,   132,   133,   134,   135,   136,   137,   138,   139,   140,
+     141,   142,   143,   145,   146,   148,   149,   151,   153,   154,
+     156,   157,   159,   160,   162,   163,   165,   166,   168,   170,
+     171,   172
 };
 #endif
 
@@ -1689,427 +1691,427 @@ yyreduce:
         case 2:
 
 /* Line 1806 of yacc.c  */
-#line 92 "pascal.yacc"
+#line 94 "pascal.yacc"
     {parse_result = new Program((yyvsp[(2) - (10)].id),(yyvsp[(4) - (10)].id_list),(yyvsp[(7) - (10)].declares),(yyvsp[(8) - (10)].subs),(yyvsp[(9) - (10)].program_body));}
     break;
 
   case 3:
 
 /* Line 1806 of yacc.c  */
-#line 94 "pascal.yacc"
+#line 96 "pascal.yacc"
     {for(std::vector<Identifier*>::iterator ite = (yyvsp[(3) - (6)].id_list)->begin();ite != (yyvsp[(3) - (6)].id_list)->end();ite++) {Declare* dec = new Declare((yyvsp[(5) - (6)].type),*ite); (yyvsp[(1) - (6)].declares)->push_back(dec); (yyval.declares) = (yyvsp[(1) - (6)].declares);}}
     break;
 
   case 4:
 
 /* Line 1806 of yacc.c  */
-#line 95 "pascal.yacc"
+#line 97 "pascal.yacc"
     {(yyval.declares) = new std::vector<Declare*>(); }
     break;
 
   case 5:
 
 /* Line 1806 of yacc.c  */
-#line 97 "pascal.yacc"
+#line 99 "pascal.yacc"
     {(yyval.subs) = (yyvsp[(1) - (2)].subs); (yyval.subs)->push_back((yyvsp[(2) - (2)].sub));}
     break;
 
   case 6:
 
 /* Line 1806 of yacc.c  */
-#line 98 "pascal.yacc"
+#line 100 "pascal.yacc"
     {(yyval.subs) = new std::vector<Subprogram*>();}
     break;
 
   case 7:
 
 /* Line 1806 of yacc.c  */
-#line 100 "pascal.yacc"
+#line 102 "pascal.yacc"
     {(yyval.sub) = new Function((yyvsp[(2) - (10)].id), (yyvsp[(4) - (10)].params), (yyvsp[(7) - (10)].type), (yyvsp[(8) - (10)].declares), (yyvsp[(9) - (10)].program_body));}
     break;
 
   case 8:
 
 /* Line 1806 of yacc.c  */
-#line 101 "pascal.yacc"
+#line 103 "pascal.yacc"
     {(yyval.sub) = new Procedure((yyvsp[(2) - (8)].id), (yyvsp[(4) - (8)].params), (yyvsp[(6) - (8)].declares), (yyvsp[(7) - (8)].program_body));}
     break;
 
   case 9:
 
 /* Line 1806 of yacc.c  */
-#line 103 "pascal.yacc"
+#line 105 "pascal.yacc"
     {(yyval.params) = (yyvsp[(1) - (5)].params); for(std::vector<Identifier*>::iterator ite = (yyvsp[(3) - (5)].id_list)->begin();ite!=(yyvsp[(3) - (5)].id_list)->end();ite++) {(yyval.params)->push_back(new Param((yyvsp[(5) - (5)].type),*ite));}}
     break;
 
   case 10:
 
 /* Line 1806 of yacc.c  */
-#line 104 "pascal.yacc"
+#line 106 "pascal.yacc"
     {(yyval.params) = new std::vector<Param*>();for(std::vector<Identifier*>::iterator ite = (yyvsp[(1) - (3)].id_list)->begin();ite!=(yyvsp[(1) - (3)].id_list)->end();ite++){(yyval.params)->push_back(new Param((yyvsp[(3) - (3)].type),*ite));}}
     break;
 
   case 11:
 
 /* Line 1806 of yacc.c  */
-#line 106 "pascal.yacc"
+#line 108 "pascal.yacc"
     {(yyval.program_body) = new StatementBlock((yyvsp[(2) - (3)].stmts));}
     break;
 
   case 12:
 
 /* Line 1806 of yacc.c  */
-#line 108 "pascal.yacc"
+#line 110 "pascal.yacc"
     {(yyval.stmts) = (yyvsp[(1) - (3)].stmts); (yyval.stmts)->push_back((yyvsp[(3) - (3)].stmt));}
     break;
 
   case 13:
 
 /* Line 1806 of yacc.c  */
-#line 109 "pascal.yacc"
+#line 111 "pascal.yacc"
     {(yyval.stmts) = new std::vector<Statement*>();}
     break;
 
   case 14:
 
 /* Line 1806 of yacc.c  */
-#line 111 "pascal.yacc"
+#line 113 "pascal.yacc"
     {(yyval.stmt) = new AssignStatement((yyvsp[(1) - (3)].var),(yyvsp[(3) - (3)].exp));}
     break;
 
   case 15:
 
 /* Line 1806 of yacc.c  */
-#line 112 "pascal.yacc"
+#line 114 "pascal.yacc"
     {(yyval.stmt) = new CallStatement((yyvsp[(1) - (1)].call));}
     break;
 
   case 16:
 
 /* Line 1806 of yacc.c  */
-#line 113 "pascal.yacc"
+#line 115 "pascal.yacc"
     {(yyval.stmt) = new IfStatement((yyvsp[(2) - (6)].exp), (yyvsp[(4) - (6)].stmt), (yyvsp[(6) - (6)].stmt));}
     break;
 
   case 17:
 
 /* Line 1806 of yacc.c  */
-#line 114 "pascal.yacc"
+#line 116 "pascal.yacc"
     {(yyval.stmt) = new IfStatement((yyvsp[(2) - (4)].exp), (yyvsp[(4) - (4)].stmt), NULL);}
     break;
 
   case 18:
 
 /* Line 1806 of yacc.c  */
-#line 115 "pascal.yacc"
+#line 117 "pascal.yacc"
     {(yyval.stmt) = new WhileStatement((yyvsp[(2) - (4)].exp), (yyvsp[(4) - (4)].stmt));}
     break;
 
   case 19:
 
 /* Line 1806 of yacc.c  */
-#line 116 "pascal.yacc"
+#line 118 "pascal.yacc"
     {(yyval.stmt) = new StatementBlock((yyvsp[(2) - (3)].stmts));}
     break;
 
   case 20:
 
 /* Line 1806 of yacc.c  */
-#line 117 "pascal.yacc"
+#line 119 "pascal.yacc"
     {(yyval.stmt) = new BreakStatement();}
     break;
 
   case 21:
 
 /* Line 1806 of yacc.c  */
-#line 119 "pascal.yacc"
+#line 121 "pascal.yacc"
     {(yyval.exp_list) = (yyvsp[(1) - (3)].exp_list); (yyvsp[(1) - (3)].exp_list)->push_back((yyvsp[(3) - (3)].exp));}
     break;
 
   case 22:
 
 /* Line 1806 of yacc.c  */
-#line 120 "pascal.yacc"
+#line 122 "pascal.yacc"
     {(yyval.exp_list) = new std::vector<Expression*>();}
     break;
 
   case 23:
 
 /* Line 1806 of yacc.c  */
-#line 122 "pascal.yacc"
+#line 124 "pascal.yacc"
     {(yyval.exp) = new ArithExpression((yyvsp[(1) - (3)].exp),_ADD, (yyvsp[(3) - (3)].exp));}
     break;
 
   case 24:
 
 /* Line 1806 of yacc.c  */
-#line 123 "pascal.yacc"
+#line 125 "pascal.yacc"
     {(yyval.exp) = new ArithExpression((yyvsp[(1) - (3)].exp),_SUB, (yyvsp[(3) - (3)].exp));}
     break;
 
   case 25:
 
 /* Line 1806 of yacc.c  */
-#line 124 "pascal.yacc"
+#line 126 "pascal.yacc"
     {(yyval.exp) = new ArithExpression(NULL, _SUB, (yyvsp[(2) - (2)].exp));}
     break;
 
   case 26:
 
 /* Line 1806 of yacc.c  */
-#line 125 "pascal.yacc"
+#line 127 "pascal.yacc"
     {(yyval.exp) = new ArithExpression((yyvsp[(1) - (3)].exp),_MUL, (yyvsp[(3) - (3)].exp));}
     break;
 
   case 27:
 
 /* Line 1806 of yacc.c  */
-#line 126 "pascal.yacc"
+#line 128 "pascal.yacc"
     {(yyval.exp) = new ArithExpression((yyvsp[(1) - (3)].exp),_DIV, (yyvsp[(3) - (3)].exp));}
     break;
 
   case 28:
 
 /* Line 1806 of yacc.c  */
-#line 127 "pascal.yacc"
+#line 129 "pascal.yacc"
     {(yyval.exp) = new ArithExpression((yyvsp[(1) - (3)].exp),_MOD, (yyvsp[(3) - (3)].exp));}
     break;
 
   case 29:
 
 /* Line 1806 of yacc.c  */
-#line 128 "pascal.yacc"
+#line 130 "pascal.yacc"
     {(yyval.exp) = (yyvsp[(2) - (3)].exp);}
     break;
 
   case 30:
 
 /* Line 1806 of yacc.c  */
-#line 129 "pascal.yacc"
+#line 131 "pascal.yacc"
     {(yyval.exp) = new LogicExpression((yyvsp[(1) - (3)].exp),_AND, (yyvsp[(3) - (3)].exp));}
     break;
 
   case 31:
 
 /* Line 1806 of yacc.c  */
-#line 130 "pascal.yacc"
+#line 132 "pascal.yacc"
     {(yyval.exp) = new LogicExpression((yyvsp[(1) - (3)].exp),_OR, (yyvsp[(3) - (3)].exp));}
     break;
 
   case 32:
 
 /* Line 1806 of yacc.c  */
-#line 131 "pascal.yacc"
+#line 133 "pascal.yacc"
     {(yyval.exp) = new LogicExpression(NULL,_NOT, (yyvsp[(2) - (2)].exp));}
     break;
 
   case 33:
 
 /* Line 1806 of yacc.c  */
-#line 132 "pascal.yacc"
+#line 134 "pascal.yacc"
     {(yyval.exp) = new RelExpression((yyvsp[(1) - (3)].exp),_GT, (yyvsp[(3) - (3)].exp));}
     break;
 
   case 34:
 
 /* Line 1806 of yacc.c  */
-#line 133 "pascal.yacc"
+#line 135 "pascal.yacc"
     {(yyval.exp) = new RelExpression((yyvsp[(1) - (3)].exp),_LT, (yyvsp[(3) - (3)].exp));}
     break;
 
   case 35:
 
 /* Line 1806 of yacc.c  */
-#line 134 "pascal.yacc"
+#line 136 "pascal.yacc"
     {(yyval.exp) = new RelExpression((yyvsp[(1) - (3)].exp),_GTE, (yyvsp[(3) - (3)].exp));}
     break;
 
   case 36:
 
 /* Line 1806 of yacc.c  */
-#line 135 "pascal.yacc"
+#line 137 "pascal.yacc"
     {(yyval.exp) = new RelExpression((yyvsp[(1) - (3)].exp),_LTE, (yyvsp[(3) - (3)].exp));}
     break;
 
   case 37:
 
 /* Line 1806 of yacc.c  */
-#line 136 "pascal.yacc"
+#line 138 "pascal.yacc"
     {(yyval.exp) = new RelExpression((yyvsp[(1) - (3)].exp),_EQ, (yyvsp[(3) - (3)].exp));}
     break;
 
   case 38:
 
 /* Line 1806 of yacc.c  */
-#line 137 "pascal.yacc"
+#line 139 "pascal.yacc"
     {(yyval.exp) = new RelExpression((yyvsp[(1) - (3)].exp),_NEQ, (yyvsp[(3) - (3)].exp));}
     break;
 
   case 39:
 
 /* Line 1806 of yacc.c  */
-#line 138 "pascal.yacc"
+#line 140 "pascal.yacc"
     {(yyval.exp) = (yyvsp[(1) - (1)].call);}
     break;
 
   case 40:
 
 /* Line 1806 of yacc.c  */
-#line 139 "pascal.yacc"
+#line 141 "pascal.yacc"
     {(yyval.exp) = (yyvsp[(1) - (1)].id);}
     break;
 
   case 41:
 
 /* Line 1806 of yacc.c  */
-#line 140 "pascal.yacc"
+#line 142 "pascal.yacc"
     {(yyval.exp) = (yyvsp[(1) - (1)].num);}
     break;
 
   case 42:
 
 /* Line 1806 of yacc.c  */
-#line 141 "pascal.yacc"
+#line 143 "pascal.yacc"
     {(yyval.exp) = (yyvsp[(1) - (1)].exp);}
     break;
 
   case 43:
 
 /* Line 1806 of yacc.c  */
-#line 143 "pascal.yacc"
+#line 145 "pascal.yacc"
     {(yyval.call) = (yyvsp[(1) - (1)].call);}
     break;
 
   case 44:
 
 /* Line 1806 of yacc.c  */
-#line 144 "pascal.yacc"
+#line 146 "pascal.yacc"
     {(yyval.call) = (yyvsp[(1) - (1)].call);}
     break;
 
   case 45:
 
 /* Line 1806 of yacc.c  */
-#line 146 "pascal.yacc"
+#line 148 "pascal.yacc"
     {(yyval.call) = new CallExpression(new Identifier("read"),NULL);}
     break;
 
   case 46:
 
 /* Line 1806 of yacc.c  */
-#line 147 "pascal.yacc"
+#line 149 "pascal.yacc"
     {(yyval.call) = new CallExpression(new Identifier("write"),(yyvsp[(3) - (4)].exp_list));}
     break;
 
   case 47:
 
 /* Line 1806 of yacc.c  */
-#line 149 "pascal.yacc"
+#line 151 "pascal.yacc"
     {(yyval.call) = new CallExpression((yyvsp[(1) - (4)].id),(yyvsp[(3) - (4)].exp_list));}
     break;
 
   case 48:
 
 /* Line 1806 of yacc.c  */
-#line 151 "pascal.yacc"
+#line 153 "pascal.yacc"
     {(yyval.var) = (yyvsp[(1) - (1)].id);}
     break;
 
   case 49:
 
 /* Line 1806 of yacc.c  */
-#line 152 "pascal.yacc"
+#line 154 "pascal.yacc"
     {(yyval.var) = new ArrayElement((yyvsp[(1) - (4)].id),(yyvsp[(3) - (4)].exp));}
     break;
 
   case 50:
 
 /* Line 1806 of yacc.c  */
-#line 154 "pascal.yacc"
+#line 156 "pascal.yacc"
     {(yyval.type) = (yyvsp[(1) - (1)].type);}
     break;
 
   case 51:
 
 /* Line 1806 of yacc.c  */
-#line 155 "pascal.yacc"
+#line 157 "pascal.yacc"
     {(yyval.type) = new ArrayType((yyvsp[(8) - (8)].type),(yyvsp[(3) - (8)].inte),(yyvsp[(5) - (8)].inte));}
     break;
 
   case 52:
 
 /* Line 1806 of yacc.c  */
-#line 157 "pascal.yacc"
+#line 159 "pascal.yacc"
     {(yyval.type) = TYPE_REAL;}
     break;
 
   case 53:
 
 /* Line 1806 of yacc.c  */
-#line 158 "pascal.yacc"
+#line 160 "pascal.yacc"
     {(yyval.type) = TYPE_INT;}
     break;
 
   case 54:
 
 /* Line 1806 of yacc.c  */
-#line 160 "pascal.yacc"
+#line 162 "pascal.yacc"
     {(yyval.id_list) = (yyvsp[(1) - (3)].id_list); (yyval.id_list)->push_back((yyvsp[(3) - (3)].id));}
     break;
 
   case 55:
 
 /* Line 1806 of yacc.c  */
-#line 161 "pascal.yacc"
+#line 163 "pascal.yacc"
     {(yyval.id_list) = new std::vector<Identifier*>();(yyval.id_list)->push_back((yyvsp[(1) - (1)].id));}
     break;
 
   case 56:
 
 /* Line 1806 of yacc.c  */
-#line 163 "pascal.yacc"
+#line 165 "pascal.yacc"
     {(yyval.exp) = new BoolConstant(true);}
     break;
 
   case 57:
 
 /* Line 1806 of yacc.c  */
-#line 164 "pascal.yacc"
+#line 166 "pascal.yacc"
     {(yyval.exp) = new BoolConstant(false);}
     break;
 
   case 58:
 
 /* Line 1806 of yacc.c  */
-#line 166 "pascal.yacc"
+#line 168 "pascal.yacc"
     {(yyval.id) = new Identifier(paslval.tokenval);}
     break;
 
   case 59:
 
 /* Line 1806 of yacc.c  */
-#line 168 "pascal.yacc"
+#line 170 "pascal.yacc"
     {(yyval.num) = new IntConstant((yyvsp[(1) - (1)].inte));}
     break;
 
   case 60:
 
 /* Line 1806 of yacc.c  */
-#line 169 "pascal.yacc"
+#line 171 "pascal.yacc"
     {(yyval.num) = new RealConstant(atof(paslval.tokenval));}
     break;
 
   case 61:
 
 /* Line 1806 of yacc.c  */
-#line 170 "pascal.yacc"
+#line 172 "pascal.yacc"
     {(yyval.inte) = atoi(paslval.tokenval);}
     break;
 
 
 
 /* Line 1806 of yacc.c  */
-#line 2113 "parser.cpp"
+#line 2115 "parser.cpp"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2347,5 +2349,5 @@ yyreturn:
 
 
 /* Line 2067 of yacc.c  */
-#line 171 "pascal.yacc"
+#line 173 "pascal.yacc"
 
