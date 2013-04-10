@@ -9,6 +9,8 @@
 #include "node.h"
 #include "exception.h"
 
+extern void error(const char* info);
+
 EvalContext::EvalContext() {
 	error = 0;
 	idTable = new std::vector<std::map<char*, Declare*, comparator>*>();
@@ -35,7 +37,7 @@ EvalContext::~EvalContext() {
 
 void EvalContext::addDeclare(char* id, Declare* type) {
 	// Record a duplication if there is
-	std::map<char*, Declare*,comparator>* current = this->idTable->back();
+	std::map<char*, Declare*, comparator>* current = this->idTable->back();
 	if (current->find(id) != current->end()) { // Already exists, record duplication
 		record(error_dup_id(type));
 	}
@@ -72,11 +74,11 @@ bool EvalContext::haserror() {
 	return error;
 }
 
-void EvalContext::showerror(FILE* output) {
+void EvalContext::showerror() {
 	if (error) {
 		for (std::vector<char*>::iterator listit = errors->begin();
 				listit != errors->end(); listit++) {
-			fprintf(output, "%s\n", *listit.base());
+			::error(*listit);
 		}
 	}
 }

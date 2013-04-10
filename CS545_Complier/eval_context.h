@@ -41,7 +41,7 @@ public:
 	void record(char* error);
 
 	bool haserror();
-	void showerror(FILE* output);
+	void showerror();
 
 	void pushFrame();
 	void popFrame();

@@ -22,7 +22,7 @@ void handle_line() {
 
 void lex_error() {
 	char* buffer = new char[200];
-	sprintf(buffer,"Parse error: unrecognized token `%s' at line %d, col %d",pastext, yyline,yycol - strlen(pastext));
+	sprintf(buffer,"Parse error: unrecognized token `%s' at line %d, col %d",pastext, yyline, yycol - (int)strlen(pastext));
 	error(buffer);
 	delete buffer;
 }
