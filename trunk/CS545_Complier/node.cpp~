@@ -742,7 +742,6 @@ void SysCall::gencode(AsmContext* context) {
 		
 		if(typeid(param) == typeid(ArrayElement) {
 			// Handle offset
-			
 		}
 			
 		context->push(eax);

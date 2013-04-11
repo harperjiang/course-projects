@@ -46,7 +46,7 @@ void EvalContext::done() {
 	history->pop();
 }
 
-Node* EvalContext::findhistory(std::typeinfo type) {
+std::vector<Node*> EvalContext::findhistory(std::typeinfo type) {
 	return history->find(type);
 }
 

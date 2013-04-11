@@ -28,7 +28,7 @@ char* error_dup_id(Subprogram* sub);
 char* error_no_sub(CallExpression*);
 char* error_type_mismatch(Expression*);
 char* error_type_mismatch(Expression*, Type*);
-char* error_type_mismatch(Expression* source, const char* desc);
+char* error_type_mismatch(Expression* source, const char* desc)
 char* error_arg_mismatch(CallExpression*);
 char* error_ret_in_proc(ReturnStatement*);
 char* error_break_not_in_loop(BreakStatement*);
