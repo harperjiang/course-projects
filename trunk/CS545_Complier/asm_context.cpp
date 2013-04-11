@@ -24,7 +24,7 @@ const char* regtoa(Register reg) {
 }
 
 Register reg(int index) {
-	return (Register) index;
+	return (Register)index;
 }
 
 AsmContext::AsmContext(FILE* output) {
@@ -32,6 +32,8 @@ AsmContext::AsmContext(FILE* output) {
 	symbolTable = new SymbolTable();
 
 	labelCount = 0;
+	
+	history = new AccessHistory();
 }
 
 AsmContext::~AsmContext() {
@@ -48,6 +50,28 @@ FILE* AsmContext::getOutput() {
 
 void AsmContext::init() {
 
+}
+
+
+void AsmContext::access(Node* node) {
+	history->push(node);
+}
+
+void AsmContext::done() {
+	// Don't do boundary check
+	history->pop();
+}
+
+Node* AsmContext::findhistory(std::typeinfo type) {
+	return history->find(type);
+}
+
+std::vector<Node*>* AsmContext::gethistory() {
+	return history->gethistory();
+}
+
+int AsmContext::getrecord(char* id, ActRecord** pointer) {
+	// TODO Not implemented
 }
 
 MemoryUnit* AsmContext::alloc(int size) {
@@ -97,10 +121,6 @@ void AsmContext::section(const char* name) {
 void AsmContext::header() {
 	section("text");
 	fprintf(getOutput(), "global _start\n");
-}
-
-void AsmContext::declare(const char* type, const char* value) {
-
 }
 
 void AsmContext::reserve(const char* name, int size, int type) {
@@ -157,18 +177,16 @@ void AsmContext::mov(Register target, Register source) {
 
 void AsmContext::mov(int address, Register source, int mode) {
 	Register buffer = edx;
-	if (source == buffer)
+	if(source == buffer)
 		buffer = ecx;
 	push(buffer);
 	mov(buffer, "heap");
 	switch (mode) {
 	case 0: //00
-		fprintf(getOutput(), "\tmov [%s+%d],%s\n", regtoa(buffer), address,
-				regtoa(source));
+		fprintf(getOutput(), "\tmov [%s+%d],%s\n", regtoa(buffer), address, regtoa(source));
 		break;
 	case 1: //01
-		fprintf(getOutput(), "\tmov [%s+%d],[%s]\n", regtoa(buffer), address,
-				regtoa(source));
+		fprintf(getOutput(), "\tmov [%s+%d],[%s]\n", regtoa(buffer), address, regtoa(source));
 		break;
 	default:
 		break;
@@ -178,7 +196,7 @@ void AsmContext::mov(int address, Register source, int mode) {
 
 void AsmContext::mov(Register target, int valoraddr, int mode) {
 	Register buffer = edx;
-	if (target == buffer)
+	if(target == buffer)
 		buffer = ecx;
 	push(buffer);
 	mov(buffer, "heap");
@@ -187,15 +205,13 @@ void AsmContext::mov(Register target, int valoraddr, int mode) {
 		fprintf(getOutput(), "\tmov %s,%d\n", regtoa(target), valoraddr);
 		break;
 	case 1: //01
-		fprintf(getOutput(), "\tmov %s,[%s+%d]\n", regtoa(target),
-				regtoa(buffer), valoraddr);
+		fprintf(getOutput(), "\tmov %s,[%s+%d]\n", regtoa(target), regtoa(buffer),valoraddr);
 		break;
 	case 2: //10
 		fprintf(getOutput(), "\tmov [%s],%d\n", regtoa(target), valoraddr);
 		break;
 	case 3: // 11
-		fprintf(getOutput(), "\tmov [%s],[%s+%d]\n", regtoa(target),
-				regtoa(buffer), valoraddr);
+		fprintf(getOutput(), "\tmov [%s],[%s+%d]\n", regtoa(target),regtoa(buffer),valoraddr);
 		break;
 	default:
 		break;
@@ -219,6 +235,14 @@ void AsmContext::mov(Register target, Register source, int mode) {
 	default:
 		break;
 	}
+}
+
+void AsmContext::mov(Register target, int offset, Register source) {
+	fprintf(getOutput(), "mov %s,[%s+%d]\n", regtoa(target),regtoa(source),offset);
+}
+
+void AsmContext::lea(Register target, Register source, int offset) {
+	fprintf(getOutput(), "\t%s %s,%s+%d\n", "lea", regtoa(target), regtoa(source),offset);
 }
 
 void AsmContext::add(Register target, int val) {
@@ -259,7 +283,7 @@ void AsmContext::lor(Register target, int val) {
 }
 
 void AsmContext::lnot(Register target) {
-	fprintf(getOutput(), "\tnot %s,%s\n", regtoa(target), regtoa(target));
+	fprintf(getOutput(), "\tnot %s,%s\n", regtoa(target),regtoa(target));
 }
 
 void AsmContext::lxor(Register target, int val) {
@@ -284,10 +308,6 @@ void AsmContext::push(Register target) {
 
 void AsmContext::push(int val) {
 	fprintf(getOutput(), "\t%s %d\n", "push", val);
-}
-
-void AsmContext::push(char* val) {
-	fprintf(getOutput(), "\t%s $.%s\n", push, val);
 }
 
 void AsmContext::pop(Register target) {
@@ -339,10 +359,6 @@ void ATTAsmContext::header() {
 	fprintf(getOutput(), "main:\n");
 }
 
-void ATTAsmContext::declare(const char* type, const char* value) {
-	fprintf(getOutput(), ".%s %s\n", type, value);
-}
-
 void ATTAsmContext::cmp(Register source, Register target) {
 	fprintf(getOutput(), "\tcmpl %%%s,%%%s\n", regtoa(target), regtoa(source));
 }
@@ -360,22 +376,22 @@ void ATTAsmContext::mov(Register target, int val) {
 
 }
 void ATTAsmContext::mov(Register target, Register source) {
-	if (target == source)
+	if(target == source)
 		return;
 	fprintf(getOutput(), "\tmovl %%%s,%%%s\n", regtoa(source), regtoa(target));
 }
 
 void ATTAsmContext::mov(int address, Register source, int mode) {
 	Register buffer = edx;
-	if (source == buffer) {
+	if(source == buffer) {
 		buffer = ecx;
-	}
+	}	
 	push(buffer);
 	mov(buffer, "heap");
 	switch (mode) {
 	case 0: //00
-		fprintf(getOutput(), "\tmovl %%%s,%d(%%%s)\n", regtoa(source), address,
-				regtoa(buffer));
+		fprintf(getOutput(), "\tmovl %%%s,%d(%%%s)\n", regtoa(source),
+				address, regtoa(buffer));
 		break;
 	case 1: //01
 		fprintf(getOutput(), "\tmovl (%%%s),%d(%%%s),\n", regtoa(source),
@@ -389,9 +405,9 @@ void ATTAsmContext::mov(int address, Register source, int mode) {
 
 void ATTAsmContext::mov(Register target, int valoraddr, int mode) {
 	Register buffer = edx;
-	if (target == buffer) {
+	if(target == buffer) {
 		buffer = ecx;
-	}
+	}	
 	push(buffer);
 	mov(buffer, "heap");
 	switch (mode) {
@@ -399,15 +415,15 @@ void ATTAsmContext::mov(Register target, int valoraddr, int mode) {
 		fprintf(getOutput(), "\tmovl $%d,%%%s\n", valoraddr, regtoa(target));
 		break;
 	case 1: //01
-		fprintf(getOutput(), "\tmovl %d(%%%s),%%%s\n", valoraddr,
-				regtoa(buffer), regtoa(target));
+		fprintf(getOutput(), "\tmovl %d(%%%s),%%%s\n", valoraddr, regtoa(buffer),
+				regtoa(target));
 		break;
 	case 2: //10
 		fprintf(getOutput(), "\tmovl $%d,(%%%s)\n", valoraddr, regtoa(target));
 		break;
 	case 3: // 11
-		fprintf(getOutput(), "\tmovl %d(%%%s),(%%%s)\n", valoraddr,
-				regtoa(buffer), regtoa(target));
+		fprintf(getOutput(), "\tmovl %d(%%%s),(%%%s)\n", valoraddr,regtoa(buffer),
+				regtoa(target));
 		break;
 	default:
 		break;
@@ -435,6 +451,14 @@ void ATTAsmContext::mov(Register target, Register source, int mode) {
 	default:
 		break;
 	}
+}
+
+void ATTAsmContext::mov(Register target, int offset, Register source) {
+	fprintf(getOutput(), "movl %d(%s),%s\n", offset, regtoa(source), regtoa(target));
+}
+
+void ATTAsmContext::lea(Register target, Register source, int offset) {
+	fprintf(getOutput(), "\t%s %d(%s),%s\n", "leal", offset, regtoa(source), regtoa(target));
 }
 
 void ATTAsmContext::add(Register target, int val) {
@@ -496,9 +520,6 @@ void ATTAsmContext::push(Register target) {
 }
 void ATTAsmContext::push(int val) {
 	fprintf(getOutput(), "\t%s $%d\n", "pushl", val);
-}
-void ATTAsmCOntext::push(char* val) {
-	fprintf(getOutput(), "\t%s $%s\n", "pushl", val);
 }
 void ATTAsmContext::pop(Register target) {
 	fprintf(getOutput(), "\t%s %%%s\n", "popl", regtoa(target));
