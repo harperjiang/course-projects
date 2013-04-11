@@ -11,6 +11,7 @@
 #include <vector>
 #include <tr1/memory>
 #include "eval_context.h"
+#include "asm_context.h"
 
 class Node {
 public:
@@ -32,7 +33,9 @@ public:
 	}
 	virtual void evaluate(EvalContext* context) {
 	}
-	;
+	virtual void gencode(AsmContext* context) {
+
+	}
 };
 /**
  * Program Structures
@@ -57,6 +60,7 @@ public:
 	virtual ~Program();
 	void print(FILE*, int);
 	void evaluate(EvalContext* context);
+	void gencode(AsmContext* context);
 };
 
 class Subprogram: public Node {
@@ -77,7 +81,10 @@ public:
 			StatementBlock*);
 	virtual ~Function();
 
+	Type* getType();
+
 	void print(FILE*, int);
+	void gencode(AsmContext*);
 };
 
 class Procedure: public Subprogram {
@@ -87,6 +94,7 @@ public:
 	virtual ~Procedure();
 
 	void print(FILE*, int);
+	void gencode(AsmContext*);
 };
 
 /**
@@ -174,6 +182,7 @@ public:
 
 	void print(FILE* file, int level);
 	void evaluate(EvalContext* context);
+	void gencode(AsmContext*);
 };
 
 class WhileStatement: public Statement {
@@ -186,6 +195,7 @@ public:
 
 	void print(FILE* file, int level);
 	void evaluate(EvalContext* context);
+	void gencode(AsmContext*);
 };
 
 class AssignStatement: public Statement {
@@ -198,6 +208,7 @@ public:
 
 	void print(FILE* file, int level);
 	void evaluate(EvalContext* context);
+	void gencode(AsmContext*);
 };
 
 class StatementBlock: public Statement {
@@ -209,6 +220,7 @@ public:
 
 	void print(FILE* file, int level);
 	void evaluate(EvalContext* context);
+	void gencode(AsmContext* context);
 };
 
 class CallStatement: public Statement {
@@ -220,6 +232,7 @@ public:
 
 	void print(FILE* file, int level);
 	void evaluate(EvalContext* context);
+	void gencode(AsmContext*);
 };
 
 class BreakStatement: public Statement {
@@ -229,6 +242,18 @@ public:
 
 	void print(FILE* file, int level);
 	void evaluate(EvalContext* context);
+	void gencode(AsmContext*);
+};
+
+class ReturnStatement: public Statement {
+public:
+	Expression* retvalue;
+	ReturnStatement(Expression*);
+	virtual ~ReturnStatement();
+
+	void print(FILE* file, int level);
+	void evaluate(EvalContext* context);
+	void gencode(AsmContext*);
 };
 
 /**
@@ -257,6 +282,7 @@ public:
 	void print(FILE*, int);
 	void evaluate(EvalContext* context);
 	Type* getType();
+	void gencode(AsmContext*);
 };
 
 class SysCall: public CallExpression {
@@ -264,9 +290,10 @@ public:
 	int type;
 	SysCall(int, std::vector<Expression*>*);
 	virtual ~SysCall();
-	void print(FILE*,int);
+	void print(FILE*, int);
 	void evaluate(EvalContext* context);
 	Type* getType();
+	void gencode(AsmContext*);
 };
 
 typedef enum _AOPR {

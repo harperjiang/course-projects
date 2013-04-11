@@ -149,7 +149,7 @@ exp			:	exp ADD exp					{$$ = new ArithExpression($1,_ADD, $3);}
 call		:	syscall 	{$$ = $1;}
 			| 	usercall	{$$ = $1;};
 							
-syscall		: 	READ LP RP  {$$ = new SysCall(_CALL_READ,new std::vector<Expression*>());} 
+syscall		: 	READ LP exp_list RP  {$$ = new SysCall(_CALL_READ, $3);} 
 			|	WRITE LP exp_list RP {$$ = new SysCall(_CALL_WRITE,$3);};
 
 usercall	:	id LP exp_list RP {$$ = new CallExpression($1,$3);};

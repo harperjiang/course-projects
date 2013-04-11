@@ -138,8 +138,10 @@ void parse_input(const char* inputName, const char* outputName,
 		parse_result->print(outputFile, 0);
 		break;
 	default:
-		throw ILLEGAL_FORMAT;
+		error("Error: unsupported operation");
+		break;
 	}
+
 	delete parse_result;
 }
 

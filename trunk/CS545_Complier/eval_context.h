@@ -23,6 +23,7 @@ class Subprogram;
 class EvalContext {
 private:
 	std::vector<std::map<char*, Declare*, comparator> *> *idTable;
+	Subprogram* current;
 	std::map<char*, Subprogram*, comparator> *subTable;
 	std::vector<char*> *errors;
 	int error;
@@ -37,13 +38,14 @@ public:
 
 	void addSub(char* id, Subprogram* def);
 	Subprogram* getSub(char* id);
+	Subprogram* getCurrent();
 
 	void record(char* error);
 
 	bool haserror();
 	void showerror();
 
-	void pushFrame();
+	void pushFrame(Subprogram*);
 	void popFrame();
 };
 

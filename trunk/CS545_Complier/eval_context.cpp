@@ -56,6 +56,9 @@ Declare* EvalContext::getDeclare(char* id) {
 }
 
 void EvalContext::addSub(char*id, Subprogram* def) {
+	if (subTable->find(id) != subTable->end()) { // Already exists, record duplication
+		record(error_dup_id(def));
+	}
 	subTable->insert(std::pair<char*, Subprogram*>(id, def));
 }
 
@@ -63,6 +66,10 @@ Subprogram* EvalContext::getSub(char* id) {
 	if (subTable->find(id) != subTable->end())
 		return subTable->find(id)->second;
 	return NULL;
+}
+
+Subprogram* EvalContext::getCurrent() {
+	return current;
 }
 
 void EvalContext::record(char* context) {
@@ -83,10 +90,12 @@ void EvalContext::showerror() {
 	}
 }
 
-void EvalContext::pushFrame() {
+void EvalContext::pushFrame(Subprogram* sub) {
+	current = sub;
 	idTable->push_back(new std::map<char*, Declare*, comparator>());
 }
 
 void EvalContext::popFrame() {
+	current = NULL;
 	idTable->pop_back();
 }
