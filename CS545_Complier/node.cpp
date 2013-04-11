@@ -91,12 +91,41 @@ void Program::evaluate(EvalContext* context) {
 	// Evaluate Subprograms
 	for (std::vector<Subprogram*>::iterator ite = subs->begin();
 			ite != subs->end(); ite++) {
-		context->pushFrame();
+		context->pushFrame(*ite);
 		(*ite)->evaluate(context);
 		context->popFrame();
 	}
 	// Evaluate body
 	body->evaluate(context);
+}
+
+void Program::gencode(AsmContext* context) {
+	// Gen data section
+	context->section("data");
+	context->label("intformat");
+	context->declare("string", "%d\n");
+
+	// Gen text section
+	context->header();
+	context->label("_start");
+
+	// TODO Handle activation record
+
+	// Generate procedure for subroutines
+	for (std::vector<Subprogram*>::iterator ite = subs->begin();
+			ite != subs->end(); ite++) {
+		(*ite)->gencode(context);
+	}
+
+	body->gencode(context);
+
+	// Gen exit code
+	context->mov(eax, 1);
+	context->mov(ebx, 0);
+	context->interrupt(0x80);
+	context->ret();
+	// Gen tail code
+	context->tail();
 }
 
 Function::Function(Identifier* id, std::vector<Param*>* params, Type* rettype,
@@ -116,6 +145,10 @@ Function::~Function() {
 	delete body;
 }
 
+Type* Function::getType() {
+	return this->rettype.get();
+}
+
 void Function::print(FILE* file, int level) {
 	Node::print(file, level);
 	fprintf(file, "%s%s\n", "[Function]", id->name);
@@ -129,6 +162,13 @@ void Function::print(FILE* file, int level) {
 		(*ite)->print(file, level + 1);
 	}
 	body->print(file, level + 1);
+}
+
+void Function::gencode(AsmContext* context) {
+	context->label(id->name);
+	// TODO Handle activation record
+
+	body->gencode(context);
 }
 
 void Subprogram::evaluate(EvalContext* context) {
@@ -170,6 +210,10 @@ void Procedure::print(FILE* file, int level) {
 		(*ite)->print(file, level + 1);
 	}
 	body->print(file, level + 1);
+}
+
+void Procedure::gencode(AsmContext* context) {
+
 }
 
 Declare::Declare(Type* t, Identifier* id) {
@@ -299,6 +343,16 @@ void IfStatement::evaluate(EvalContext* context) {
 		elsebody->evaluate(context);
 }
 
+void IfStatement::gencode(AsmContext* context) {
+	char* elselabel = context->genlabel();
+	condition->gencode(context);
+	context->jne(elselabel);
+	thenbody->gencode(context);
+	context->label(elselabel);
+	if (elsebody != NULL)
+		elsebody->gencode(context);
+}
+
 WhileStatement::WhileStatement(Expression* cond, Statement* body) {
 	this->condition = cond;
 	this->body = body;
@@ -325,6 +379,18 @@ void WhileStatement::evaluate(EvalContext* context) {
 	body->evaluate(context);
 }
 
+void WhileStatement::gencode(AsmContext* context) {
+	char* startlabel = context->genlabel();
+	char* endlabel = context->genlabel();
+	context->label(startlabel);
+	condition->gencode(context);
+	// TODO is this correct?
+	context->jne(endlabel);
+	body->gencode(context);
+	context->jmp(startlabel);
+	context->label(endlabel);
+}
+
 AssignStatement::AssignStatement(Variable* lval, Expression* rval) {
 	this->leftval = lval;
 	this->rightval = rval;
@@ -348,6 +414,11 @@ void AssignStatement::evaluate(EvalContext* context) {
 	if (leftval->getType() != rightval->getType()) {
 		context->record(error_type_mismatch(leftval, rightval->getType()));
 	}
+	// TODO If AssignStatement is an ReturnStatement
+}
+
+void AssignStatement::gencode(AsmContext* context) {
+
 }
 
 StatementBlock::StatementBlock(std::vector<Statement*>* stmts) {
@@ -374,6 +445,14 @@ void StatementBlock::evaluate(EvalContext* context) {
 	}
 }
 
+void StatementBlock::gencode(AsmContext* context) {
+	// TODO Use quadruple
+	for (std::vector<Statement*>::iterator ite = statements->begin();
+			ite != statements->end(); ite++) {
+		(*ite)->gencode(context);
+	}
+}
+
 CallStatement::CallStatement(CallExpression* call) {
 	this->callexp = call;
 }
@@ -392,6 +471,10 @@ void CallStatement::evaluate(EvalContext* context) {
 	callexp->evaluate(context);
 }
 
+void CallStatement::gencode(AsmContext* context) {
+	callexp->gencode(context);
+}
+
 BreakStatement::BreakStatement() {
 
 }
@@ -406,7 +489,44 @@ void BreakStatement::print(FILE* file, int level) {
 }
 
 void BreakStatement::evaluate(EvalContext* context) {
-	// Do nothing
+	// TODO Check whether in a while loop
+
+}
+
+ReturnStatement::ReturnStatement(Expression* exp) {
+	this->retvalue = exp;
+}
+
+ReturnStatement::~ReturnStatement() {
+	delete retvalue;
+}
+
+void ReturnStatement::print(FILE* file, int level) {
+	Node::print(file, level);
+	fprintf(file, "%s\n", "[ReturnStatement]");
+	if (NULL != retvalue)
+		retvalue->print(file, level + 1);
+}
+
+void ReturnStatement::evaluate(EvalContext* context) {
+	if (retvalue != NULL)
+		retvalue->evaluate(context);
+	Subprogram* current = context->getCurrent();
+	Function* function = dynamic_cast<Function*>(current);
+	if (NULL == function) { // Not a function, should not have return
+		context->record(error_ret_in_proc(this));
+	}
+	if (retvalue != NULL && function->getType() != retvalue->getType()) {
+		context->record(::error_type_mismatch(retvalue, function->getType()));
+	}
+}
+
+void ReturnStatement::gencode(AsmContext* context) {
+	if (retvalue != NULL) {
+		retvalue->gencode(context);
+	}
+	// TODO store return value in eax
+	context->ret();
 }
 
 CallExpression::CallExpression(Identifier* name,
@@ -459,6 +579,16 @@ Type* CallExpression::getType() {
 	return function->rettype.get();
 }
 
+void CallExpression::gencode(AsmContext* context) {
+	for (std::vector<Expression*>::iterator ite = params->begin();
+			ite != params->end(); ite++) {
+		(*ite)->gencode(context);
+		context->push(eax);
+	}
+	context->push(params->size());
+	context->call(callname->name);
+}
+
 SysCall::SysCall(int type, std::vector<Expression*>* params) :
 		CallExpression(NULL, params) {
 	this->type = type;
@@ -478,19 +608,24 @@ void SysCall::print(FILE* file, int level) {
 }
 
 void SysCall::evaluate(EvalContext* context) {
-	if (type == _CALL_READ && params->size() != 0) {
-		context->record(error_arg_mismatch(this));
-	}
-	if (type == _CALL_WRITE && params->size() != 1) {
+	if (params->size() != 1) {
 		// write can write everything
 		context->record(error_arg_mismatch(this));
 	}
 }
 
 Type* SysCall::getType() {
-	if (type == _CALL_READ)
-		return TYPE_INT;
 	return NULL;
+}
+
+void SysCall::gencode(AsmContext* context) {
+	// TODO
+	if (type == _CALL_READ) {
+		context->call("scanf");
+	}
+	if (type == _CALL_WRITE) {
+		context->call("printf");
+	}
 }
 
 ArithExpression::ArithExpression(Expression* l, AOPR opr, Expression* r) {

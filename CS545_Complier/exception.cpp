@@ -20,10 +20,23 @@ char* error_dup_id(Declare* declare) {
 	return buffer;
 }
 
+char* error_dup_id(Subprogram* sub) {
+	char* buffer = new char[300];
+	sprintf(buffer, "Semantic error: subroutine is declared twice: %s",
+			sub->id->name);
+	return buffer;
+}
+
 char* error_no_sub(CallExpression* call) {
 	char* buffer = new char[300];
 	sprintf(buffer, "Semantic error: call not defined: %s",
 			call->callname->name);
+	return buffer;
+}
+
+char* error_ret_in_proc(ReturnStatement* ret) {
+	char* buffer = new char[300];
+	sprintf(buffer, "Semantic error: return statement in procedure:");
 	return buffer;
 }
 
