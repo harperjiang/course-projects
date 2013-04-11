@@ -736,16 +736,24 @@ void SysCall::gencode(AsmContext* context) {
 		ActRecord** record;
 		int level = context->getrecord(var->getId()->name,record);
 		int offset = (*record)->offset(var->getId()->name);
-		int position = 
-		context->get
-		context->lea(	
+		// Get base position
+		// The level will be 0 or 1
+		if(level) {
+			context->mov(edx, 8, ebp);
+			context->mov(edx, edx, 1);
+		} else {
+			context->mov(edx, esp);
+		}
+		context->add(edx, offset);
 		
 		if(typeid(param) == typeid(ArrayElement) {
 			// Handle offset
-			
-		}
-			
-		context->push(eax);
+			ArrayElement* ae = (ArrayElement*)param;
+			ae->index->gencode(context);
+			// offset value will be in eax
+			context->add(edx, eax);
+		} 
+		context->push(edx);
 		context->call("scanf");
 	}
 	if (type == _CALL_WRITE) {
