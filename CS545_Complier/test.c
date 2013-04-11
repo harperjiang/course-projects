@@ -1,3 +1,8 @@
+int func(int a, int b) {
+	return a+b;
+}
+
 void main() {
-printf("%s\n","Very Good");
+    int c = func(4,3);	
+    d = c+5;
 }

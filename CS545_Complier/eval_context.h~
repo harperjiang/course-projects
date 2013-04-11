@@ -12,7 +12,6 @@
 #include <vector>
 #include <stdio.h>
 #include <string.h>
-#include <typeinfo>
 #include "acc_history.h"
 
 struct comparator {
@@ -38,7 +37,7 @@ public:
 
 	void access(Node*);
 	void done();	
-	Node* findhistory(std::typeinfo type);
+	std::vector<Node*> gethistory();
 
 	void addDeclare(char* id, Declare* type);
 	Declare* getDeclare(char* id);

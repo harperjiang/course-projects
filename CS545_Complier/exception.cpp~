@@ -47,13 +47,6 @@ char* error_type_mismatch(Expression* source) {
 	return buffer;
 }
 
-char* error_type_mismatch(Expression* source, const char* desc) {
-	char* buffer = new char[300];
-	sprintf(buffer,
-			"Semantic error: type mismatch: expression should have type %s",desc);
-	return buffer;
-}
-
 char* error_type_mismatch(Expression* source, Type* shouldbe) {
 	char* buffer = new char[300];
 	sprintf(buffer,

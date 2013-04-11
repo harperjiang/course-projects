@@ -286,6 +286,10 @@ void AsmContext::push(int val) {
 	fprintf(getOutput(), "\t%s %d\n", "push", val);
 }
 
+void AsmContext::push(char* val) {
+	fprintf(getOutput(), "\t%s $.%s\n", push, val);
+}
+
 void AsmContext::pop(Register target) {
 	fprintf(getOutput(), "\t%s %s\n", "pop", regtoa(target));
 }
@@ -492,6 +496,9 @@ void ATTAsmContext::push(Register target) {
 }
 void ATTAsmContext::push(int val) {
 	fprintf(getOutput(), "\t%s $%d\n", "pushl", val);
+}
+void ATTAsmCOntext::push(char* val) {
+	fprintf(getOutput(), "\t%s $%s\n", "pushl", val);
 }
 void ATTAsmContext::pop(Register target) {
 	fprintf(getOutput(), "\t%s %%%s\n", "popl", regtoa(target));

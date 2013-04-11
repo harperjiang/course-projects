@@ -97,6 +97,7 @@ public:
 
 	virtual void push(Register target);
 	virtual void push(int val);
+	virtual void push(char* val);
 	virtual void pop(Register target);
 
 	virtual void jmp(char* label);
@@ -150,6 +151,7 @@ public:
 
 	virtual void push(Register target);
 	virtual void push(int val);
+	virtual void push(char* val);
 	virtual void pop(Register target);
 };
 
