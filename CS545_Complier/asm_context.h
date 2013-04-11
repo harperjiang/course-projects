@@ -12,14 +12,16 @@
 #include <map>
 #include <vector>
 #include <stack>
+#include <typeinfo>
 
+#include "common.h"
 #include "symbol_table.h"
 
 #define INDIRECT  1
 #define DIRECT  0
 
 typedef enum _Register {
-	eax, ebx, ecx, edx, esp, unknown
+	eax, ebx, ecx, edx, esp, ebp, unknown
 } Register;
 
 class AsmContext {
@@ -28,12 +30,21 @@ private:
 	SymbolTable *symbolTable;
 
 	int labelCount;
+	
+	AccessHistory* history;
 public:
 	AsmContext(FILE* output);
 	virtual ~AsmContext();
 	FILE* getOutput();
 
 	void init();
+
+	void access(Node*);
+	void done();
+	Node* findhistory(std::typeinfo type);
+	std::vector<Node*>* gethistory();
+	
+	int getrecord(char* var, ActRecord**);
 
 	MemoryUnit* alloc(int size);
 
@@ -43,7 +54,7 @@ public:
 
 	void popFrame();
 
-	// Return the allocated address for the given id, allocate if not allocated
+	// Return the allocated address for the given id
 	MemoryUnit* find(const char* id);
 	MemoryUnit* find(const char* id, int level);
 
@@ -51,10 +62,8 @@ public:
 
 	// Utilities methods for generating ASM code
 	virtual void header();
-	virtual void declare(const char* type, const char* value);
-	virtual void tail();
 
-	virtual void declare(const char* type, const char* value);
+	virtual void tail();
 
 	virtual void section(const char* name);
 	virtual void reserve(const char* name, int size, int type);
@@ -74,7 +83,11 @@ public:
 	virtual void mov(Register target, Register source);
 	virtual void mov(int address, Register source, int mode);
 	virtual void mov(Register target, int valoraddr, int mode);
+	virtual void mov(Register target, int offset, Register source);
 	virtual void mov(Register target, Register source, int mode);
+
+	// Only calculate the offset to esp
+	virtual void lea(Register target, Register source, int offset);
 
 	virtual void add(Register target, int val);
 	virtual void add(Register target, Register source);
@@ -97,7 +110,6 @@ public:
 
 	virtual void push(Register target);
 	virtual void push(int val);
-	virtual void push(char* val);
 	virtual void pop(Register target);
 
 	virtual void jmp(char* label);
@@ -130,7 +142,9 @@ public:
 	virtual void mov(Register target, Register source);
 	virtual void mov(int address, Register source, int mode);
 	virtual void mov(Register target, int valoraddr, int mode);
+	virtual void mov(Register target, int offset, Register source);
 	virtual void mov(Register target, Register source, int mode);
+	
 
 	virtual void add(Register target, int val);
 	virtual void add(Register target, Register source);
@@ -151,7 +165,6 @@ public:
 
 	virtual void push(Register target);
 	virtual void push(int val);
-	virtual void push(char* val);
 	virtual void pop(Register target);
 };
 
