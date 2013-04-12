@@ -56,7 +56,7 @@ public:
 	std::vector<Subprogram*> *subs;
 	StatementBlock* body;
 	
-	ActRecord* actrecord;
+	ActivationRecord* actrecord;
 
 	Program(Identifier*, std::vector<Identifier*>*, std::vector<Declare*>*,
 			std::vector<Subprogram*>*, StatementBlock*);
@@ -73,7 +73,7 @@ public:
 	std::vector<Declare*>* declares;
 	StatementBlock* body;
 
-	ActRecord* actrecord;
+	ActivationRecord* actrecord;
 	
 	Subprogram(Identifier*,std::vector<Param*>*,std::vector<Declare*>*,StatementBlock*);
 	~Subprogram();
@@ -328,6 +328,7 @@ public:
 	void print(FILE*, int);
 	void evaluate(EvalContext* context);
 	Type* getType();
+	void gencode(AsmContext*);
 };
 
 typedef enum _ROPR {
@@ -346,6 +347,7 @@ public:
 	void print(FILE*, int);
 	void evaluate(EvalContext* context);
 	Type* getType();
+	void gencode(AsmContext*);
 };
 
 typedef enum _LOPR {
@@ -364,18 +366,7 @@ public:
 	void print(FILE*, int);
 	void evaluate(EvalContext* context);
 	Type* getType();
-};
-
-class Variable: public Expression {
-protected:
-	Declare* declare;
-public:
-	Variable() {
-		declare = NULL;
-	}
-	virtual ~Variable() {
-	}
-	virtual Identifier* getId() = 0;
+	void gencode(AsmContext*);
 };
 
 class NumConstant: public Expression {
@@ -397,6 +388,7 @@ public:
 
 	void print(FILE*, int);
 	Type* getType();
+	void gencode(AsmContext*);
 };
 
 class RealConstant: public NumConstant {
@@ -407,6 +399,7 @@ public:
 
 	void print(FILE*, int);
 	Type* getType();
+	void gencode(AsmContext*);
 };
 
 class BoolConstant: public Expression {
@@ -417,6 +410,21 @@ public:
 
 	void print(FILE*, int);
 	Type* getType();
+	void gencode(AsmContext*);
+};
+
+class Variable: public Expression {
+protected:
+	Declare* declare;
+public:
+	Variable() {
+		declare = NULL;
+	}
+	virtual ~Variable() {
+	}
+	virtual Identifier* getId() = 0;
+	// Assembly code to put the address of variable to edx
+	virtual void genaddr(AsmContext*) =0;
 };
 
 class Identifier: public Variable {
@@ -429,6 +437,7 @@ public:
 	void evaluate(EvalContext*);
 	Type* getType();
 	Identifier* getId();
+	void genaddr(AsmContext*);
 };
 
 class ArrayElement: public Variable {
@@ -443,6 +452,7 @@ public:
 	void evaluate(EvalContext*);
 	Type* getType();
 	Identifier* getId();
+	void genaddr(AsmContext*);
 };
 
 #endif /* NODE_H_ */

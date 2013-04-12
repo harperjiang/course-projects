@@ -8,16 +8,18 @@
 #ifndef ACT_RECORD_H_
 #define ACT_RECORD_H_
 
-class ActRecord {
+class ActivationRecord {
 private:
 
 public:
-	
+
 	// Managing local variables
 	void add(Declare* variable);
 	void addparam(Param* param);
+	// Return the offset of given variable,
+	// -1 if not exists
 	int offset(char* variable);
-	
+
 	// Generate itself in memory
 	void gencode(AsmContext*);
 };

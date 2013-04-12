@@ -15,6 +15,7 @@
 #include <typeinfo>
 
 #include "common.h"
+#include "acc_hist.h"
 #include "symbol_table.h"
 
 #define INDIRECT  1
@@ -41,10 +42,10 @@ public:
 
 	void access(Node*);
 	void done();
-	Node* findhistory(std::typeinfo type);
+	Node* findhistory(std::type_info type);
 	std::vector<Node*>* gethistory();
 	
-	int getrecord(char* var, ActRecord**);
+	ActivationRecord* getActRecord(char* var,int* level);
 
 	MemoryUnit* alloc(int size);
 
@@ -65,6 +66,7 @@ public:
 
 	virtual void tail();
 
+	virtual void declare(const char* type, const char* name);
 	virtual void section(const char* name);
 	virtual void reserve(const char* name, int size, int type);
 
@@ -110,6 +112,8 @@ public:
 
 	virtual void push(Register target);
 	virtual void push(int val);
+	virtual void push(char*);
+	virtual void push(Register target, int offset);
 	virtual void pop(Register target);
 
 	virtual void jmp(char* label);
@@ -165,6 +169,8 @@ public:
 
 	virtual void push(Register target);
 	virtual void push(int val);
+	virtual void push(char*);
+	virtual void push(Register target, int offset);
 	virtual void pop(Register target);
 };
 
