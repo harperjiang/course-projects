@@ -13,13 +13,13 @@
 
 class AccessHistory {
 private:
-	std::vector<Node*> history;
+	std::vector<Node*>* history;
 public:
 	AccessHistory();
 	virtual ~AccessHistory();
 	
-	push(Node*);
-	pop();
-	Node* find(std::typeinfo type);
+	void push(Node*);
+	void pop();
+	Node* find(std::type_info type);
 	std::vector<Node*>* gethistory();
-}
+};

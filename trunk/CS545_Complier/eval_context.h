@@ -38,7 +38,7 @@ public:
 
 	void access(Node*);
 	void done();	
-	Node* findhistory(std::typeinfo type);
+	Node* findhistory(std::type_info type);
 
 	void addDeclare(char* id, Declare* type);
 	Declare* getDeclare(char* id);
