@@ -20,6 +20,7 @@ EvalContext::EvalContext() {
 	history = new AccessHistory();
 
 	idTable->push_back(new std::map<char*, Declare*, comparator>());
+	current = NULL;
 }
 
 EvalContext::~EvalContext() {
@@ -46,7 +47,7 @@ void EvalContext::done() {
 	history->pop();
 }
 
-Node* EvalContext::findhistory(std::typeinfo type) {
+Node* EvalContext::findhistory(const char* type) {
 	return history->find(type);
 }
 
@@ -108,9 +109,11 @@ void EvalContext::showerror() {
 void EvalContext::pushFrame(Subprogram* sub) {
 	current = sub;
 	idTable->push_back(new std::map<char*, Declare*, comparator>());
+	access(sub);
 }
 
 void EvalContext::popFrame() {
+	done();
 	current = NULL;
 	idTable->pop_back();
 }

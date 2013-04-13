@@ -6,6 +6,7 @@
  */
 
 #include "asm_context.h"
+#include "node.h"
 #include <stdio.h>
 
 const char* regtoa(Register reg) {
@@ -18,6 +19,10 @@ const char* regtoa(Register reg) {
 		return "ecx";
 	case edx:
 		return "edx";
+	case esp:
+		return "esp";
+	case ebp:
+		return "ebp";
 	default:
 		return NULL;
 	}
@@ -29,7 +34,6 @@ Register reg(int index) {
 
 AsmContext::AsmContext(FILE* output) {
 	this->output = output;
-	symbolTable = new SymbolTable();
 
 	labelCount = 0;
 
@@ -40,8 +44,7 @@ AsmContext::~AsmContext() {
 	if (NULL != this->output) {
 		fclose(this->output);
 	}
-
-	delete symbolTable;
+	delete history;
 }
 
 FILE* AsmContext::getOutput() {
@@ -61,7 +64,7 @@ void AsmContext::done() {
 	history->pop();
 }
 
-Node* AsmContext::findhistory(std::type_info type) {
+Node* AsmContext::findhistory(char* type) {
 	return history->find(type);
 }
 
@@ -88,39 +91,6 @@ ActivationRecord* AsmContext::getActRecord(char* id, int* level) {
 		(*level)++;
 	}
 	return NULL;
-}
-
-MemoryUnit* AsmContext::alloc(int size) {
-	return this->symbolTable->allocOnHeap(size);
-}
-
-void AsmContext::dealloc(MemoryUnit* alloc) {
-	symbolTable->releaseHeap(alloc);
-}
-
-// Return the allocated address for the given id, -1 if not allocated
-MemoryUnit* AsmContext::find(const char* id) {
-	if (NULL == symbolTable->find(id)) {
-		MemoryUnit* alloc = this->alloc(4); // 32 bit
-		symbolTable->add(id, alloc);
-	}
-	return symbolTable->find(id);
-}
-
-MemoryUnit* AsmContext::find(const char* id, int level) {
-	if (NULL == symbolTable->find(id, level)) {
-		MemoryUnit* alloc = this->alloc(4); // 32 bit
-		symbolTable->add(id, alloc);
-	}
-	return symbolTable->find(id, level);
-}
-
-void AsmContext::pushFrame() {
-	this->symbolTable->pushFrame();
-}
-
-void AsmContext::popFrame() {
-	this->symbolTable->popFrame();
 }
 
 char* AsmContext::genlabel() {
@@ -340,7 +310,7 @@ void AsmContext::push(int val) {
 	fprintf(getOutput(), "\t%s %d\n", "push", val);
 }
 
-void AsmContext::push(char* val) {
+void AsmContext::push(const char* val) {
 	fprintf(getOutput(), "\t%s %s\n", "push", val);
 }
 
@@ -583,12 +553,12 @@ void ATTAsmContext::push(int val) {
 	fprintf(getOutput(), "\t%s $%d\n", "pushl", val);
 }
 
-void ATTAsmContext::push(char* val) {
+void ATTAsmContext::push(const char* val) {
 	fprintf(getOutput(), "\t%s $%s\n", "pushl", val);
 }
 
-void AsmContext::push(Register target, int offset) {
-	fprintf(getOutput(), "\t%s %d(%%%s)\n", "pushl", regtoa(target), offset);
+void ATTAsmContext::push(Register target, int offset) {
+	fprintf(getOutput(), "\t%s %d(%%%s)\n", "pushl", offset, regtoa(target));
 }
 
 void ATTAsmContext::pop(Register target) {
@@ -604,11 +574,11 @@ void ATTAsmContext::popf() {
 }
 
 void ATTAsmContext::shr(Register target, int val) {
-	fprintf(getOutput(), "\t%s $%d,%%%s\n", "shrl", regtoa(target), val);
+	fprintf(getOutput(), "\t%s $%d,%%%s\n", "shrl", val, regtoa(target));
 }
 
 void ATTAsmContext::shl(Register target, int val) {
-	fprintf(getOutput(), "\t%s $%d,%%%s\n", "shll", regtoa(target), val);
+	fprintf(getOutput(), "\t%s $%d,%%%s\n", "shll", val, regtoa(target));
 }
 
 void ATTAsmContext::reserve(const char* name, int size, int type) {

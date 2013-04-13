@@ -5,6 +5,8 @@
  *      Author: harper
  */
 
+#include <typeinfo>
+#include "node.h"
 #include "acc_hist.h"
 
 AccessHistory::AccessHistory() {
@@ -24,9 +26,9 @@ void AccessHistory::pop() {
 	history->pop_back();
 }
 
-Node* AccessHistory::find(std::type_info type) {
+Node* AccessHistory::find(const char* type) {
 	for (int i = history->size() - 1; i >= 0; i--) {
-		if (typeid(history->at(i)) == type)
+		if (strcmp(typeid(*(history->at(i))).name(), type) == 0)
 			return history->at(i);
 	}
 	return NULL;

@@ -6,6 +6,8 @@
  */
 
 #include "act_record.h"
+#include "node.h"
+#include "asm_context.h"
 
 ActivationRecord::ActivationRecord(bool fm) {
 	formain = fm;

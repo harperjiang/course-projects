@@ -11,6 +11,10 @@
 #include <map>
 #include "common.h"
 
+class AsmContext;
+class Param;
+class Declare;
+
 class ActivationRecord {
 private:
 	bool formain;
@@ -31,3 +35,5 @@ public:
 	void gencode(AsmContext*);
 	void genclean(AsmContext*);
 };
+
+#endif

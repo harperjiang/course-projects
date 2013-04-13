@@ -12,8 +12,7 @@
 #include <vector>
 #include <stdio.h>
 #include <string.h>
-#include <typeinfo>
-#include "acc_history.h"
+#include "acc_hist.h"
 
 struct comparator {
 	bool operator()(const char* a, const char* b) {
@@ -37,8 +36,8 @@ public:
 	virtual ~EvalContext();
 
 	void access(Node*);
-	void done();	
-	Node* findhistory(std::type_info type);
+	void done();
+	Node* findhistory(const char* type);
 
 	void addDeclare(char* id, Declare* type);
 	Declare* getDeclare(char* id);

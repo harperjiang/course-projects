@@ -103,8 +103,9 @@ declares	: 	declares VAR id_list COLON type SEMICOLON	{for(std::vector<Identifie
 subs		:	subs sub 			{$$ = $1; $$->push_back($2);}
 			|			 			{$$ = new std::vector<Subprogram*>();};
 
-sub			:	FUNCTION id LP params RP COLON stdtype declares program_body SEMICOLON		{$$ = new Function($2, $4, $7, $8, $9);}
-			|	PROCEDURE id LP params RP declares program_body SEMICOLON					{$$ = new Procedure($2, $4, $6, $7);};
+sub			:	FUNCTION id LP params RP COLON stdtype SEMICOLON declares program_body SEMICOLON		{$$ = new Function($2, $4, $7, $9, $10);}
+			|	PROCEDURE id LP params RP SEMICOLON declares program_body SEMICOLON			{$$ = new Procedure($2, $4, $7, $8);};
+			|	PROCEDURE id SEMICOLON declares program_body SEMICOLON						{$$ = new Procedure($2, new std::vector<Param*>(), $4, $5);}
 
 params		:	params SEMICOLON id_list COLON type	{$$ = $1; for(std::vector<Identifier*>::iterator ite = $3->begin();ite!=$3->end();ite++) {$$->push_back(new Param($5,*ite));}}
 			|	id_list COLON type {$$ = new std::vector<Param*>();for(std::vector<Identifier*>::iterator ite = $1->begin();ite!=$1->end();ite++){$$->push_back(new Param($3,*ite));}};

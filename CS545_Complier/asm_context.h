@@ -12,14 +12,15 @@
 #include <map>
 #include <vector>
 #include <stack>
-#include <typeinfo>
 
 #include "common.h"
 #include "acc_hist.h"
-#include "symbol_table.h"
+#include "act_record.h"
 
 #define INDIRECT  1
 #define DIRECT  0
+
+class Node;
 
 typedef enum _Register {
 	eax, ebx, ecx, edx, esp, ebp, unknown
@@ -28,7 +29,6 @@ typedef enum _Register {
 class AsmContext {
 private:
 	FILE* output;
-	SymbolTable *symbolTable;
 
 	int labelCount;
 	
@@ -42,22 +42,11 @@ public:
 
 	void access(Node*);
 	void done();
-	Node* findhistory(std::type_info type);
+	Node* findhistory(char* type);
 	std::vector<Node*>* gethistory();
 	
 	ActivationRecord* getActRecord(char* var,int* level);
 
-	MemoryUnit* alloc(int size);
-
-	void dealloc(MemoryUnit*);
-
-	void pushFrame();
-
-	void popFrame();
-
-	// Return the allocated address for the given id
-	MemoryUnit* find(const char* id);
-	MemoryUnit* find(const char* id, int level);
 
 	char* genlabel();
 
@@ -113,7 +102,7 @@ public:
 
 	virtual void push(Register target);
 	virtual void push(int val);
-	virtual void push(char*);
+	virtual void push(const char*);
 	virtual void push(Register target, int offset);
 	virtual void pop(Register target);
 
@@ -143,6 +132,7 @@ public:
 	virtual void header();
 
 	virtual void section(const char* name);
+	virtual void declare(const char* type, const char* name);
 	virtual void reserve(const char* name, int size, int type);
 
 	virtual void cmp(Register source, Register target);
@@ -155,8 +145,9 @@ public:
 	virtual void mov(Register target, int valoraddr, int mode);
 	virtual void mov(Register target, int offset, Register source);
 	virtual void mov(Register target, Register source, int mode);
-	
 
+	virtual void lea(Register target, Register source, int offset);
+	
 	virtual void add(Register target, int val);
 	virtual void add(Register target, Register source);
 	virtual void sub(Register target, int val);
@@ -176,7 +167,7 @@ public:
 
 	virtual void push(Register target);
 	virtual void push(int val);
-	virtual void push(char*);
+	virtual void push(const char*);
 	virtual void push(Register target, int offset);
 	virtual void pop(Register target);
 
