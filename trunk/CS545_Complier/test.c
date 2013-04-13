@@ -1,13 +1,13 @@
 int func(int a, int b) {
-	return a+b;
+    int c = a;
+    int d = a+b;
+    return c+d;
 }
-
-int func2(int x) {
-	return x+5;
-}
-
 void main() {
-    int c = func(4,3);	
-    int d = c+5;
-    func2(d);
+int b = 5;
+int i = 0;
+for(i =0;i<5;i++)
+{b = func(3+i,4);
+printf("%d\n",b);}
+int w = b+6;
 }

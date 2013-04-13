@@ -162,6 +162,10 @@ void AsmContext::ret(int val) {
 	fprintf(getOutput(), "\t%s %d\n", "ret", val);
 }
 
+void AsmContext::leave() {
+	fprintf(getOutput(), "\t%s\n", "leave");
+}
+
 void AsmContext::tail() {
 	section("bss");
 	reserve("heap", 8192, 1);
@@ -346,6 +350,22 @@ void AsmContext::push(Register target, int offset) {
 
 void AsmContext::pop(Register target) {
 	fprintf(getOutput(), "\t%s %s\n", "pop", regtoa(target));
+}
+
+void AsmContext::pushf() {
+	fprintf(getOutput(), "\t%s\n", "pushfd");
+}
+
+void AsmContext::popf() {
+	fprintf(getOutput(), "\t%s\n", "popfd");
+}
+
+void AsmContext::shr(Register target, int val) {
+	fprintf(getOutput(), "\t%s %s,%d\n", "shr", regtoa(target), val);
+}
+
+void AsmContext::shl(Register target, int val) {
+	fprintf(getOutput(), "\t%s %s,%d\n", "shl", regtoa(target), val);
 }
 
 void AsmContext::jmp(char* label) {
@@ -573,6 +593,22 @@ void AsmContext::push(Register target, int offset) {
 
 void ATTAsmContext::pop(Register target) {
 	fprintf(getOutput(), "\t%s %%%s\n", "popl", regtoa(target));
+}
+
+void ATTAsmContext::pushf() {
+	fprintf(getOutput(), "\t%s\n", "pushf");
+}
+
+void ATTAsmContext::popf() {
+	fprintf(getOutput(), "\t%s\n", "popf");
+}
+
+void ATTAsmContext::shr(Register target, int val) {
+	fprintf(getOutput(), "\t%s $%d,%%%s\n", "shrl", regtoa(target), val);
+}
+
+void ATTAsmContext::shl(Register target, int val) {
+	fprintf(getOutput(), "\t%s $%d,%%%s\n", "shll", regtoa(target), val);
 }
 
 void ATTAsmContext::reserve(const char* name, int size, int type) {

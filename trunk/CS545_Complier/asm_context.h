@@ -76,6 +76,7 @@ public:
 	virtual void call(const char* label);
 	virtual void ret();
 	virtual void ret(int val);
+	virtual void leave();
 
 	virtual void cmp(Register source, Register target);
 	virtual void cmp(Register source, int val);
@@ -115,6 +116,12 @@ public:
 	virtual void push(char*);
 	virtual void push(Register target, int offset);
 	virtual void pop(Register target);
+
+	virtual void pushf();
+	virtual void popf();
+
+	virtual void shr(Register target, int val);
+	virtual void shl(Register target, int val);
 
 	virtual void jmp(char* label);
 	virtual void je(char* label);
@@ -172,6 +179,12 @@ public:
 	virtual void push(char*);
 	virtual void push(Register target, int offset);
 	virtual void pop(Register target);
+
+	virtual void pushf();
+	virtual void popf();
+
+	virtual void shr(Register target, int val);
+	virtual void shl(Register target, int val);
 };
 
 #endif /* ASM_CONTEXT_H_ */
