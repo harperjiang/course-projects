@@ -8,10 +8,17 @@
 #ifndef ACT_RECORD_H_
 #define ACT_RECORD_H_
 
+#include <map>
+#include "common.h"
+
 class ActivationRecord {
 private:
-
+	bool formain;
+	std::map<char*,int,comp>* table;
+	int localVarPointer;
+	int paramPointer;
 public:
+	ActivationRecord(bool);
 
 	// Managing local variables
 	void add(Declare* variable);
@@ -22,4 +29,5 @@ public:
 
 	// Generate itself in memory
 	void gencode(AsmContext*);
+	void genclean(AsmContext*);
 };

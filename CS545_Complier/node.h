@@ -213,6 +213,8 @@ public:
 };
 
 class AssignStatement: public Statement {
+private:
+	bool isreturn;
 public:
 	Variable* leftval;
 	Expression* rightval;
@@ -438,6 +440,7 @@ public:
 	Type* getType();
 	Identifier* getId();
 	void genaddr(AsmContext*);
+	bool operator==(const Identifier& another) const;
 };
 
 class ArrayElement: public Variable {

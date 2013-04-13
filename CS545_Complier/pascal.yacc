@@ -37,13 +37,14 @@ Program* parse_result;
 
 %left THEN
 %left ELSE
-%left AND OR
+%left OR
+%left AND
 %right NOT
-%left GT LT GTE LTE EQ NEQ
+%left EQ NEQ
+%left GT LT GTE LTE 
 %left ADD SUB 
 %left MUL DIV MOD
 %right UMINUS
-
 
 %union {
 	char* tokenval;

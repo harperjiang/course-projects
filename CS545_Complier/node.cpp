@@ -52,7 +52,7 @@ Program::Program(Identifier* id, std::vector<Identifier*>* params,
 	this->subs = subs;
 	this->body = body;
 
-	this->actrecord = new ActivationRecord();
+	this->actrecord = new ActivationRecord(true);
 }
 
 Program::~Program() {
@@ -116,7 +116,6 @@ void Program::gencode(AsmContext* context) {
 
 	// Gen text section
 	context->header();
-	context->label("_start");
 
 	// Handle activation record
 	for (std::vector<Declare*>::iterator ite = declares->begin();
@@ -129,8 +128,14 @@ void Program::gencode(AsmContext* context) {
 			ite != subs->end(); ite++) {
 		(*ite)->gencode(context);
 	}
+	// Program body starts here
+	context->label("_start");
+
 	actrecord->gencode(context);
 	body->gencode(context);
+	// Clean activation record
+	actrecord->genclean(context);
+
 	// Gen exit code
 	context->mov(eax, 1);
 	context->mov(ebx, 0);
@@ -149,7 +154,7 @@ Subprogram::Subprogram(Identifier* id, std::vector<Param*>* params,
 	this->declares = declares;
 	this->body = body;
 
-	this->actrecord = new ActivationRecord();
+	this->actrecord = new ActivationRecord(false);
 }
 
 Subprogram::~Subprogram() {
@@ -196,13 +201,13 @@ void Function::gencode(AsmContext* context) {
 			ite != declares->end(); ite++) {
 		actrecord->add(*ite);
 	}
-	for (std::vector<Param*>::iterator ite = params->begin();
-			ite != params->end(); ite++) {
-		actrecord->addparam(*ite);
+	for (int i = params->size() - 1; i >= 0; i--) {
+		actrecord->addparam(params->at(i));
 	}
 
 	actrecord->gencode(context);
 	body->gencode(context);
+	actrecord->genclean(context);
 
 	context->done();
 }
@@ -244,16 +249,19 @@ void Procedure::print(FILE* file, int level) {
 void Procedure::gencode(AsmContext* context) {
 	context->access(this);
 	context->label(id->name);
-// Handle activation record
+	// Handle activation record
 	for (std::vector<Declare*>::iterator ite = declares->begin();
 			ite != declares->end(); ite++) {
 		actrecord->add(*ite);
 	}
-	for (std::vector<Param*>::iterator ite = params->begin();
-			ite != params->end(); ite++) {
-		actrecord->addparam(*ite);
+	for (int i = params->size() - 1; i >= 0; i--) {
+		actrecord->addparam(params->at(i));
 	}
+
+	actrecord->gencode(context);
 	body->gencode(context);
+	actrecord->genclean(context);
+
 	context->done();
 }
 
@@ -342,7 +350,9 @@ void ArrayType::print(FILE* file, int level) {
 	fprintf(file, "%s\n", "[ArrayType]");
 	basic.get()->print(file, level + 1);
 }
-
+// TODO Check cases that wrongly write
+// Should be ArrayType == ArrayType
+// Check whether there's *ArrayType = *ArrayType that makes it doesn't work
 bool ArrayType::operator ==(const ArrayType& another) const {
 	return basic.get() == another.basic.get();
 }
@@ -395,6 +405,7 @@ void IfStatement::evaluate(EvalContext* context) {
 void IfStatement::gencode(AsmContext* context) {
 	char* elselabel = context->genlabel();
 	condition->gencode(context);
+	context->cmp(eax, 1);
 	context->jne(elselabel);
 	thenbody->gencode(context);
 	context->label(elselabel);
@@ -436,7 +447,7 @@ void WhileStatement::gencode(AsmContext* context) {
 	context->access(this);
 	context->label(startlabel);
 	condition->gencode(context);
-// TODO is this correct?
+	context->cmp(eax, 1);
 	context->jne(endlabel);
 
 	body->gencode(context);
@@ -448,6 +459,7 @@ void WhileStatement::gencode(AsmContext* context) {
 AssignStatement::AssignStatement(Variable* lval, Expression* rval) {
 	this->leftval = lval;
 	this->rightval = rval;
+	this->isreturn = false;
 }
 
 AssignStatement::~AssignStatement() {
@@ -463,16 +475,40 @@ void AssignStatement::print(FILE* file, int level) {
 }
 
 void AssignStatement::evaluate(EvalContext* context) {
+	Node* funcnode = context->findhistory(typeid(Function));
+	if (funcnode != NULL && typeid(leftval) == typeid(Identifier)) {
+		Function* function = (Function*) funcnode;
+		if (*(function->id) == *((Identifier*) leftval)) {
+			// This is a return statement
+			isreturn = true;
+			rightval->evaluate(context);
+			if (*(function->getType()) != *(rightval->getType())) {
+				context->record(
+						error_type_mismatch(rightval, function->getType()));
+			}
+			return;
+		}
+	}
+	// This is a normal assignment
+	isreturn = false;
 	leftval->evaluate(context);
 	rightval->evaluate(context);
-	if (leftval->getType() != rightval->getType()) {
+	if (*(leftval->getType()) != *(rightval->getType())) {
 		context->record(error_type_mismatch(leftval, rightval->getType()));
 	}
-// TODO If AssignStatement is an ReturnStatement
+
 }
 
 void AssignStatement::gencode(AsmContext* context) {
-// TODO Not done yet
+	if (isreturn) {
+		rightval->gencode(context);
+		context->leave();
+		context->ret();
+	} else {
+		rightval->gencode(context);
+		leftval->genaddr(context);
+		context->mov(edx, eax, 2);
+	}
 }
 
 StatementBlock::StatementBlock(std::vector<Statement*>* stmts) {
@@ -500,7 +536,7 @@ void StatementBlock::evaluate(EvalContext* context) {
 }
 
 void StatementBlock::gencode(AsmContext* context) {
-// TODO Use quadruple
+	// TODO Use quadruple
 	for (std::vector<Statement*>::iterator ite = statements->begin();
 			ite != statements->end(); ite++) {
 		(*ite)->gencode(context);
@@ -543,8 +579,7 @@ void BreakStatement::print(FILE* file, int level) {
 }
 
 void BreakStatement::evaluate(EvalContext* context) {
-// TODO Check whether in a while loop
-
+	//  Check whether in a while loop
 	Node* node = context->findhistory(typeid(WhileStatement));
 	if (NULL != node) {
 		parent = (WhileStatement*) node;
@@ -589,7 +624,7 @@ void ReturnStatement::gencode(AsmContext* context) {
 	if (retvalue != NULL) {
 		retvalue->gencode(context);
 	}
-// TODO store return value in eax
+	// Return value already stored in eax
 	context->ret();
 }
 
@@ -784,7 +819,34 @@ Type * ArithExpression::getType() {
 }
 
 void ArithExpression::gencode(AsmContext* context) {
-
+	right->gencode(context);
+	context->push(eax);
+	if (NULL != left) {
+		left->gencode(context);
+	} else {
+		context->mov(eax, 0);
+	}
+	context->pop(ebx);
+	switch (opr) {
+	case _ADD:
+		context->add(eax, ebx);
+		break;
+	case _SUB:
+		context->sub(eax, ebx);
+		break;
+	case _MUL:
+		context->mul(ebx);
+		break;
+	case _DIV:
+		context->div(ebx);
+		break;
+	case _MOD:
+		context->div(ebx);
+		context->mov(eax, edx);
+		break;
+	default:
+		break;
+	}
 }
 
 RelExpression::RelExpression(Expression* l, ROPR opr, Expression* r) {
@@ -820,7 +882,47 @@ Type * RelExpression::getType() {
 }
 
 void RelExpression::gencode(AsmContext* context) {
+	char* tlabel = context->genlabel();
+	char* elabel = context->genlabel();
+	right->gencode(context);
+	context->push(eax);
+	left->gencode(context);
+	context->pop(ebx);
+	context->cmp(eax, ebx);
 
+	switch (opr) {
+	case _EQ:
+		// ZF = 0
+		context->je(tlabel);
+		break;
+	case _NEQ:
+		// ZF != 0
+		context->jne(tlabel);
+		break;
+	case _GT:
+		// ZF != 0 && SF = 0
+		context->jg(tlabel);
+		break;
+	case _GTE:
+		// SF = 0
+		context->jge(tlabel);
+		break;
+	case _LT:
+		// ZF != 0 && SF = 1
+		context->jl(tlabel);
+		break;
+	case _LTE:
+		// SF = 1
+		context->jle(tlabel);
+		break;
+	default:
+		return;
+	}
+	context->mov(eax, 0);
+	context->jmp(elabel);
+	context->label(tlabel);
+	context->mov(eax, 1);
+	context->label(elabel);
 }
 
 LogicExpression::LogicExpression(Expression* l, LOPR opr, Expression* r) {
@@ -859,7 +961,24 @@ Type * LogicExpression::getType() {
 }
 
 void LogicExpression::gencode(AsmContext* context) {
-
+	right->gencode(context);
+	if (left != NULL) {
+		context->push(eax);
+		left->gencode(context);
+		context->pop(ebx);
+		switch (opr) {
+		case _AND:
+			context->land(eax, ebx);
+			break;
+		case _OR:
+			context->lor(eax, ebx);
+			break;
+		default:
+			break;
+		}
+	} else {
+		context->lnot(eax);
+	}
 }
 
 IntConstant::IntConstant(int val) {
@@ -879,11 +998,16 @@ void IntConstant::print(FILE* file, int level) {
 	fprintf(file, "%s%d\n", "[IntConstant]", value);
 }
 
+void IntConstant::gencode(AsmContext* context) {
+	context->mov(eax, value);
+}
+
 RealConstant::RealConstant(double val) {
 	this->value = val;
 }
 
 RealConstant::~RealConstant() {
+
 }
 
 void RealConstant::print(FILE* file, int level) {
@@ -893,6 +1017,10 @@ void RealConstant::print(FILE* file, int level) {
 
 Type * RealConstant::getType() {
 	return TYPE_REAL;
+}
+
+void RealConstant::gencode(AsmContext* context) {
+
 }
 
 BoolConstant::BoolConstant(bool val) {
@@ -910,6 +1038,10 @@ void BoolConstant::print(FILE* file, int level) {
 
 Type * BoolConstant::getType() {
 	return TYPE_BOOL;
+}
+
+void BoolConstant::gencode(AsmContext* context) {
+	context->mov(eax, value ? 1 : 0);
 }
 
 Identifier::Identifier(char* name) :
