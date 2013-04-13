@@ -31,8 +31,13 @@ void lex_error() {
 NUMBER					[0-9]+
 ID						[a-zA-Z_][a-zA-Z0-9_]*
 %option noyywrap
+%x COMMENT
 
 %%
+"(*"					{BEGIN COMMENT;}
+<COMMENT>\n				{yyline++;yycol = 0;}
+<COMMENT>.				{;}
+<COMMENT>"*)"			{BEGIN INITIAL;}
 {NUMBER}"."{NUMBER} 	{paslval.tokenval = pastext; return REAL;}
 {NUMBER}				{paslval.tokenval = pastext; return INT;}
 "program"				{return PROGRAM;}
@@ -49,7 +54,7 @@ ID						[a-zA-Z_][a-zA-Z0-9_]*
 "write"					{return WRITE;}
 "var"					{return VAR;}
 "real"					{return TREAL;}
-"int"					{return TINT;}
+"integer"				{return TINT;}
 "array"					{return ARRAY;}
 "of"					{return OF;}
 "true"					{return TRUE;}

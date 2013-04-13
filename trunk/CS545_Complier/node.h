@@ -9,6 +9,7 @@
 #define NODE_H_
 
 #include <vector>
+#include <map>
 #include <tr1/memory>
 #include "eval_context.h"
 #include "asm_context.h"
@@ -67,6 +68,8 @@ public:
 };
 
 class Subprogram: public Node {
+private:
+	std::map<char*,Declare*,comp>* declareTable;
 public:
 	Identifier* id;
 	std::vector<Param*>* params;
@@ -77,12 +80,15 @@ public:
 	
 	Subprogram(Identifier*,std::vector<Param*>*,std::vector<Declare*>*,StatementBlock*);
 	~Subprogram();
-
+	Declare* getDeclare(char*);
 	void evaluate(EvalContext* context);
 };
 
+class AssignStatement;
+
 class Function: public Subprogram {
 public:
+	AssignStatement* returnstmt;
 	std::tr1::shared_ptr<Type> rettype;
 
 	Function(Identifier*, std::vector<Param*>*, Type*, std::vector<Declare*>*,
@@ -92,6 +98,7 @@ public:
 	Type* getType();
 
 	void print(FILE*, int);
+	void evaluate(EvalContext* context);
 	void gencode(AsmContext*);
 };
 
@@ -133,6 +140,7 @@ public:
 	virtual ~Type() {
 	}
 	virtual const char* description() = 0;
+	virtual bool equals(Type*) = 0;
 };
 
 class BasicType: public Type {
@@ -145,6 +153,7 @@ public:
 
 	void print(FILE* file, int level);
 	const char* description();
+	virtual bool equals(Type*);
 };
 
 class ArrayType: public Type {
@@ -160,11 +169,8 @@ public:
 
 	void print(FILE* file, int level);
 
-	// overloading == operator
-	bool operator ==(const ArrayType& another) const;
-	bool operator !=(const ArrayType& another) const;
 	const char* description();
-	
+	virtual bool equals(Type*);
 	Type* getBasic();
 };
 /**
@@ -427,6 +433,7 @@ public:
 	virtual Identifier* getId() = 0;
 	// Assembly code to put the address of variable to edx
 	virtual void genaddr(AsmContext*) =0;
+	Declare* getdeclare();
 };
 
 class Identifier: public Variable {
@@ -440,7 +447,7 @@ public:
 	Type* getType();
 	Identifier* getId();
 	void genaddr(AsmContext*);
-	bool operator==(const Identifier& another) const;
+	bool equals(const Identifier* another) const;
 };
 
 class ArrayElement: public Variable {

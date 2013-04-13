@@ -47,10 +47,18 @@ char* error_type_mismatch(Expression* source) {
 	return buffer;
 }
 
+char* error_type_mismatch(Function* function) {
+	char* buffer = new char[300];
+	sprintf(buffer,
+			"Semantic error: type mismatch: incorrect function return value");
+	return buffer;
+}
+
 char* error_type_mismatch(Expression* source, const char* desc) {
 	char* buffer = new char[300];
 	sprintf(buffer,
-			"Semantic error: type mismatch: expression should have type %s",desc);
+			"Semantic error: type mismatch: expression should have type %s",
+			desc);
 	return buffer;
 }
 
@@ -72,5 +80,18 @@ char* error_arg_mismatch(CallExpression* call) {
 char* error_break_not_in_loop(BreakStatement* stmt) {
 	char* buffer = new char[300];
 	sprintf(buffer, "Semantic error: break not in a loop");
+	return buffer;
+}
+
+char* error_no_return(Function* func) {
+	char* buffer = new char[300];
+	sprintf(buffer, "Semantic error: function has no return statement:%s",
+			func->id->name);
+	return buffer;
+}
+
+char* error_update_non_local(AssignStatement*) {
+	char* buffer = new char[300];
+	sprintf(buffer, "Semantic error: non-local variable cannot be updated");
 	return buffer;
 }

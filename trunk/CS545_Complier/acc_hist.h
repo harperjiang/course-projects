@@ -7,9 +7,10 @@
 
 #ifndef ACC_HISTORY_H_
 #define ACC_HISTORY_H_
-#include "node.h"
+
 #include <vector>
-#include <typeinfo>
+
+class Node;
 
 class AccessHistory {
 private:
@@ -17,9 +18,11 @@ private:
 public:
 	AccessHistory();
 	virtual ~AccessHistory();
-	
+
 	void push(Node*);
 	void pop();
-	Node* find(std::type_info type);
+	Node* find(const char* type);
 	std::vector<Node*>* gethistory();
 };
+
+#endif
