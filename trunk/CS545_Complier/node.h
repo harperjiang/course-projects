@@ -83,6 +83,8 @@ private:
 public:
 	std::vector<Param*>* params;
 
+	int level;
+
 	Subprogram(Identifier*, std::vector<Param*>*, std::vector<Declare*>*,
 			std::vector<Subprogram*>*, StatementBlock*);
 	virtual ~Subprogram();

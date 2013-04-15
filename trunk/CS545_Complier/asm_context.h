@@ -21,6 +21,7 @@
 #define DIRECT  0
 
 class Node;
+class Subprogram;
 
 typedef enum _Register {
 	eax, ebx, ecx, edx, esp, ebp, unknown
@@ -29,14 +30,15 @@ typedef enum _Register {
 class AsmContext {
 private:
 	FILE* output;
-
 	int labelCount;
-
 	AccessHistory* history;
+	std::stack<Subprogram*>* subhistory;
 public:
 	AsmContext(FILE* output);
 	virtual ~AsmContext();
 	FILE* getOutput();
+
+	Subprogram* currentsub();
 
 	void init();
 

@@ -34,6 +34,7 @@ AsmContext::AsmContext(FILE* output) {
 	labelCount = 0;
 
 	history = new AccessHistory();
+	subhistory = new std::stack<Subprogram*>();
 }
 
 AsmContext::~AsmContext() {
@@ -41,6 +42,10 @@ AsmContext::~AsmContext() {
 		fclose(this->output);
 	}
 	delete history;
+
+	while (!subhistory->empty())
+		subhistory->pop();
+	delete subhistory;
 }
 
 FILE* AsmContext::getOutput() {
@@ -53,11 +58,24 @@ void AsmContext::init() {
 
 void AsmContext::access(Node* node) {
 	history->push(node);
+	if (dynamic_cast<Subprogram*>(node) != NULL) {
+		subhistory->push((Subprogram*) node);
+	}
 }
 
 void AsmContext::done() {
 	// Don't do boundary check
+	if (!history->gethistory()->empty()
+			&& history->gethistory()->back() == currentsub()) {
+		subhistory->pop();
+	}
 	history->pop();
+}
+
+Subprogram* AsmContext::currentsub() {
+	if (subhistory->empty())
+		return NULL;
+	return subhistory->top();
 }
 
 Node* AsmContext::findhistory(char* type) {

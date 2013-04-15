@@ -226,6 +226,7 @@ Subprogram::Subprogram(Identifier* id, std::vector<Param*>* params,
 		declareTable->insert(
 				std::pair<char*, Declare*>((*ite)->name->name, *ite));
 	}
+	this->level = 0;
 }
 
 Subprogram::~Subprogram() {
@@ -234,6 +235,11 @@ Subprogram::~Subprogram() {
 }
 
 void Subprogram::evaluate(EvalContext* context) {
+	if (context->getCurrent() == NULL) {
+		level = 1;
+	} else {
+		level = context->getCurrent()->level + 1;
+	}
 	context->pushFrame(this);
 	for (std::vector<Declare*>::iterator ite = declares->begin();
 			ite != declares->end(); ite++) {
@@ -284,6 +290,10 @@ void Function::print(FILE* file, int level) {
 	}
 	for (std::vector<Declare*>::iterator ite = declares->begin();
 			ite != declares->end(); ite++) {
+		(*ite)->print(file, level + 1);
+	}
+	for (std::vector<Subprogram*>::iterator ite = subs->begin();
+			ite != subs->end(); ite++) {
 		(*ite)->print(file, level + 1);
 	}
 	body->print(file, level + 1);
@@ -348,6 +358,10 @@ void Procedure::print(FILE* file, int level) {
 	}
 	for (std::vector<Declare*>::iterator ite = declares->begin();
 			ite != declares->end(); ite++) {
+		(*ite)->print(file, level + 1);
+	}
+	for (std::vector<Subprogram*>::iterator ite = subs->begin();
+			ite != subs->end(); ite++) {
 		(*ite)->print(file, level + 1);
 	}
 	body->print(file, level + 1);
@@ -943,45 +957,37 @@ void CallExpression::gencode(AsmContext* context) {
 	//  <-----ebp
 	// local_var
 
-	// Find the caller & parent
-	Routine* owner = NULL;
-	Routine* parent = NULL;
-	std::vector<Node*>* history = context->gethistory();
-	for (int i = history->size() - 1; i >= 0; i--) {
-		Node* n = history->at(i);
-		if (typeid(*n) == typeid(Program) || typeid(*n) == typeid(Function)
-				|| typeid(*n) == typeid(Procedure)) {
-			if (owner == NULL) {
-				owner = (Routine*) n;
-			} else {
-				parent = (Routine*) n;
-				break;
-			}
-		}
-	}
+	// Find the caller & callee
+
+	Subprogram* caller = context->currentsub();
+	Subprogram* callee = this->source;
+
 	// call type : 0:up->down 1:slibling 2:child->parent
 	int calltype = 0;
-	// Owner won't be null as we know there is a Program in history
-	if (parent == NULL) {
+	if (caller == NULL) {
 		// start from main, up call down
 		calltype = 0;
-	} else if (NULL != owner->getSub(callname->name)) {
+	} else if (caller->level < callee->level) {
 		calltype = 0;
-	} else if (parent->getSub(callname->name) != NULL
-			&& parent->getSub(owner->id->name) == owner) {
+	} else if (caller->level == callee->level) {
 		calltype = 1;
 	} else {
 		calltype = 2;
 	}
-
+	int leveldiff;
 	switch (calltype) {
-	case 2:
-		//TODO dunno how to do this...
+	case 2: // child call parent, repeatly go up call stack
+		leveldiff = caller->level - callee->level;
+		context->mov(edx, ebp);
+		for (int i = 0; i < leveldiff; i++)
+			context->mov(edx, edx, 1, 8);
+		// Now back to slibling position
+		context->push(edx, 8);
 		break;
 	case 1: // slibling, copy frame reference
 		context->push(ebp, 8);
 		break;
-	case 0: // parent call child, child copy parent's frame reference
+	case 0: // parent call child, child create reference of parent's frame reference
 		context->push(ebp);
 		break;
 	default:
