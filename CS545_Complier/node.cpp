@@ -1102,14 +1102,12 @@ Type * ArithExpression::getType() {
 
 void ArithExpression::gencode(AsmContext* context) {
 	if (TYPE_REAL->equals(right->getType())) {
-		context->sub(esp, 4);
-		context->fstp(esp);
 		if (NULL != left) {
-			left->gencode(context);
+			left->gencode(context);// r1
 		} else {
 			context->fldz();
 		}
-		right->gencode(context);
+		right->gencode(context); // r0
 		switch (opr) {
 		case _ADD:
 			context->faddp();
