@@ -380,7 +380,7 @@ void AsmContext::faddp() {
 }
 
 void AsmContext::fsubp() {
-	fprintf(getOutput(), "\t%s\n", "fsubp");
+	fprintf(getOutput(), "\t%s\n", "fsubrp");
 }
 
 void AsmContext::fmulp() {
@@ -388,7 +388,7 @@ void AsmContext::fmulp() {
 }
 
 void AsmContext::fdivp() {
-	fprintf(getOutput(), "\t%s\n", "fdivp");
+	fprintf(getOutput(), "\t%s\n", "fdivrp");
 }
 
 void AsmContext::fcompp() {
