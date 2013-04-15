@@ -681,10 +681,13 @@ void AssignStatement::print(FILE* file, int level) {
 }
 
 void AssignStatement::evaluate(EvalContext* context) {
-	Node* funcnode = context->findhistory(typeid(Function).name());
+	Subprogram* current = context->getCurrent();
+	Function* function = NULL;
+	if (NULL != current && typeid(*current) == typeid(Function)) {
+		function = (Function*) current;
+	}
 	rightval->evaluate(context);
-	if (funcnode != NULL) {
-		Function* function = (Function*) funcnode;
+	if (function != NULL) {
 		if (typeid(*leftval) == typeid(Identifier)
 				&& function->id->equals((Identifier*) leftval)) {
 			// This is a return statement
@@ -1024,7 +1027,7 @@ void SysCall::evaluate(EvalContext* context) {
 	}
 }
 
-Type * SysCall::getType() {
+Type* SysCall::getType() {
 	return NULL;
 }
 
@@ -1103,7 +1106,7 @@ Type * ArithExpression::getType() {
 void ArithExpression::gencode(AsmContext* context) {
 	if (TYPE_REAL->equals(right->getType())) {
 		if (NULL != left) {
-			left->gencode(context);// r1
+			left->gencode(context);		// r1
 		} else {
 			context->fldz();
 		}
@@ -1518,12 +1521,15 @@ void ArrayElement::evaluate(EvalContext* context) {
 	if (NULL == dec) {
 		context->record(error_undefined_id(this->name));
 	} else {
+		// Check array type
+		if (typeid(*(dec->getType())) != typeid(ArrayType)) {
+			context->record(error_type_mismatch(this));
+			// If continue here, problem may occur
+			return;
+		}
 		this->declare = dec;
 	}
-// Check array type
-	if (typeid(*(dec->getType())) != typeid(ArrayType)) {
-		context->record(error_type_mismatch(this));
-	}
+
 	index->evaluate(context);
 	if (index->getType() == NULL)
 		return;

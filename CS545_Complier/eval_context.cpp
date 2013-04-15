@@ -21,7 +21,7 @@ EvalContext::EvalContext() {
 
 	idTable->push_back(new std::map<char*, Declare*, comparator>());
 	subTable->push_back(new std::map<char*, Subprogram*, comparator>());
-	current = NULL;
+	current = new std::stack<Subprogram*>();
 }
 
 EvalContext::~EvalContext() {
@@ -47,6 +47,10 @@ EvalContext::~EvalContext() {
 	}
 	errors->clear();
 	delete errors;
+
+	while (!current->empty())
+		current->pop();
+	delete current;
 }
 
 void EvalContext::access(Node* node) {
@@ -100,7 +104,9 @@ Subprogram* EvalContext::getSub(char* id) {
 }
 
 Subprogram* EvalContext::getCurrent() {
-	return current;
+	if(current->empty())
+		return NULL;
+	return current->top();
 }
 
 void EvalContext::record(char* context) {
@@ -122,7 +128,7 @@ void EvalContext::showerror() {
 }
 
 void EvalContext::pushFrame(Subprogram* sub) {
-	current = sub;
+	current->push(sub);
 	idTable->push_back(new std::map<char*, Declare*, comparator>());
 	subTable->push_back(new std::map<char*, Subprogram*, comparator>());
 	access(sub);
@@ -130,7 +136,7 @@ void EvalContext::pushFrame(Subprogram* sub) {
 
 void EvalContext::popFrame() {
 	done();
-	current = NULL;
+	current->pop();
 	idTable->pop_back();
 	subTable->pop_back();
 }

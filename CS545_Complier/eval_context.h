@@ -10,6 +10,7 @@
 
 #include <map>
 #include <vector>
+#include <stack>
 #include <stdio.h>
 #include <string.h>
 #include "acc_hist.h"
@@ -25,7 +26,7 @@ class EvalContext {
 private:
 	std::vector<std::map<char*, Declare*, comparator> *> *idTable;
 	std::vector<std::map<char*, Subprogram*, comparator>*> *subTable;
-	Subprogram* current;
+	std::stack<Subprogram*>* current;
 	std::vector<char*> *errors;
 	AccessHistory* history;
 	int error;

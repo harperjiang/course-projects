@@ -75,7 +75,7 @@ ID						[a-zA-Z_][a-zA-Z0-9_]*
 "+"                 	{return ADD;}
 "-"                 	{return SUB;}
 "*"                 	{return MUL;}
-"div"                 	{return DIV;}
+"/"                 	{return DIV;}
 "mod"					{return MOD;}
 "and"					{return AND;}
 "or"					{return OR;}
