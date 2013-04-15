@@ -132,7 +132,11 @@ void parse_input(const char* inputName, const char* outputName,
 
 	// Generate output
 	switch (format) {
-	case ASM:
+	case ASM: {
+		AsmContext* asmcontext = new ATTAsmContext(outputFile);
+		parse_result->gencode(asmcontext);
+		delete asmcontext;
+	}
 		break;
 	case TREE:
 		parse_result->print(outputFile, 0);

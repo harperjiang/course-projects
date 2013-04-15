@@ -11,6 +11,7 @@
 #include <tr1/memory>
 #include "node.h"
 #include "exception.h"
+#include "parser.h"
 
 #define _TYPE_REAL 1
 #define _TYPE_INT 2
@@ -43,24 +44,91 @@ void clearVector(V* avec) {
 	avec->clear();
 }
 
-Program::Program(Identifier* id, std::vector<Identifier*>* params,
-		std::vector<Declare*>* declares, std::vector<Subprogram*>* subs,
-		StatementBlock* body) {
+void Node::setloc(YYLTYPE loc) {
+	if (this->loc == NULL) {
+		this->loc = new YYLTYPE();
+	}
+	this->loc->first_column = loc.first_column;
+	this->loc->first_line = loc.first_line;
+	this->loc->last_column = loc.last_column;
+	this->loc->last_line = loc.last_line;
+}
+
+void Node::setloc(YYLTYPE* from, YYLTYPE* to) {
+	if (this->loc == NULL) {
+		this->loc = new YYLTYPE();
+	}
+	this->loc->first_column = from->first_column;
+	this->loc->first_line = from->first_line;
+	this->loc->last_column = to->last_column;
+	this->loc->last_line = to->last_line;
+}
+
+Routine::Routine(Identifier* id, std::vector<Declare*>* declares,
+		std::vector<Subprogram*>* subs, StatementBlock* body) :
+		Node() {
 	this->id = id;
-	this->params = params;
 	this->declares = declares;
 	this->subs = subs;
 	this->body = body;
+
+	this->declareTable = new std::map<char*, Declare*, comp>();
+	for (std::vector<Declare*>::iterator ite = declares->begin();
+			ite != declares->end(); ite++) {
+		declareTable->insert(
+				std::pair<char*, Declare*>((*ite)->name->name, *ite));
+	}
+
+	this->subTable = new std::map<char*, Subprogram*, comp>();
+	for (std::vector<Subprogram*>::iterator ite = subs->begin();
+			ite != subs->end(); ite++) {
+		subTable->insert(
+				std::pair<char*, Subprogram*>((*ite)->id->name, (*ite)));
+	}
+
+	this->actrecord = NULL;
+}
+
+Routine::~Routine() {
+	delete id;
+
+	delete actrecord;
+	declareTable->clear();
+	delete declareTable;
+
+	clearVector(declares);
+	delete declares;
+	clearVector(subs);
+	delete subs;
+	delete body;
+}
+
+Declare* Routine::getDeclare(char* id) {
+	if (declareTable->find(id) != declareTable->end()) {
+		return declareTable->find(id)->second;
+	}
+	return NULL;
+}
+
+Subprogram* Routine::getSub(char* id) {
+	if (subTable->find(id) != subTable->end()) {
+		return subTable->find(id)->second;
+	}
+	return NULL;
+}
+
+Program::Program(Identifier* id, std::vector<Identifier*>* params,
+		std::vector<Declare*>* declares, std::vector<Subprogram*>* subs,
+		StatementBlock* body) :
+		Routine(id, declares, subs, body) {
+	this->params = params;
 
 	this->actrecord = new ActivationRecord(true);
 }
 
 Program::~Program() {
-	delete id;
 	clearVector(params);
-	clearVector(declares);
-	clearVector(subs);
-	delete body;
+	delete params;
 }
 
 void Program::print(FILE* file, int level) {
@@ -104,11 +172,11 @@ void Program::gencode(AsmContext* context) {
 	// Gen data section
 	context->section("data");
 	context->label("intwrite");
-	context->declare("string", "%d\n");
+	context->declare("string", "%d\\n");
 	context->label("intread");
 	context->declare("string", "%d");
 	context->label("realwrite");
-	context->declare("string", "%f\n");
+	context->declare("string", "%f\\n");
 	context->label("realread");
 	context->declare("string", "%f");
 
@@ -127,7 +195,7 @@ void Program::gencode(AsmContext* context) {
 		(*ite)->gencode(context);
 	}
 	// Program body starts here
-	context->label("_start");
+	context->label("main");
 
 	actrecord->gencode(context);
 	body->gencode(context);
@@ -146,19 +214,13 @@ void Program::gencode(AsmContext* context) {
 }
 
 Subprogram::Subprogram(Identifier* id, std::vector<Param*>* params,
-		std::vector<Declare*>*declares, StatementBlock*body) {
-	this->id = id;
+		std::vector<Declare*>* declares, std::vector<Subprogram*>* subs,
+		StatementBlock* body) :
+		Routine(id, declares, subs, body) {
 	this->params = params;
-	this->declares = declares;
-	this->body = body;
 
 	this->actrecord = new ActivationRecord(false);
-	this->declareTable = new std::map<char*, Declare*, comp>();
-	for (std::vector<Declare*>::iterator ite = declares->begin();
-			ite != declares->end(); ite++) {
-		declareTable->insert(
-				std::pair<char*, Declare*>((*ite)->name->name, *ite));
-	}
+
 	for (std::vector<Param*>::iterator ite = params->begin();
 			ite != params->end(); ite++) {
 		declareTable->insert(
@@ -167,31 +229,45 @@ Subprogram::Subprogram(Identifier* id, std::vector<Param*>* params,
 }
 
 Subprogram::~Subprogram() {
-	delete id;
 	clearVector(params);
-	clearVector(declares);
-	delete body;
-	declareTable->clear();
-	delete declareTable;
+	delete params;
 }
 
-Declare* Subprogram::getDeclare(char* id) {
-	if (declareTable->find(id) != declareTable->end()) {
-		return declareTable->find(id)->second;
+void Subprogram::evaluate(EvalContext* context) {
+	context->pushFrame(this);
+	for (std::vector<Declare*>::iterator ite = declares->begin();
+			ite != declares->end(); ite++) {
+		context->addDeclare((*ite)->name->name, (*ite));
 	}
-	return NULL;
+	for (std::vector<Param*>::iterator ite = params->begin();
+			ite != params->end(); ite++) {
+		context->addDeclare((*ite)->name->name, (*ite));
+	}
+	for (std::vector<Subprogram*>::iterator ite = subs->begin();
+			ite != subs->end(); ite++) {
+		context->addSub((*ite)->id->name, (*ite));
+	}
+	for (std::vector<Subprogram*>::iterator ite = subs->begin();
+			ite != subs->end(); ite++) {
+		(*ite)->evaluate(context);
+	}
+	body->evaluate(context);
+	context->popFrame();
 }
 
 Function::Function(Identifier* id, std::vector<Param*>* params, Type* rettype,
-		std::vector<Declare*>* declares, StatementBlock* body) :
-		Subprogram(id, params, declares, body) {
+		std::vector<Declare*>* declares, std::vector<Subprogram*>* subs,
+		StatementBlock* body) :
+		Subprogram(id, params, declares, subs, body) {
 	this->rettype = get_type_pointer(rettype);
 	this->returnstmt = NULL;
+	this->returnlabel = NULL;
 }
 
 Function::~Function() {
 	rettype.reset();
 	returnstmt = NULL;
+	returnlabel = NULL;
 }
 
 Type* Function::getType() {
@@ -215,7 +291,8 @@ void Function::print(FILE* file, int level) {
 
 void Function::gencode(AsmContext* context) {
 	context->access(this);
-	context->label(id->name);
+	returnlabel = context->genlabel();
+
 	// Handle activation record
 	for (std::vector<Declare*>::iterator ite = declares->begin();
 			ite != declares->end(); ite++) {
@@ -225,9 +302,20 @@ void Function::gencode(AsmContext* context) {
 		actrecord->addparam(params->at(i));
 	}
 
+	// Generate procedure for subroutines
+	for (std::vector<Subprogram*>::iterator ite = subs->begin();
+			ite != subs->end(); ite++) {
+		(*ite)->gencode(context);
+	}
+	// Generating code for this
+	context->label(id->name);
+
 	actrecord->gencode(context);
 	body->gencode(context);
+
+	context->label(returnlabel);
 	actrecord->genclean(context);
+	context->ret();
 
 	context->done();
 }
@@ -242,23 +330,10 @@ void Function::evaluate(EvalContext* context) {
 	}
 }
 
-void Subprogram::evaluate(EvalContext* context) {
-	context->pushFrame(this);
-	for (std::vector<Declare*>::iterator ite = declares->begin();
-			ite != declares->end(); ite++) {
-		context->addDeclare((*ite)->name->name, (*ite));
-	}
-	for (std::vector<Param*>::iterator ite = params->begin();
-			ite != params->end(); ite++) {
-		context->addDeclare((*ite)->name->name, (*ite));
-	}
-	body->evaluate(context);
-	context->popFrame();
-}
-
 Procedure::Procedure(Identifier* id, std::vector<Param*>* params,
-		std::vector<Declare*>* declares, StatementBlock* block) :
-		Subprogram(id, params, declares, block) {
+		std::vector<Declare*>* declares, std::vector<Subprogram*>* subs,
+		StatementBlock* block) :
+		Subprogram(id, params, declares, subs, block) {
 }
 
 Procedure::~Procedure() {
@@ -280,7 +355,7 @@ void Procedure::print(FILE* file, int level) {
 
 void Procedure::gencode(AsmContext* context) {
 	context->access(this);
-	context->label(id->name);
+
 	// Handle activation record
 	for (std::vector<Declare*>::iterator ite = declares->begin();
 			ite != declares->end(); ite++) {
@@ -290,14 +365,25 @@ void Procedure::gencode(AsmContext* context) {
 		actrecord->addparam(params->at(i));
 	}
 
+	// Generate procedure for subroutines
+	for (std::vector<Subprogram*>::iterator ite = subs->begin();
+			ite != subs->end(); ite++) {
+		(*ite)->gencode(context);
+	}
+	// Generating code for this
+	context->label(id->name);
+
 	actrecord->gencode(context);
 	body->gencode(context);
 	actrecord->genclean(context);
 
+	context->ret();
+
 	context->done();
 }
 
-Declare::Declare(Type* t, Identifier* id) {
+Declare::Declare(Type* t, Identifier* id) :
+		Node() {
 	this->name = id;
 	this->type = get_type_pointer(t);
 }
@@ -327,6 +413,20 @@ void Param::print(FILE* file, int level) {
 	fprintf(file, "%s\n", "[Param]");
 	type.get()->print(file, level + 1);
 	name->print(file, level + 1);
+}
+
+Type::Type() :
+		Node() {
+
+}
+
+Type::~Type() {
+
+}
+
+BasicType::BasicType(int t) :
+		Type() {
+	type = t;
 }
 
 BasicType::~BasicType() {
@@ -367,7 +467,8 @@ bool BasicType::equals(Type* t) {
 	return this == t;
 }
 
-ArrayType::ArrayType(Type* t, int begin, int end) {
+ArrayType::ArrayType(Type* t, int begin, int end) :
+		Type() {
 	this->basic = get_type_pointer(t);
 	this->begin = begin;
 	this->end = end;
@@ -403,7 +504,8 @@ bool ArrayType::equals(Type* another) {
 }
 
 IfStatement::IfStatement(Expression* cond, Statement* thenbody,
-		Statement* elsebody) {
+		Statement* elsebody) :
+		Statement() {
 	this->condition = cond;
 	this->thenbody = thenbody;
 	this->elsebody = elsebody;
@@ -426,7 +528,7 @@ void IfStatement::print(FILE* file, int level) {
 
 void IfStatement::evaluate(EvalContext* context) {
 	condition->evaluate(context);
-// Condition must be boolean type
+	// Condition must be boolean type
 	if (!TYPE_BOOL->equals(condition->getType())) {
 		context->record(error_type_mismatch(condition, TYPE_BOOL));
 	}
@@ -437,16 +539,20 @@ void IfStatement::evaluate(EvalContext* context) {
 
 void IfStatement::gencode(AsmContext* context) {
 	char* elselabel = context->genlabel();
+	char* endlabel = context->genlabel();
 	condition->gencode(context);
 	context->cmp(eax, 1);
 	context->jne(elselabel);
 	thenbody->gencode(context);
+	context->jmp(endlabel);
 	context->label(elselabel);
 	if (elsebody != NULL)
 		elsebody->gencode(context);
+	context->label(endlabel);
 }
 
-WhileStatement::WhileStatement(Expression* cond, Statement* body) {
+WhileStatement::WhileStatement(Expression* cond, Statement* body) :
+		Statement() {
 	this->condition = cond;
 	this->body = body;
 	this->endlabel = NULL;
@@ -489,15 +595,82 @@ void WhileStatement::gencode(AsmContext* context) {
 	context->done();
 }
 
-AssignStatement::AssignStatement(Variable* lval, Expression* rval) {
+ForStatement::ForStatement(Identifier* var, Expression* from, Expression* to,
+		Statement* body) :
+		Statement() {
+	this->variable = var;
+	this->from = from;
+	this->to = to;
+	this->body = body;
+}
+
+ForStatement::~ForStatement() {
+	delete variable;
+	delete from;
+	delete to;
+	delete body;
+}
+
+void ForStatement::print(FILE* file, int level) {
+	Node::print(file, level);
+	fprintf(file, "%s\n", "[ForStatement]");
+	variable->print(file, level + 1);
+	from->print(file, level + 1);
+	to->print(file, level + 1);
+	body->print(file, level + 1);
+}
+
+void ForStatement::evaluate(EvalContext* context) {
+	variable->evaluate(context);
+	if (variable->getType() == NULL)
+		return;
+	if (variable->getType() != TYPE_INT) {
+		context->record(::error_type_mismatch(variable, TYPE_INT));
+	}
+	from->evaluate(context);
+	to->evaluate(context);
+	if (from->getType() == NULL || to->getType() == NULL)
+		return;
+	if (from->getType() != TYPE_INT) {
+		context->record(::error_type_mismatch(from, TYPE_INT));
+	}
+	if (to->getType() != TYPE_INT) {
+		context->record(::error_type_mismatch(to, TYPE_INT));
+	}
+	body->evaluate(context);
+}
+
+void ForStatement::gencode(AsmContext* context) {
+	char* begin = context->genlabel();
+	char* end = context->genlabel();
+
+	from->gencode(context);
+	variable->genaddr(context);
+	context->mov(edx, eax, 2);
+
+	context->label(begin);
+	to->gencode(context);
+	variable->genaddr(context);
+	context->mov(ebx, edx, 1);
+	context->cmp(ebx, eax);
+	context->jg(end);
+	body->gencode(context);
+	context->jmp(begin);
+	context->label(end);
+}
+
+AssignStatement::AssignStatement(Variable* lval, Expression* rval) :
+		Statement() {
 	this->leftval = lval;
 	this->rightval = rval;
 	this->isreturn = false;
+	this->function = NULL;
 }
 
 AssignStatement::~AssignStatement() {
 	delete leftval;
 	delete rightval;
+	this->function = NULL;
 }
 
 void AssignStatement::print(FILE* file, int level) {
@@ -516,6 +689,7 @@ void AssignStatement::evaluate(EvalContext* context) {
 				&& function->id->equals((Identifier*) leftval)) {
 			// This is a return statement
 			isreturn = true;
+			this->function = function;
 			function->returnstmt = this;
 			if (!function->getType()->equals((rightval->getType()))) {
 				context->record(
@@ -536,6 +710,9 @@ void AssignStatement::evaluate(EvalContext* context) {
 	// This is not an assignment in function
 	isreturn = false;
 	leftval->evaluate(context);
+	// Variable may be undeclared
+	if (leftval->getType() == NULL)
+		return;
 	if (!leftval->getType()->equals(rightval->getType())) {
 		context->record(error_type_mismatch(leftval, rightval->getType()));
 	}
@@ -545,16 +722,27 @@ void AssignStatement::evaluate(EvalContext* context) {
 void AssignStatement::gencode(AsmContext* context) {
 	if (isreturn) {
 		rightval->gencode(context);
-		context->leave();
-		context->ret();
+		context->jmp(this->function->returnlabel);
 	} else {
 		rightval->gencode(context);
-		leftval->genaddr(context);
-		context->mov(edx, eax, 2);
+		if (TYPE_REAL->equals(rightval->getType())) {
+			leftval->genaddr(context);
+			context->fstp(edx, 0);
+		} else {
+			if (typeid(*leftval) != typeid(Identifier)) {
+				context->push(eax);
+			}
+			leftval->genaddr(context);
+			if (typeid(*leftval) != typeid(Identifier)) {
+				context->pop(eax);
+			}
+			context->mov(edx, eax, 2);
+		}
 	}
 }
 
-StatementBlock::StatementBlock(std::vector<Statement*>* stmts) {
+StatementBlock::StatementBlock(std::vector<Statement*>* stmts) :
+		Statement() {
 	this->statements = stmts;
 }
 
@@ -579,14 +767,15 @@ void StatementBlock::evaluate(EvalContext* context) {
 }
 
 void StatementBlock::gencode(AsmContext* context) {
-// TODO Use quadruple
+	// TODO Use quadruple
 	for (std::vector<Statement*>::iterator ite = statements->begin();
 			ite != statements->end(); ite++) {
 		(*ite)->gencode(context);
 	}
 }
 
-CallStatement::CallStatement(CallExpression* call) {
+CallStatement::CallStatement(CallExpression* call) :
+		Statement() {
 	this->callexp = call;
 }
 
@@ -608,7 +797,8 @@ void CallStatement::gencode(AsmContext* context) {
 	callexp->gencode(context);
 }
 
-BreakStatement::BreakStatement() {
+BreakStatement::BreakStatement() :
+		Statement() {
 	parent = NULL;
 }
 
@@ -635,7 +825,8 @@ void BreakStatement::gencode(AsmContext* context) {
 	context->jmp(parent->endlabel);
 }
 
-ReturnStatement::ReturnStatement(Expression* exp) {
+ReturnStatement::ReturnStatement(Expression* exp) :
+		Statement() {
 	this->retvalue = exp;
 }
 
@@ -667,12 +858,13 @@ void ReturnStatement::gencode(AsmContext* context) {
 	if (retvalue != NULL) {
 		retvalue->gencode(context);
 	}
-// Return value already stored in eax
+	// Return value already stored in eax
 	context->ret();
 }
 
 CallExpression::CallExpression(Identifier* name,
-		std::vector<Expression*>* params) {
+		std::vector<Expression*>* params) :
+		Expression() {
 	this->callname = name;
 	this->params = params;
 	this->source = NULL;
@@ -708,6 +900,8 @@ void CallExpression::evaluate(EvalContext* context) {
 		Expression* realparam = this->params->at(i);
 		Param* def = sub->params->at(i);
 		realparam->evaluate(context);
+		if (NULL == realparam->getType())
+			continue;
 		if (!realparam->getType()->equals(def->getType())) {
 			context->record(error_type_mismatch(realparam, def->getType()));
 		}
@@ -722,43 +916,75 @@ Type * CallExpression::getType() {
 }
 
 void CallExpression::gencode(AsmContext* context) {
-// Push parameters
+	// Push parameters
 	for (std::vector<Expression*>::iterator ite = params->begin();
 			ite != params->end(); ite++) {
 		(*ite)->gencode(context);
-		context->push(eax);
+
+		if (TYPE_REAL->equals((*ite)->getType())) {
+			context->sub(esp, 4);
+			context->fstp(esp);
+		} else {
+			context->push(eax);
+		}
 	}
 
-// Stack Structure:
+	// Stack Structure:
 
-// high_end
-// ....
-// params
-// base_callframe
-// ret_addr
-// old ebp
-//  <-----ebp
-// local_var
+	// high_end
+	// ....
+	// params
+	// base_callframe
+	// ret_addr
+	// old ebp
+	//  <-----ebp
+	// local_var
 
-// Find the caller
-	bool inmain = false;
+	// Find the caller & parent
+	Routine* owner = NULL;
+	Routine* parent = NULL;
 	std::vector<Node*>* history = context->gethistory();
 	for (int i = history->size() - 1; i >= 0; i--) {
 		Node* n = history->at(i);
-		if (typeid(*n) == typeid(Program)) {
-			inmain = true;
-			break;
-		}
-		if (typeid(*n) == typeid(Function) || typeid(*n) == typeid(Procedure)) {
-			inmain = false;
-			break;
+		if (typeid(*n) == typeid(Program) || typeid(*n) == typeid(Function)
+				|| typeid(*n) == typeid(Procedure)) {
+			if (owner == NULL) {
+				owner = (Routine*) n;
+			} else {
+				parent = (Routine*) n;
+				break;
+			}
 		}
 	}
-	if (inmain) { // call from main, the special pointer is pointed to %ebp
-		context->push(ebp);
-	} else { // call from subroutine, copy the value from 8(%ebp)
+	// call type : 0:up->down 1:slibling 2:child->parent
+	int calltype = 0;
+	// Owner won't be null as we know there is a Program in history
+	if (parent == NULL) {
+		// start from main, up call down
+		calltype = 0;
+	} else if (NULL != owner->getSub(callname->name)) {
+		calltype = 0;
+	} else if (parent->getSub(callname->name) != NULL
+			&& parent->getSub(owner->id->name) == owner) {
+		calltype = 1;
+	} else {
+		calltype = 2;
+	}
+
+	switch (calltype) {
+	case 2:
+		//TODO dunno how to do this...
+		break;
+	case 1: // slibling, copy frame reference
 		context->push(ebp, 8);
+		break;
+	case 0: // parent call child, child copy parent's frame reference
+		context->push(ebp);
+		break;
+	default:
+		break;
 	}
+
 	context->call(callname->name);
 }
 
@@ -785,8 +1011,11 @@ void SysCall::evaluate(EvalContext* context) {
 		context->record(error_arg_mismatch(this));
 	}
 	Expression* param = params->at(0);
-
-	if (param->getType() != TYPE_INT || param->getType() != TYPE_REAL) {
+	param->evaluate(context);
+	if (param->getType() == NULL) {
+		return;
+	}
+	if (param->getType() != TYPE_INT && param->getType() != TYPE_REAL) {
 		context->record(error_type_mismatch(param, "int or real"));
 	}
 	if (type == _CALL_READ && typeid(*param) != typeid(Identifier)
@@ -803,33 +1032,35 @@ void SysCall::gencode(AsmContext* context) {
 	Expression* param = params->at(0);
 	if (type == _CALL_READ) {
 		Variable* var = (Variable*) param;
-		if (param->getType() == TYPE_INT) {
-			context->push("intread");
-		}
-		if (param->getType() == TYPE_REAL) {
-			context->push("realread");
-		}
-// push the address
+		// push the address
 		var->genaddr(context);
 		context->push(edx);
+		// push the format
+		if (TYPE_REAL->equals(param->getType())) {
+			context->push("realread");
+		} else {
+			context->push("intread");
+		}
 		context->call("scanf");
 	}
-
 	if (type == _CALL_WRITE) {
-		if (param->getType() == TYPE_INT) {
+		// Float need to be converted to double
+		// push the value to print
+		param->gencode(context);
+		if (TYPE_REAL->equals(param->getType())) {
+			context->sub(esp, 8);
+			context->fstp(esp, 0, true);
+			context->push("realwrite");
+		} else {
+			context->push(eax);
 			context->push("intwrite");
 		}
-		if (param->getType() == TYPE_REAL) {
-			context->push("realwrite");
-		}
-// push the value to print
-		param->gencode(context);
-		context->push(eax);
 		context->call("printf");
 	}
 }
 
-ArithExpression::ArithExpression(Expression* l, AOPR opr, Expression* r) {
+ArithExpression::ArithExpression(Expression* l, AOPR opr, Expression* r) :
+		Expression() {
 	this->left = l;
 	this->opr = opr;
 	this->right = r;
@@ -852,8 +1083,16 @@ void ArithExpression::evaluate(EvalContext* context) {
 	if (left != NULL)
 		left->evaluate(context);
 	right->evaluate(context);
-	if (left != NULL && (left->getType() != right->getType())) {
-		context->record(error_type_mismatch(this));
+	if (left != NULL) {
+		if (left->getType() == NULL || right->getType() == NULL)
+			return;
+		if (!left->getType()->equals(right->getType())) {
+			context->record(error_type_mismatch(this));
+			return;
+		}
+		if (opr == _MOD && TYPE_REAL->equals(left->getType())) {
+			context->record(error_type_mismatch(this, TYPE_INT));
+		}
 	}
 }
 
@@ -862,37 +1101,67 @@ Type * ArithExpression::getType() {
 }
 
 void ArithExpression::gencode(AsmContext* context) {
-	right->gencode(context);
-	context->push(eax);
-	if (NULL != left) {
-		left->gencode(context);
+	if (TYPE_REAL->equals(right->getType())) {
+		context->sub(esp, 4);
+		context->fstp(esp);
+		if (NULL != left) {
+			left->gencode(context);
+		} else {
+			context->fldz();
+		}
+		right->gencode(context);
+		switch (opr) {
+		case _ADD:
+			context->faddp();
+			break;
+		case _SUB:
+			context->fsubp();
+			break;
+		case _MUL:
+			context->fmulp();
+			break;
+		case _DIV:
+			context->fdivp();
+			break;
+		default:		// No mod here
+			break;
+		}
 	} else {
-		context->mov(eax, 0);
-	}
-	context->pop(ebx);
-	switch (opr) {
-	case _ADD:
-		context->add(eax, ebx);
-		break;
-	case _SUB:
-		context->sub(eax, ebx);
-		break;
-	case _MUL:
-		context->mul(ebx);
-		break;
-	case _DIV:
-		context->div(ebx);
-		break;
-	case _MOD:
-		context->div(ebx);
-		context->mov(eax, edx);
-		break;
-	default:
-		break;
+		right->gencode(context);
+		context->push(eax);
+		if (NULL != left) {
+			left->gencode(context);
+		} else {
+			context->mov(eax, 0);
+		}
+		context->pop(ebx);
+		switch (opr) {
+		case _ADD:
+			context->add(eax, ebx);
+			break;
+		case _SUB:
+			context->sub(eax, ebx);
+			break;
+		case _MUL:
+			context->mul(ebx);
+			break;
+		case _DIV:
+			context->mov(edx, 0);
+			context->div(ebx);
+			break;
+		case _MOD:
+			context->mov(edx, 0);
+			context->div(ebx);
+			context->mov(eax, edx);
+			break;
+		default:
+			break;
+		}
 	}
 }
 
-RelExpression::RelExpression(Expression* l, ROPR opr, Expression* r) {
+RelExpression::RelExpression(Expression* l, ROPR opr, Expression* r) :
+		Expression() {
 	this->left = l;
 	this->opr = opr;
 	this->right = r;
@@ -912,11 +1181,17 @@ void RelExpression::print(FILE* file, int level) {
 }
 
 void RelExpression::evaluate(EvalContext* context) {
-	if (left != NULL)
-		left->evaluate(context);
+	left->evaluate(context);
 	right->evaluate(context);
-	if (left != NULL && (left->getType() != right->getType())) {
+	if (left->getType() == NULL || right->getType() == NULL) {
+		return;
+	}
+	if (!left->getType()->equals(right->getType())) {
 		context->record(error_type_mismatch(this));
+	}
+	if (!TYPE_INT->equals(left->getType())
+			&& !TYPE_REAL->equals(left->getType())) {
+		context->record(::error_type_mismatch(this, "int or real"));
 	}
 }
 
@@ -927,39 +1202,78 @@ Type * RelExpression::getType() {
 void RelExpression::gencode(AsmContext* context) {
 	char* tlabel = context->genlabel();
 	char* elabel = context->genlabel();
-	right->gencode(context);
-	context->push(eax);
-	left->gencode(context);
-	context->pop(ebx);
-	context->cmp(eax, ebx);
+	if (TYPE_REAL->equals(left->getType())) {
+		right->gencode(context); // ST1
+		left->gencode(context); // ST0
+		context->fcomip(1);
+		context->ffree(0);
+		// ZF-PF-CF
+		// ST0 > ST1  000
+		// ST0 < ST1  001
+		// ST0 = ST1  100
+		switch (opr) {
+		case _EQ:
+			// ZF = 0
+			context->je(tlabel);
+			break;
+		case _NEQ:
+			// ZF != 0
+			context->jne(tlabel);
+			break;
+		case _GT:
+			// ZF = 0 && PF = 0 && CF = 0
+			context->ja(tlabel);
+			break;
+		case _GTE:
+			// PF = 0 && CF = 0
+			context->jae(tlabel);
+			break;
+		case _LT:
+			// ZF = 0 && PF = 0 && CF = 1
+			context->jb(tlabel);
+			break;
+		case _LTE:
+			// PF = 0, ZF != CF
+			context->jbe(tlabel);
+			break;
+		default:
+			return;
+		}
+	} else {
+		right->gencode(context);
+		context->push(eax);
+		left->gencode(context);
+		context->pop(ebx);
+		context->cmp(eax, ebx);
 
-	switch (opr) {
-	case _EQ:
-// ZF = 0
-		context->je(tlabel);
-		break;
-	case _NEQ:
-// ZF != 0
-		context->jne(tlabel);
-		break;
-	case _GT:
-// ZF != 0 && SF = 0
-		context->jg(tlabel);
-		break;
-	case _GTE:
-// SF = 0
-		context->jge(tlabel);
-		break;
-	case _LT:
-// ZF != 0 && SF = 1
-		context->jl(tlabel);
-		break;
-	case _LTE:
-// SF = 1
-		context->jle(tlabel);
-		break;
-	default:
-		return;
+		switch (opr) {
+		case _EQ:
+			// ZF = 0
+			context->je(tlabel);
+			break;
+		case _NEQ:
+			// ZF != 0
+			context->jne(tlabel);
+			break;
+		case _GT:
+			// ZF != 0 && SF = 0
+			context->jg(tlabel);
+			break;
+		case _GTE:
+			// SF = 0
+			context->jge(tlabel);
+			break;
+		case _LT:
+			// ZF != 0 && SF = 1
+			context->jl(tlabel);
+			break;
+		case _LTE:
+			// SF = 1
+			context->jle(tlabel);
+			break;
+		default:
+			return;
+		}
 	}
 	context->mov(eax, 0);
 	context->jmp(elabel);
@@ -968,7 +1282,8 @@ void RelExpression::gencode(AsmContext* context) {
 	context->label(elabel);
 }
 
-LogicExpression::LogicExpression(Expression* l, LOPR opr, Expression* r) {
+LogicExpression::LogicExpression(Expression* l, LOPR opr, Expression* r) :
+		Expression() {
 	this->left = l;
 	this->opr = opr;
 	this->right = r;
@@ -1024,7 +1339,8 @@ void LogicExpression::gencode(AsmContext* context) {
 	}
 }
 
-IntConstant::IntConstant(int val) {
+IntConstant::IntConstant(int val) :
+		NumConstant() {
 	this->value = val;
 }
 
@@ -1045,7 +1361,8 @@ void IntConstant::gencode(AsmContext* context) {
 	context->mov(eax, value);
 }
 
-RealConstant::RealConstant(double val) {
+RealConstant::RealConstant(float val) :
+		NumConstant() {
 	this->value = val;
 }
 
@@ -1063,10 +1380,25 @@ Type * RealConstant::getType() {
 }
 
 void RealConstant::gencode(AsmContext* context) {
-
+	if (value == 0.0f) {
+		context->fldz();
+		return;
+	}
+	if (value == 1.0f) {
+		context->fld1();
+		return;
+	}
+// Get IEEE 745 Representation of float number;
+	unsigned int* uint = (unsigned int*) &value;
+	context->mov(eax, *uint);
+	context->sub(esp, 4);
+	context->mov(esp, eax, 2);
+	context->fld(esp, 0);
+	context->add(esp, 4);
 }
 
-BoolConstant::BoolConstant(bool val) {
+BoolConstant::BoolConstant(bool val) :
+		Expression() {
 	this->value = val;
 }
 
@@ -1087,7 +1419,7 @@ void BoolConstant::gencode(AsmContext* context) {
 	context->mov(eax, value ? 1 : 0);
 }
 
-Declare* Variable::getdeclare() {
+Declare * Variable::getdeclare() {
 	return declare;
 }
 
@@ -1096,6 +1428,8 @@ Identifier::Identifier(char* name) :
 	this->name = new char[strlen(name)];
 	strcpy(this->name, name);
 	declare = NULL;
+	iscall = false;
+	subprogram = NULL;
 }
 
 Identifier::~Identifier() {
@@ -1108,11 +1442,18 @@ void Identifier::print(FILE* file, int level) {
 }
 
 void Identifier::evaluate(EvalContext* context) {
-	Declare* dec = context->getDeclare(this->name);
-	if (NULL == dec) {
-		context->record(error_undefined_id(this));
+	declare = context->getDeclare(this->name);
+	if (NULL == declare) {
+		subprogram = context->getSub(this->name);
+		if (NULL == subprogram) {
+			context->record(error_undefined_id(this));
+		} else if (subprogram->params->size() != 0) {
+			context->record(error_arg_mismatch(this));
+		} else {
+			iscall = true;
+		}
 	} else {
-		this->declare = dec;
+		iscall = false;
 	}
 }
 
@@ -1126,17 +1467,30 @@ Identifier * Identifier::getId() {
 	return this;
 }
 
+void Identifier::gencode(AsmContext* context) {
+	genaddr(context);
+	if (TYPE_REAL->equals(getType())) {
+		context->fld(edx);
+	} else {
+		context->mov(eax, edx, 1);
+	}
+}
+
 void Identifier::genaddr(AsmContext* context) {
 	int level = 0;
 	ActivationRecord* actrecord = context->getActRecord(name, &level);
-	context->mov(edx, ebp);
-	for (int i = 0; i < level; i++) {
-// point to the frame
-		context->add(edx, 8);
-		context->mov(edx, edx, 1);
-	}
 	int offset = actrecord->offset(name);
-	context->add(edx, offset);
+	if (0 == level) {
+		context->lea(edx, ebp, offset);
+	} else {
+		context->mov(edx, ebp);
+		for (int i = 0; i < level; i++) {
+			// point to the frame
+			context->add(edx, 8);
+			context->mov(edx, edx, 1);
+		}
+		context->add(edx, offset);
+	}
 }
 
 bool Identifier::equals(const Identifier* another) const {
@@ -1168,9 +1522,15 @@ void ArrayElement::evaluate(EvalContext* context) {
 	} else {
 		this->declare = dec;
 	}
-	// Check array type
+// Check array type
 	if (typeid(*(dec->getType())) != typeid(ArrayType)) {
 		context->record(error_type_mismatch(this));
+	}
+	index->evaluate(context);
+	if (index->getType() == NULL)
+		return;
+	if (index->getType() != TYPE_INT) {
+		context->record(::error_type_mismatch(index, TYPE_INT));
 	}
 }
 
@@ -1190,6 +1550,17 @@ void ArrayElement::genaddr(AsmContext* context) {
 	int begin = arraytype->begin;
 	index->gencode(context);
 	context->sub(eax, begin);
+	context->mov(ebx, 4);
+	context->mul(ebx);
 	name->genaddr(context);
 	context->add(edx, eax);
+}
+
+void ArrayElement::gencode(AsmContext* context) {
+	genaddr(context);
+	if (TYPE_REAL->equals(getType())) {
+		context->fld(edx);
+	} else {
+		context->mov(eax, edx, 1);
+	}
 }

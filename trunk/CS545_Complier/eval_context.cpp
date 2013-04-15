@@ -14,19 +14,30 @@ extern void error(const char* info);
 EvalContext::EvalContext() {
 	error = 0;
 	idTable = new std::vector<std::map<char*, Declare*, comparator>*>();
-	subTable = new std::map<char*, Subprogram*, comparator>();
+	subTable = new std::vector<std::map<char*, Subprogram*, comparator>*>();
 	errors = new std::vector<char*>();
 
 	history = new AccessHistory();
 
 	idTable->push_back(new std::map<char*, Declare*, comparator>());
+	subTable->push_back(new std::map<char*, Subprogram*, comparator>());
 	current = NULL;
 }
 
 EvalContext::~EvalContext() {
+	for (std::vector<std::map<char*, Declare*, comparator>*>::iterator ite =
+			idTable->begin(); ite != idTable->end(); ite++) {
+		(*ite)->clear();
+		delete (*ite);
+	}
 	idTable->clear();
 	delete idTable;
 
+	for (std::vector<std::map<char*, Subprogram*, comparator>*>::iterator ite =
+			subTable->begin(); ite != subTable->end(); ite++) {
+		(*ite)->clear();
+		delete (*ite);
+	}
 	subTable->clear();
 	delete subTable;
 
@@ -61,26 +72,30 @@ void EvalContext::addDeclare(char* id, Declare* type) {
 }
 
 Declare* EvalContext::getDeclare(char* id) {
-	std::vector<std::map<char*, Declare*, comparator>*>::iterator ite =
-			idTable->begin();
-	for (; ite != idTable->end(); ite++) {
-		if ((*ite)->find(id) != (*ite)->end()) {
-			return (*ite)->find(id)->second;
+	// from back to front
+	for (int i = idTable->size() - 1; i >= 0; i--) {
+		std::map<char*, Declare*, comparator>* level = idTable->at(i);
+		if (level->find(id) != level->end()) {
+			return level->find(id)->second;
 		}
 	}
 	return NULL;
 }
 
 void EvalContext::addSub(char*id, Subprogram* def) {
-	if (subTable->find(id) != subTable->end()) { // Already exists, record duplication
+	std::map<char*, Subprogram*, comparator>* currentTable = subTable->back();
+	if (currentTable->find(id) != currentTable->end()) { // Already exists, record duplication
 		record(error_dup_id(def));
 	}
-	subTable->insert(std::pair<char*, Subprogram*>(id, def));
+	currentTable->insert(std::pair<char*, Subprogram*>(id, def));
 }
 
 Subprogram* EvalContext::getSub(char* id) {
-	if (subTable->find(id) != subTable->end())
-		return subTable->find(id)->second;
+	for (int i = subTable->size() - 1; i >= 0; i--) {
+		std::map<char*, Subprogram*, comparator>* ct = subTable->at(i);
+		if (ct->find(id) != ct->end())
+			return ct->find(id)->second;
+	}
 	return NULL;
 }
 
@@ -109,6 +124,7 @@ void EvalContext::showerror() {
 void EvalContext::pushFrame(Subprogram* sub) {
 	current = sub;
 	idTable->push_back(new std::map<char*, Declare*, comparator>());
+	subTable->push_back(new std::map<char*, Subprogram*, comparator>());
 	access(sub);
 }
 
@@ -116,4 +132,5 @@ void EvalContext::popFrame() {
 	done();
 	current = NULL;
 	idTable->pop_back();
+	subTable->pop_back();
 }

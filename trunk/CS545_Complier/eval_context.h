@@ -24,8 +24,8 @@ class Subprogram;
 class EvalContext {
 private:
 	std::vector<std::map<char*, Declare*, comparator> *> *idTable;
+	std::vector<std::map<char*, Subprogram*, comparator>*> *subTable;
 	Subprogram* current;
-	std::map<char*, Subprogram*, comparator> *subTable;
 	std::vector<char*> *errors;
 	AccessHistory* history;
 	int error;

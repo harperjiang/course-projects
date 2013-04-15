@@ -36,6 +36,7 @@ char* error_type_mismatch(Expression*, Type*);
 char* error_type_mismatch(Expression* source, const char* desc);
 char* error_type_mismatch(Function*);
 char* error_arg_mismatch(CallExpression*);
+char* error_arg_mismatch(Identifier*);
 char* error_ret_in_proc(ReturnStatement*);
 char* error_break_not_in_loop(BreakStatement*);
 char* error_no_return(Function*);

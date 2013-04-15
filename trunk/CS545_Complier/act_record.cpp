@@ -22,7 +22,7 @@ ActivationRecord::ActivationRecord(bool fm) {
 }
 
 void ActivationRecord::add(Declare* var) {
-	if (typeid(var->getType()) == typeid(ArrayType)) {
+	if (typeid(*(var->getType())) == typeid(ArrayType)) {
 		ArrayType* at = (ArrayType*) var->getType();
 		int size = at->end - at->begin + 1;
 		localVarPointer -= 4 * size;
@@ -51,10 +51,21 @@ void ActivationRecord::gencode(AsmContext* context) {
 
 	// allocate local variables
 	if (localVarPointer != 0)
-		context->add(esp, localVarPointer);
+		context->sub(esp, -localVarPointer);
 }
 
 void ActivationRecord::genclean(AsmContext* context) {
 	context->leave();
-	context->sub(esp, paramPointer);
+	if (!formain) {
+		// need to clean param from stack
+		// things to clean: return + frame + param
+		// maintain return address
+
+		// no saved ebp now
+		// esp should be esp - (paramPointer - 4) + 4
+		// esp = esp - paramPointer + 4
+		context->mov(ebx, esp, 1);
+		context->lea(esp, esp, paramPointer - 8);
+		context->mov(esp, ebx, 2);
+	}
 }
