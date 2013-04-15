@@ -31,7 +31,7 @@ private:
 	FILE* output;
 
 	int labelCount;
-	
+
 	AccessHistory* history;
 public:
 	AsmContext(FILE* output);
@@ -44,9 +44,8 @@ public:
 	void done();
 	Node* findhistory(char* type);
 	std::vector<Node*>* gethistory();
-	
-	ActivationRecord* getActRecord(char* var,int* level);
 
+	ActivationRecord* getActRecord(char* var, int* level);
 
 	char* genlabel();
 
@@ -58,7 +57,6 @@ public:
 	virtual void declare(const char* type, const char* name);
 	virtual void section(const char* name);
 	virtual void reserve(const char* name, int size, int type);
-
 
 	virtual void label(const char* label);
 
@@ -72,13 +70,10 @@ public:
 
 	virtual void mov(Register target, const char* var);
 	virtual void mov(Register target, int val);
-	virtual void mov(Register target, Register source);
-	virtual void mov(int address, Register source, int mode);
-	virtual void mov(Register target, int valoraddr, int mode);
-	virtual void mov(Register target, int offset, Register source);
-	virtual void mov(Register target, Register source, int mode);
+	virtual void mov(Register target, unsigned int fval);
+	virtual void mov(Register target, Register source, int mode = 0,
+			int offset = 0);
 
-	// Only calculate the offset to esp
 	virtual void lea(Register target, Register source, int offset);
 
 	virtual void add(Register target, int val);
@@ -115,12 +110,30 @@ public:
 	virtual void jmp(char* label);
 	virtual void je(char* label);
 	virtual void jne(char* label);
+	virtual void ja(char* label);
+	virtual void jae(char* label);
 	virtual void jg(char* label);
 	virtual void jge(char* label);
+	virtual void jb(char* label);
+	virtual void jbe(char* label);
 	virtual void jl(char* label);
 	virtual void jle(char* label);
 
 	virtual void nop();
+
+	// Float operations
+	virtual void fld(Register, int offset = 0, bool lv = false);
+	virtual void fstp(Register, int offset = 0, bool lv = false);
+	virtual void fldz();
+	virtual void fld1();
+	virtual void ffree(int i);
+	virtual void faddp();
+	virtual void fsubp();
+	virtual void fmulp();
+	virtual void fdivp();
+	virtual void fcompp();
+	virtual void fcomip(int i);
+	virtual void fstsw();
 };
 
 class ATTAsmContext: public AsmContext {
@@ -140,14 +153,12 @@ public:
 
 	virtual void mov(Register target, const char* var);
 	virtual void mov(Register target, int val);
-	virtual void mov(Register target, Register source);
-	virtual void mov(int address, Register source, int mode);
-	virtual void mov(Register target, int valoraddr, int mode);
-	virtual void mov(Register target, int offset, Register source);
-	virtual void mov(Register target, Register source, int mode);
+	virtual void mov(Register target, unsigned int fval);
+	virtual void mov(Register target, Register source, int mode = 0,
+			int offset = 0);
 
 	virtual void lea(Register target, Register source, int offset);
-	
+
 	virtual void add(Register target, int val);
 	virtual void add(Register target, Register source);
 	virtual void sub(Register target, int val);
@@ -176,6 +187,13 @@ public:
 
 	virtual void shr(Register target, int val);
 	virtual void shl(Register target, int val);
+
+	// Float operations
+	virtual void fld(Register, int offset = 0, bool lv = false);
+	virtual void fstp(Register, int offset = 0, bool lv = false);
+	virtual void fstsw();
+	virtual void ffree(int i);
+	virtual void fcomip(int i);
 };
 
 #endif /* ASM_CONTEXT_H_ */

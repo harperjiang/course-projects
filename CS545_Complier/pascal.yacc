@@ -25,7 +25,7 @@ Program* parse_result;
 %}
 
 %token PROGRAM FUNCTION PROCEDURE
-%token VAR IF ELSE THEN WHILE DO BGIN END
+%token VAR IF ELSE THEN WHILE DO BGIN END FOR TO
 %token SEMICOLON COMMA COLON DOT DOTDOT
 %token LP RP LSQ RSQ
 
@@ -98,82 +98,84 @@ Program* parse_result;
 program		:	PROGRAM id LP id_list RP SEMICOLON declares subs program_body DOT 	{parse_result = new Program($2,$4,$7,$8,$9);};
 
 declares	: 	declares VAR id_list COLON type SEMICOLON	{for(std::vector<Identifier*>::iterator ite = $3->begin();ite != $3->end();ite++) {Declare* dec = new Declare($5,*ite); $1->push_back(dec); $$ = $1;}}
-			|						{$$ = new std::vector<Declare*>(); };
+			|												{$$ = new std::vector<Declare*>(); };
 			
 subs		:	subs sub 			{$$ = $1; $$->push_back($2);}
 			|			 			{$$ = new std::vector<Subprogram*>();};
 
-sub			:	FUNCTION id LP params RP COLON stdtype SEMICOLON declares program_body SEMICOLON		{$$ = new Function($2, $4, $7, $9, $10);}
-			|	PROCEDURE id LP params RP SEMICOLON declares program_body SEMICOLON			{$$ = new Procedure($2, $4, $7, $8);};
-			|	PROCEDURE id SEMICOLON declares program_body SEMICOLON						{$$ = new Procedure($2, new std::vector<Param*>(), $4, $5);}
+sub			:	FUNCTION id LP params RP COLON stdtype SEMICOLON declares subs program_body SEMICOLON		{$$ = new Function($2, $4, $7, $9, $10, $11);}
+			|	PROCEDURE id LP params RP SEMICOLON declares subs program_body SEMICOLON					{$$ = new Procedure($2, $4, $7, $8, $9);};
+			|	PROCEDURE id SEMICOLON declares subs program_body SEMICOLON									{$$ = new Procedure($2, new std::vector<Param*>(), $4, $5, $6);}
 
-params		:	params SEMICOLON id_list COLON type	{$$ = $1; for(std::vector<Identifier*>::iterator ite = $3->begin();ite!=$3->end();ite++) {$$->push_back(new Param($5,*ite));}}
-			|	id_list COLON type {$$ = new std::vector<Param*>();for(std::vector<Identifier*>::iterator ite = $1->begin();ite!=$1->end();ite++){$$->push_back(new Param($3,*ite));}};
+params		:	params SEMICOLON id_list COLON type		{$$ = $1; for(std::vector<Identifier*>::iterator ite = $3->begin();ite!=$3->end();ite++) {$$->push_back(new Param($5,*ite));}}
+			|	id_list COLON type 						{$$ = new std::vector<Param*>();for(std::vector<Identifier*>::iterator ite = $1->begin();ite!=$1->end();ite++){$$->push_back(new Param($3,*ite));}};
 
-program_body:	BGIN stmts END	{$$ = new StatementBlock($2);};
+program_body:	BGIN stmts END			{$$ = new StatementBlock($2);};
 
-stmts		:	stmt SEMICOLON stmts	{$$ = $3; $$->push_back($1);}
+stmts		:	stmt SEMICOLON stmts	{$$ = $3; $$->insert($3->begin(), $1);}
 			|	stmt					{$$ = new std::vector<Statement*>();$$->push_back($1);}
 			|							{$$ = new std::vector<Statement*>();};
 
-stmt		:	var ASSIGN exp 				{$$ = new AssignStatement($1,$3);}
-			|	call						{$$ = new CallStatement($1);}
-			|	IF exp THEN stmt ELSE stmt 	{$$ = new IfStatement($2, $4, $6);}
-			|	IF exp THEN stmt			{$$ = new IfStatement($2, $4, NULL);}
-			|	WHILE exp DO stmt			{$$ = new WhileStatement($2, $4);}
-			|	BGIN stmts END				{$$ = new StatementBlock($2);}
-			|	BREAK						{$$ = new BreakStatement();};
+stmt		:	var ASSIGN exp 						{$$ = new AssignStatement($1,$3);}
+			|	call								{$$ = new CallStatement($1);}
+			|	IF exp THEN stmt ELSE stmt 			{$$ = new IfStatement($2, $4, $6);}
+			|	IF exp THEN stmt					{$$ = new IfStatement($2, $4, NULL);}
+			|	WHILE exp DO stmt					{$$ = new WhileStatement($2, $4);}
+			|	FOR id ASSIGN exp TO exp DO stmt 	{$$ = new ForStatement($2, $4, $6, $8);}
+			|	BGIN stmts END						{$$ = new StatementBlock($2);}
+			|	BREAK								{$$ = new BreakStatement();$$->setloc(@1);}
+			|	id									{$$ = new CallStatement(new CallExpression($1, new std::vector<Expression*>()));};
 			
 exp_list	:	exp_list COMMA exp			{$$ = $1; $1->push_back($3);}
-			|	exp							{$$ = new std::vector<Expression*>();};
+			|	exp							{$$ = new std::vector<Expression*>(); $$->push_back($1);};
 			
-exp			:	exp ADD exp					{$$ = new ArithExpression($1,_ADD, $3);}
-			| 	exp SUB exp 				{$$ = new ArithExpression($1,_SUB, $3);}
-			|	SUB exp %prec UMINUS		{$$ = new ArithExpression(NULL, _SUB, $2);}
-			|	exp MUL exp 				{$$ = new ArithExpression($1,_MUL, $3);}
-			| 	exp DIV exp 				{$$ = new ArithExpression($1,_DIV, $3);}
-			| 	exp MOD exp 				{$$ = new ArithExpression($1,_MOD, $3);}
-			|	LP exp RP 					{$$ = $2;}
-			|	exp AND exp 				{$$ = new LogicExpression($1,_AND, $3);}
-			| 	exp OR 	exp 				{$$ = new LogicExpression($1,_OR, $3);}
-			|	NOT exp						{$$ = new LogicExpression(NULL,_NOT, $2);}
-			|	exp GT  exp					{$$ = new RelExpression($1,_GT, $3);}
-			|	exp LT	exp					{$$ = new RelExpression($1,_LT, $3);}
-			|	exp GTE	exp 				{$$ = new RelExpression($1,_GTE, $3);}
-			|	exp LTE exp 				{$$ = new RelExpression($1,_LTE, $3);}
-			|	exp EQ exp					{$$ = new RelExpression($1,_EQ, $3);}
-			|	exp NEQ exp 				{$$ = new RelExpression($1,_NEQ, $3);}
+exp			:	exp ADD exp					{$$ = new ArithExpression($1,_ADD, $3);$$->setloc($1->loc,$3->loc);}
+			| 	exp SUB exp 				{$$ = new ArithExpression($1,_SUB, $3);$$->setloc($1->loc,$3->loc);}
+			|	SUB exp %prec UMINUS		{$$ = new ArithExpression(NULL, _SUB, $2);$$->setloc(&@1,$2->loc);}
+			|	exp MUL exp 				{$$ = new ArithExpression($1,_MUL, $3);$$->setloc($1->loc,$3->loc);}
+			| 	exp DIV exp 				{$$ = new ArithExpression($1,_DIV, $3);$$->setloc($1->loc,$3->loc);}
+			| 	exp MOD exp 				{$$ = new ArithExpression($1,_MOD, $3);$$->setloc($1->loc,$3->loc);}
+			|	LP exp RP 					{$$ = $2;$$->setloc(&@1,&@3);}
+			|	exp AND exp 				{$$ = new LogicExpression($1,_AND, $3);$$->setloc($1->loc,$3->loc);}
+			| 	exp OR 	exp 				{$$ = new LogicExpression($1,_OR, $3);$$->setloc($1->loc,$3->loc);}
+			|	NOT exp						{$$ = new LogicExpression(NULL,_NOT, $2);$$->setloc(&@1,$2->loc);}
+			|	exp GT  exp					{$$ = new RelExpression($1,_GT, $3);$$->setloc($1->loc,$3->loc);}
+			|	exp LT	exp					{$$ = new RelExpression($1,_LT, $3);$$->setloc($1->loc,$3->loc);}
+			|	exp GTE	exp 				{$$ = new RelExpression($1,_GTE, $3);$$->setloc($1->loc,$3->loc);}
+			|	exp LTE exp 				{$$ = new RelExpression($1,_LTE, $3);$$->setloc($1->loc,$3->loc);}
+			|	exp EQ exp					{$$ = new RelExpression($1,_EQ, $3);$$->setloc($1->loc,$3->loc);}
+			|	exp NEQ exp 				{$$ = new RelExpression($1,_NEQ, $3);$$->setloc($1->loc,$3->loc);}
 			|	call						{$$ = $1;}
-			|	id							{$$ = $1;}
+			|	var							{$$ = $1;}
 			|	num							{$$ = $1;}
 			|	boolexp						{$$ = $1;};
 	
 call		:	syscall 	{$$ = $1;}
 			| 	usercall	{$$ = $1;};
 							
-syscall		: 	READ LP exp_list RP  {$$ = new SysCall(_CALL_READ, $3);} 
-			|	WRITE LP exp_list RP {$$ = new SysCall(_CALL_WRITE,$3);};
+syscall		: 	READ LP exp_list RP  {$$ = new SysCall(_CALL_READ, $3);$$->setloc(&@1,&@4);} 
+			|	WRITE LP exp_list RP {$$ = new SysCall(_CALL_WRITE,$3);$$->setloc(&@1,&@4);};
 
-usercall	:	id LP exp_list RP {$$ = new CallExpression($1,$3);};
+usercall	:	id LP exp_list RP {$$ = new CallExpression($1,$3);$$->setloc($1->loc,&@4);};
 
 var			:	id						{$$ = $1;}
-			|	id LSQ exp RSQ			{$$ = new ArrayElement($1,$3);};
+			|	id LSQ exp RSQ			{$$ = new ArrayElement($1,$3);$$->setloc($1->loc,&@4);};
 
 type		:	stdtype				{$$ = $1;}
-			|	ARRAY LSQ int DOTDOT int RSQ OF stdtype		{$$ = new ArrayType($8,$3,$5);};
+			|	ARRAY LSQ int DOTDOT int RSQ OF stdtype		{$$ = new ArrayType($8,$3,$5);$$->setloc(&@1,$8->loc);};
 
-stdtype		:	TREAL				{$$ = TYPE_REAL;}
-			|	TINT				{$$ = TYPE_INT;};
+stdtype		:	TREAL				{$$ = TYPE_REAL;$$->setloc(@1);}
+			|	TINT				{$$ = TYPE_INT;$$->setloc(@1);};
 
 id_list		:	id_list COMMA id	{$$ = $1; $$->push_back($3);}
 			|	id					{$$ = new std::vector<Identifier*>();$$->push_back($1);};
 
-boolexp		:	TRUE	{$$ = new BoolConstant(true);}
-			|	FALSE	{$$ = new BoolConstant(false);};
+boolexp		:	TRUE	{$$ = new BoolConstant(true);$$->setloc(@1);}
+			|	FALSE	{$$ = new BoolConstant(false);$$->setloc(@1);};
 
-id			:	ID	{$$ = new Identifier(paslval.tokenval);};
+id			:	ID	{$$ = new Identifier(paslval.tokenval);$$->setloc(@1);};
 
-num			:	int {$$ = new IntConstant($1);}
-			|   REAL {$$ = new RealConstant(atof(paslval.tokenval));};
-int			:	INT {$$ = atoi(paslval.tokenval);};
+num			:	int {$$ = new IntConstant($1);$$->setloc(@1);}
+			|   REAL {$$ = new RealConstant(atof(paslval.tokenval));$$->setloc(@1);};
+int			:	INT {$$ = atoi(paslval.tokenval);@$=@1;};
 %%

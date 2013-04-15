@@ -50,6 +50,8 @@ ID						[a-zA-Z_][a-zA-Z0-9_]*
 "else"					{return ELSE;}
 "while"					{return WHILE;}
 "do"					{return DO;}
+"for"					{return FOR;}
+"to"					{return TO;}
 "read"					{return READ;}
 "write"					{return WRITE;}
 "var"					{return VAR;}
@@ -73,10 +75,11 @@ ID						[a-zA-Z_][a-zA-Z0-9_]*
 "+"                 	{return ADD;}
 "-"                 	{return SUB;}
 "*"                 	{return MUL;}
-"/"                 	{return DIV;}
-"&&"					{return AND;}
-"||"					{return OR;}
-"!"						{return NOT;}
+"div"                 	{return DIV;}
+"mod"					{return MOD;}
+"and"					{return AND;}
+"or"					{return OR;}
+"not"					{return NOT;}
 "="						{return EQ;}
 "!="					{return NEQ;}
 ">"						{return GT;}

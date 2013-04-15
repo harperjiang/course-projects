@@ -48,43 +48,45 @@
      DO = 266,
      BGIN = 267,
      END = 268,
-     SEMICOLON = 269,
-     COMMA = 270,
-     COLON = 271,
-     DOT = 272,
-     DOTDOT = 273,
-     LP = 274,
-     RP = 275,
-     LSQ = 276,
-     RSQ = 277,
-     READ = 278,
-     WRITE = 279,
-     ARRAY = 280,
-     TINT = 281,
-     TREAL = 282,
-     OF = 283,
-     ASSIGN = 284,
-     ADD = 285,
-     SUB = 286,
-     MUL = 287,
-     DIV = 288,
-     MOD = 289,
-     AND = 290,
-     OR = 291,
-     NOT = 292,
-     GT = 293,
-     LT = 294,
-     EQ = 295,
-     NEQ = 296,
-     GTE = 297,
-     LTE = 298,
-     INT = 299,
-     REAL = 300,
-     ID = 301,
-     TRUE = 302,
-     FALSE = 303,
-     BREAK = 304,
-     UMINUS = 305
+     FOR = 269,
+     TO = 270,
+     SEMICOLON = 271,
+     COMMA = 272,
+     COLON = 273,
+     DOT = 274,
+     DOTDOT = 275,
+     LP = 276,
+     RP = 277,
+     LSQ = 278,
+     RSQ = 279,
+     READ = 280,
+     WRITE = 281,
+     ARRAY = 282,
+     TINT = 283,
+     TREAL = 284,
+     OF = 285,
+     ASSIGN = 286,
+     ADD = 287,
+     SUB = 288,
+     MUL = 289,
+     DIV = 290,
+     MOD = 291,
+     AND = 292,
+     OR = 293,
+     NOT = 294,
+     GT = 295,
+     LT = 296,
+     EQ = 297,
+     NEQ = 298,
+     GTE = 299,
+     LTE = 300,
+     INT = 301,
+     REAL = 302,
+     ID = 303,
+     TRUE = 304,
+     FALSE = 305,
+     BREAK = 306,
+     UMINUS = 307
    };
 #endif
 /* Tokens.  */
@@ -99,43 +101,45 @@
 #define DO 266
 #define BGIN 267
 #define END 268
-#define SEMICOLON 269
-#define COMMA 270
-#define COLON 271
-#define DOT 272
-#define DOTDOT 273
-#define LP 274
-#define RP 275
-#define LSQ 276
-#define RSQ 277
-#define READ 278
-#define WRITE 279
-#define ARRAY 280
-#define TINT 281
-#define TREAL 282
-#define OF 283
-#define ASSIGN 284
-#define ADD 285
-#define SUB 286
-#define MUL 287
-#define DIV 288
-#define MOD 289
-#define AND 290
-#define OR 291
-#define NOT 292
-#define GT 293
-#define LT 294
-#define EQ 295
-#define NEQ 296
-#define GTE 297
-#define LTE 298
-#define INT 299
-#define REAL 300
-#define ID 301
-#define TRUE 302
-#define FALSE 303
-#define BREAK 304
-#define UMINUS 305
+#define FOR 269
+#define TO 270
+#define SEMICOLON 271
+#define COMMA 272
+#define COLON 273
+#define DOT 274
+#define DOTDOT 275
+#define LP 276
+#define RP 277
+#define LSQ 278
+#define RSQ 279
+#define READ 280
+#define WRITE 281
+#define ARRAY 282
+#define TINT 283
+#define TREAL 284
+#define OF 285
+#define ASSIGN 286
+#define ADD 287
+#define SUB 288
+#define MUL 289
+#define DIV 290
+#define MOD 291
+#define AND 292
+#define OR 293
+#define NOT 294
+#define GT 295
+#define LT 296
+#define EQ 297
+#define NEQ 298
+#define GTE 299
+#define LTE 300
+#define INT 301
+#define REAL 302
+#define ID 303
+#define TRUE 304
+#define FALSE 305
+#define BREAK 306
+#define UMINUS 307
 
 
 
@@ -169,7 +173,7 @@ typedef union YYSTYPE
 
 
 /* Line 2068 of yacc.c  */
-#line 173 "parser.h"
+#line 177 "parser.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

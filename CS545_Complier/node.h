@@ -15,17 +15,13 @@
 #include "asm_context.h"
 #include "act_record.h"
 
+struct YYLTYPE;
+
 class Node {
 public:
-	int beginRow;
-	int endRow;
-	int beginColumn;
-	int endColumn;
+	YYLTYPE* loc;
 	Node() {
-		beginRow = 0;
-		endRow = 0;
-		beginColumn = 0;
-		endColumn = 0;
+		loc = NULL;
 	}
 	virtual ~Node() {
 	}
@@ -36,8 +32,9 @@ public:
 	virtual void evaluate(EvalContext* context) {
 	}
 	virtual void gencode(AsmContext* context) {
-
 	}
+	void setloc(YYLTYPE loc);
+	void setloc(YYLTYPE* from, YYLTYPE* to);
 };
 /**
  * Program Structures
@@ -49,16 +46,30 @@ class StatementBlock;
 class Param;
 class Type;
 
-class Program: public Node {
+class Routine: public Node {
+protected:
+	std::map<char*, Declare*, comp>* declareTable;
+	std::map<char*, Subprogram*, comp>* subTable;
 public:
 	Identifier* id;
-	std::vector<Identifier*> *params;
 	std::vector<Declare*> *declares;
 	std::vector<Subprogram*> *subs;
 	StatementBlock* body;
-	
+
 	ActivationRecord* actrecord;
 
+	Routine(Identifier*, std::vector<Declare*>*, std::vector<Subprogram*>*,
+			StatementBlock*);
+	Declare* getDeclare(char*);
+	Subprogram* getSub(char*);
+
+	virtual ~Routine();
+};
+
+class Program: public Routine {
+private:
+public:
+	std::vector<Identifier*> *params;
 	Program(Identifier*, std::vector<Identifier*>*, std::vector<Declare*>*,
 			std::vector<Subprogram*>*, StatementBlock*);
 	virtual ~Program();
@@ -67,20 +78,15 @@ public:
 	void gencode(AsmContext* context);
 };
 
-class Subprogram: public Node {
+class Subprogram: public Routine {
 private:
-	std::map<char*,Declare*,comp>* declareTable;
 public:
-	Identifier* id;
 	std::vector<Param*>* params;
-	std::vector<Declare*>* declares;
-	StatementBlock* body;
 
-	ActivationRecord* actrecord;
-	
-	Subprogram(Identifier*,std::vector<Param*>*,std::vector<Declare*>*,StatementBlock*);
-	~Subprogram();
-	Declare* getDeclare(char*);
+	Subprogram(Identifier*, std::vector<Param*>*, std::vector<Declare*>*,
+			std::vector<Subprogram*>*, StatementBlock*);
+	virtual ~Subprogram();
+
 	void evaluate(EvalContext* context);
 };
 
@@ -88,11 +94,12 @@ class AssignStatement;
 
 class Function: public Subprogram {
 public:
+	char* returnlabel;
 	AssignStatement* returnstmt;
 	std::tr1::shared_ptr<Type> rettype;
 
 	Function(Identifier*, std::vector<Param*>*, Type*, std::vector<Declare*>*,
-			StatementBlock*);
+			std::vector<Subprogram*>*, StatementBlock*);
 	virtual ~Function();
 
 	Type* getType();
@@ -105,7 +112,7 @@ public:
 class Procedure: public Subprogram {
 public:
 	Procedure(Identifier*, std::vector<Param*>*, std::vector<Declare*>*,
-			StatementBlock*);
+			std::vector<Subprogram*>*, StatementBlock*);
 	virtual ~Procedure();
 
 	void print(FILE*, int);
@@ -135,10 +142,8 @@ public:
 
 class Type: public Node {
 public:
-	Type() {
-	}
-	virtual ~Type() {
-	}
+	Type();
+	virtual ~Type();
 	virtual const char* description() = 0;
 	virtual bool equals(Type*) = 0;
 };
@@ -146,9 +151,7 @@ public:
 class BasicType: public Type {
 public:
 	int type;
-	BasicType(int t) {
-		type = t;
-	}
+	BasicType(int t);
 	virtual ~BasicType();
 
 	void print(FILE* file, int level);
@@ -182,7 +185,8 @@ class CallExpression;
 
 class Statement: public Node {
 public:
-	Statement() {
+	Statement() :
+			Node() {
 	}
 	virtual ~Statement() {
 	}
@@ -203,7 +207,6 @@ public:
 };
 
 class WhileStatement: public Statement {
-
 public:
 	Expression* condition;
 	Statement* body;
@@ -218,9 +221,25 @@ public:
 	void gencode(AsmContext*);
 };
 
+class ForStatement: public Statement {
+public:
+	Identifier* variable;
+	Expression* from;
+	Expression* to;
+	Statement* body;
+
+	ForStatement(Identifier*, Expression*, Expression*, Statement*);
+	virtual ~ForStatement();
+
+	void print(FILE*, int);
+	void evaluate(EvalContext*);
+	void gencode(AsmContext*);
+};
+
 class AssignStatement: public Statement {
 private:
 	bool isreturn;
+	Function* function;
 public:
 	Variable* leftval;
 	Expression* rightval;
@@ -285,7 +304,8 @@ public:
  */
 class Expression: public Node {
 public:
-	Expression() {
+	Expression() :
+			Node() {
 	}
 	virtual ~Expression() {
 	}
@@ -379,7 +399,8 @@ public:
 
 class NumConstant: public Expression {
 public:
-	NumConstant() {
+	NumConstant() :
+			Expression() {
 	}
 	virtual ~NumConstant() {
 	}
@@ -401,8 +422,8 @@ public:
 
 class RealConstant: public NumConstant {
 public:
-	double value;
-	RealConstant(double val);
+	float value;
+	RealConstant(float val);
 	virtual ~RealConstant();
 
 	void print(FILE*, int);
@@ -425,7 +446,8 @@ class Variable: public Expression {
 protected:
 	Declare* declare;
 public:
-	Variable() {
+	Variable() :
+			Expression() {
 		declare = NULL;
 	}
 	virtual ~Variable() {
@@ -437,6 +459,9 @@ public:
 };
 
 class Identifier: public Variable {
+protected:
+	bool iscall;
+	Subprogram* subprogram;
 public:
 	char* name;
 	Identifier(char* name);
@@ -447,6 +472,7 @@ public:
 	Type* getType();
 	Identifier* getId();
 	void genaddr(AsmContext*);
+	void gencode(AsmContext*);
 	bool equals(const Identifier* another) const;
 };
 
@@ -463,6 +489,7 @@ public:
 	Type* getType();
 	Identifier* getId();
 	void genaddr(AsmContext*);
+	void gencode(AsmContext*);
 };
 
 #endif /* NODE_H_ */
