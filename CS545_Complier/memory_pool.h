@@ -10,18 +10,27 @@
 
 #include <vector>
 
+template <class T>
 class MemoryPool {
 private:
-	static std::vector<MemoryPool*>* pools;
-
-	std::vector<void*>* pool;
+	std::vector<T*>* pool;
 public:
-	MemoryPool();
-	virtual ~MemoryPool();
+	MemoryPool() {
+		pool = new std::vector<T*>();
+	}
 
-	void add(void*);
+	virtual ~MemoryPool() {
+		for (typename std::vector<T*>::iterator ite = pool->begin(); ite != pool->end();
+			ite++) {
+			delete *ite;
+		}
+		pool->clear();
+		delete pool;
+	}
 
-	static void clear();
+	void add(T* member) {
+		pool->push_back(member);
+	}
 };
 
 #endif /* MEMORY_POOL_H_ */

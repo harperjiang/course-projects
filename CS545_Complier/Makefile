@@ -4,7 +4,7 @@ YACC=yacc
 
 CXXFLAGS =	-O0 -g -Wall -fmessage-length=0
 
-OBJS =	main.o scanner.o parser.o node.o exception.o eval_context.o asm_context.o acc_hist.o act_record.o
+OBJS =	main.o scanner.o parser.o node.o exception.o eval_context.o asm_context.o acc_hist.o act_record.o memory_pool.o quadruple.o quad_context.o reg_context.o
 
 LIBS =
 
@@ -12,7 +12,14 @@ TARGET = pasc
 
 $(TARGET):	$(OBJS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
-	
+quadruple.o:
+	$(CXX) $(CXXFLAGS) -c quadruple.cpp -o quadruple.o
+quad_context.o:
+	$(CXX) $(CXXFLAGS) -c quad_context.cpp -o quad_context.o
+memory_pool.o:
+	$(CXX) $(CXXFLAGS) -c memory_pool.cpp -o memory_pool.o
+reg_context.o:
+	$(CXX) $(CXXFLAGS) -c reg_context.cpp -o reg_context.o
 asm_context.o:
 	$(CXX) $(CXXFLAGS) -c asm_context.cpp -o asm_context.o
 acc_hist.o:

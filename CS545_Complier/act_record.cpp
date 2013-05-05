@@ -39,8 +39,9 @@ void ActivationRecord::addparam(Param* param) {
 }
 
 int ActivationRecord::offset(char* var) {
-	if (table->find(var) == table->end())
+	if (table->find(var) == table->end()) {
 		return -1;
+	}
 	return table->find(var)->second;
 }
 

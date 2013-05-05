@@ -1,6 +1,9 @@
 program aad(input,output);
-var a,b:int;
+var a,b,c:integer;
 begin
 a:=5;
-a:=read()
+b:=6;
+c:=7;
+a:=((a*b+c)*(a*b+c))+(a*b+c)*(a*b+c);
+write(a)
 end.

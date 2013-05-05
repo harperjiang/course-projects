@@ -24,7 +24,7 @@ class Node;
 class Subprogram;
 
 typedef enum _Register {
-	eax, ebx, ecx, edx, esp, ebp, unknown
+	eax, ebx, ecx, edx, esi, edi, esp, ebp, unknown
 } Register;
 
 class AsmContext {
@@ -33,6 +33,8 @@ private:
 	int labelCount;
 	AccessHistory* history;
 	std::stack<Subprogram*>* subhistory;
+	std::map<char*,int,comp>* heapTracker;
+	int heapPointer;
 public:
 	AsmContext(FILE* output);
 	virtual ~AsmContext();
@@ -48,6 +50,8 @@ public:
 	std::vector<Node*>* gethistory();
 
 	ActivationRecord* getActRecord(char* var, int* level);
+	int inHeap(char* var);
+	void resetHeap();
 
 	char* genlabel();
 

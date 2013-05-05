@@ -12,6 +12,8 @@
 #include "node.h"
 #include "exception.h"
 #include "parser.h"
+#include "quadruple.h"
+#include "quad_context.h"
 
 #define _TYPE_REAL 1
 #define _TYPE_INT 2
@@ -758,6 +760,33 @@ void AssignStatement::gencode(AsmContext* context) {
 	}
 }
 
+void AssignStatement::genquad(QuadContext* context) {
+	// TODO Currently doesn't deal with float/boolean optimization
+	if (TYPE_INT->equals(rightval->getType())) {
+		if (isreturn) {
+			rightval->genquad(context);
+			context->genasm();
+			QuadNode* last = context->lastnode();
+			// Maintain return value
+			context->getAsmContext()->mov(eax,last->loc);
+			context->getAsmContext()->jmp(function->returnlabel);
+			context->reset();
+		} else {
+			rightval->genquad(context);
+			Value* right = context->lastresult();
+			if(typeid(*leftval) == typeid(ArrayElement)) {
+				((ArrayElement*)leftval)->genaddrquad(context);
+				context->add(NULL, QUAD_SAVE, context->lastresult(), right);
+			} else {
+				context->add(new Value(leftval->getId()->name), QUAD_ASSIGN, NULL, right);
+			}
+		}
+	} else {
+		gencode(context->getAsmContext());
+		return;
+	}
+}
+
 StatementBlock::StatementBlock(std::vector<Statement*>* stmts) :
 		Statement() {
 	this->statements = stmts;
@@ -784,11 +813,34 @@ void StatementBlock::evaluate(EvalContext* context) {
 }
 
 void StatementBlock::gencode(AsmContext* context) {
-	// TODO Use quadruple
+	// Use quadruple
+/*	
+	QuadContext* qc = new QuadContext(context);
+	
+	for (std::vector<Statement*>::iterator ite = statements->begin();
+			ite != statements->end(); ite++) {
+		Statement* statement = *ite;
+		if(typeid(*statement) == typeid(AssignStatement)) {
+			AssignStatement* assign = (AssignStatement*)statement;
+			assign->genquad(qc);
+		} else if(typeid(*statement) == typeid(CallStatement)) {
+			CallStatement* call = (CallStatement*)statement;
+			call->genquad(qc);
+		} else {
+			qc->genasm();
+			qc->reset();
+			statement->gencode(context);
+		}
+	}
+	qc->genasm();
+	delete qc;
+*/
+
 	for (std::vector<Statement*>::iterator ite = statements->begin();
 			ite != statements->end(); ite++) {
 		(*ite)->gencode(context);
 	}
+
 }
 
 CallStatement::CallStatement(CallExpression* call) :
@@ -814,6 +866,31 @@ void CallStatement::gencode(AsmContext* context) {
 	callexp->gencode(context);
 }
 
+void CallStatement::genquad(QuadContext* context) {
+	// TODO Only handle int type now
+	bool usequad = true;
+
+	if(typeid(*callexp) == typeid(SysCall)) {
+		usequad = false;	
+	} else {
+		for(std::vector<Param*>::iterator ite = callexp->source->params->begin();
+			ite != callexp->source->params->end(); ite++) {
+			Param* param = *ite;
+			if(!TYPE_INT->equals(param->getType())) {
+				usequad = false;
+				break;
+			}
+		}
+	}
+	if(usequad) {
+		callexp->genquad(context);
+	} else {
+		context->genasm();
+		context->reset();
+		callexp->gencode(context->getAsmContext());
+	}
+}
+
 BreakStatement::BreakStatement() :
 		Statement() {
 	parent = NULL;
@@ -829,7 +906,7 @@ void BreakStatement::print(FILE* file, int level) {
 }
 
 void BreakStatement::evaluate(EvalContext* context) {
-//  Check whether in a while loop
+	//  Check whether in a while loop
 	Node* node = context->findhistory(typeid(WhileStatement).name());
 	if (NULL != node) {
 		parent = (WhileStatement*) node;
@@ -937,7 +1014,6 @@ void CallExpression::gencode(AsmContext* context) {
 	for (std::vector<Expression*>::iterator ite = params->begin();
 			ite != params->end(); ite++) {
 		(*ite)->gencode(context);
-
 		if (TYPE_REAL->equals((*ite)->getType())) {
 			context->sub(esp, 4);
 			context->fstp(esp);
@@ -946,6 +1022,10 @@ void CallExpression::gencode(AsmContext* context) {
 		}
 	}
 
+	gencall(context);
+}
+
+void CallExpression::gencall(AsmContext* context) {
 	// Stack Structure:
 
 	// high_end
@@ -958,7 +1038,6 @@ void CallExpression::gencode(AsmContext* context) {
 	// local_var
 
 	// Find the caller & callee
-
 	Subprogram* caller = context->currentsub();
 	Subprogram* callee = this->source;
 
@@ -995,6 +1074,18 @@ void CallExpression::gencode(AsmContext* context) {
 	}
 
 	context->call(callname->name);
+}
+
+void CallExpression::genquad(QuadContext* qc) {
+	// Push parameters
+	for (std::vector<Expression*>::iterator ite = params->begin();
+			ite != params->end(); ite++) {
+		(*ite)->genquad(qc);
+		qc->add(NULL, QUAD_PARAM, NULL, qc->lastresult());	
+	}
+	qc->genasm();
+	gencall(qc->getAsmContext());
+	qc->reset();
 }
 
 SysCall::SysCall(int type, std::vector<Expression*>* params) :
@@ -1164,6 +1255,32 @@ void ArithExpression::gencode(AsmContext* context) {
 		default:
 			break;
 		}
+	}
+}
+
+void ArithExpression::genquad(QuadContext* qc) {
+	left->genquad(qc);
+	Value* leftval = qc->lastresult();
+	right->genquad(qc);
+	Value* rightval = qc->lastresult();
+	switch(opr) {
+	case _ADD:
+		qc->add(qc->newvar(), QUAD_ADD, leftval, rightval);
+		break;
+	case _SUB:
+		qc->add(qc->newvar(), QUAD_SUB, leftval, rightval);
+		break;
+	case _MUL:
+		qc->add(qc->newvar(), QUAD_MUL, leftval, rightval);
+		break;
+	case _DIV:
+		qc->add(qc->newvar(), QUAD_DIV, leftval, rightval);
+		break;
+	case _MOD:
+		qc->add(qc->newvar(), QUAD_MOD, leftval, rightval);
+		break;
+	default:
+		break;
 	}
 }
 
@@ -1368,6 +1485,10 @@ void IntConstant::gencode(AsmContext* context) {
 	context->mov(eax, value);
 }
 
+void IntConstant::genquad(QuadContext* context) {
+	context->add(context->newvar(), QUAD_ASSIGN, NULL, new Value(value));
+}
+
 RealConstant::RealConstant(float val) :
 		NumConstant() {
 	this->value = val;
@@ -1395,7 +1516,7 @@ void RealConstant::gencode(AsmContext* context) {
 		context->fld1();
 		return;
 	}
-// Get IEEE 745 Representation of float number;
+	// Get IEEE 745 Representation of float number;
 	unsigned int* uint = (unsigned int*) &value;
 	context->mov(eax, *uint);
 	context->sub(esp, 4);
@@ -1504,6 +1625,10 @@ bool Identifier::equals(const Identifier* another) const {
 	return strcmp(this->name, another->name) == 0;
 }
 
+void Identifier::genquad(QuadContext* qc) {
+	qc->add(qc->newvar(), QUAD_ASSIGN, NULL, new Value(name));
+}
+
 ArrayElement::ArrayElement(Identifier * id, Expression * val) :
 		Variable() {
 	this->name = id;
@@ -1573,4 +1698,21 @@ void ArrayElement::gencode(AsmContext* context) {
 	} else {
 		context->mov(eax, edx, 1);
 	}
+}
+
+void ArrayElement::genaddrquad(QuadContext* qc) {
+	ArrayType* arraytype = (ArrayType*) declare->getType();
+	int begin = arraytype->begin;
+	index->genquad(qc);
+	Value* index = qc->lastresult();
+	qc->add(qc->newvar(), QUAD_SUB, index, new Value(begin));
+	qc->add(qc->newvar(), QUAD_MUL, qc->lastresult(), new Value(4));
+	Value* indexlast = qc->lastresult();
+	qc->add(qc->newvar(), QUAD_ADDR, NULL,new Value(getId()->name));
+	qc->add(qc->newvar(), QUAD_ADD, qc->lastresult(), indexlast);
+}
+
+void ArrayElement::genquad(QuadContext* qc) {
+	genaddrquad(qc);
+	qc->add(qc->newvar(), QUAD_LOAD, NULL, qc->lastresult());
 }

@@ -28,7 +28,7 @@ public:
 	void add(Declare* variable);
 	void addparam(Param* param);
 	// Return the offset of given variable,
-	// -1 if not exists
+	// Return -1 if not exists
 	int offset(char* variable);
 
 	// Generate itself in memory

@@ -11,9 +11,14 @@
 #include <stdlib.h>
 #include "common.h"
 #include "asm_context.h"
+#include "node.h"
 
-#define NO_AVAIL_REG 10
-#define REG_LOCKED 20
+class RegContext;
+
+typedef enum _ValueType {
+	TYPE_NUM, TYPE_VAR
+
+} ValueType;
 
 class Value {
 public:
@@ -27,6 +32,7 @@ public:
 		this->value = val;
 		this->var = NULL;
 		temp = false;
+		init();
 	}
 
 	Value(const char* name) {
@@ -35,103 +41,31 @@ public:
 		strcpy(var, name);
 		this->value = 0;
 		temp = false;
+		init();
 	}
+
+	void init();
 
 	~Value() {
 		delete var;
 	}
 };
 
-class Quadruple {
-public:
-	Value* result;
-	OPR opr;
-	Value* left;
-	Value* right;
-
-	Quadruple(Value* result, OPR opr, Value* left, Value *right) {
-		this->result = result;
-		this->opr = opr;
-		this->left = left;
-		this->right = right;
-	}
-
-	virtual ~Quadruple();
-};
-
-class QuadNode;
+typedef enum _QuadOpr {
+	QUAD_ASSIGN,
+	QUAD_ADD, QUAD_SUB, QUAD_MUL, QUAD_DIV, QUAD_MOD,
+	QUAD_PARAM, QUAD_CALL,
+	QUAD_ADDR,
+	QUAD_LOAD, QUAD_SAVE,
+	QUAD_NONE
+} QuadOpr;
 
 extern Register reg(int index);
 
-class RegContext {
-private:
-	std::map<Register,QuadNode*>* nodes;
-	std::map<Register,bool>* locks;
-	int nextpointer;
-public:
-
-	RegContext() {
-		nodes = new std::map<Register,QuadNode*>();
-		locks = new std::map<Register,bool>();
-		nextpointer = 0;
-	}
-	virtual ~RegContext() {
-		delete nodes;
-		delete locks;
-	}
-	
-	Register next() {
-		Register retval = unknown;
-		int start = nextpointer;
-		while(nextpointer - start < 4) {
-			retval = reg((nextpointer++)%4);
-			if(!islock(retval))
-				return retval;
-		}
-		return unknown;
-	}
-
-	Register avail() {
-		for(int i = 0 ; i < 4 ; i++) {
-			if(get(reg(i)) == NULL)
-				return reg(i);
-		}
-		return unknown;
-	}	
-
-	QuadNode* get(Register reg) {
-		if(nodes->find(reg) == nodes->end())
-			return NULL;
-		return nodes->find(reg)->second;
-	}
-
-	void clean(Register reg) {
-		if(islock(reg))
-			throw REG_LOCKED;
-		nodes->erase(reg);
-	}
-
-	void put(Register reg, QuadNode* node) {
-		if(islock(reg) && get(reg) != node)
-			throw REG_LOCKED;
-		nodes->insert(std::pair<Register,QuadNode*>(reg,node));
-	}
-
-	void lock(Register reg) {
-		locks->insert(std::pair<Register,bool>(reg,true));
-	}
-
-	void unlock(Register reg) {
-		locks->erase(reg);
-	}
-	
-	bool islock(Register reg) {
-		return locks->find(reg) != locks->end() && locks->find(reg)->second;
-	}
-};	
-
-
 class QuadNode {
+protected:
+	void gentwinasm(AsmContext*, RegContext*);
+	void genallocregasm(AsmContext*, RegContext*);
 public:
 	// For uniquely identify the nodes
 	int number;
@@ -141,22 +75,19 @@ public:
 	std::vector<Value*>* synonym;
 	QuadNode* left;
 	QuadNode* right;
-	OPR opr;
+	QuadOpr opr;
 
 	// For quadruple generation
 	bool processed;
-	Quadruple* origin;
-
-	// For labeling
-	int ilabel;
 
 	// For code generation
 	int refCount;
 	Register loc;
 	bool memory;
 
+	void init();
 	QuadNode(Value* value);
-	QuadNode(OPR opr, QuadNode* left, QuadNode* right);
+	QuadNode(QuadOpr opr, QuadNode* left, QuadNode* right);
 	virtual ~QuadNode();
 	/*
 	 * Deal with synonyms
@@ -164,19 +95,17 @@ public:
 	void addSynonym(Value* name);
 	void removeSynonym(Value* name);
 	void cleanSynonym();
-
-	void label(int flag);
 	
 	/**
 	 * usenow: means the node's register will be used to store its calculation result.
-	 * For a temp node with no further use, a store operation can be avoided.
+	 * For a temp node with no further use, a store operation can be avoided in this way.
 	 */
-	void gencleanregasm(AsmContext* context, RegContext* regc,bool usenow);
-	void genloadregasm(AsmContext* context);
+	void gencleanregasm(AsmContext* context, RegContext* regc, bool usenow);
+	void genloadregasm(AsmContext* context, RegContext* regc);
 	/**
 	 * allowtemp: whether store temp variables
 	 */
-	void genstoreasm(AsmContext* context, bool allowtemp);
+	void genstoreasm(AsmContext* context, RegContext* regc, bool allowtemp);
 	void genasm(AsmContext* context, RegContext* regc);
 };
 
