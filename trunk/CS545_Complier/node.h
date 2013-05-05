@@ -17,6 +17,8 @@
 
 struct YYLTYPE;
 
+class QuadContext;
+
 class Node {
 public:
 	YYLTYPE* loc;
@@ -252,6 +254,7 @@ public:
 	void print(FILE* file, int level);
 	void evaluate(EvalContext* context);
 	void gencode(AsmContext*);
+	void genquad(QuadContext* quad);
 };
 
 class StatementBlock: public Statement {
@@ -276,6 +279,7 @@ public:
 	void print(FILE* file, int level);
 	void evaluate(EvalContext* context);
 	void gencode(AsmContext*);
+	void genquad(QuadContext* quad);
 };
 
 class BreakStatement: public Statement {
@@ -312,13 +316,18 @@ public:
 	virtual ~Expression() {
 	}
 
+	virtual void genquad(QuadContext*) {
+	}
+
 	virtual Type* getType() = 0;
 };
 
 class CallExpression: public Expression {
 private:
-	Subprogram* source;
+protected:
+	void gencall(AsmContext*);
 public:
+	Subprogram* source;
 	Identifier* callname;
 	std::vector<Expression*>* params;
 
@@ -329,6 +338,7 @@ public:
 	void evaluate(EvalContext* context);
 	Type* getType();
 	void gencode(AsmContext*);
+	void genquad(QuadContext*);
 };
 
 class SysCall: public CallExpression {
@@ -359,6 +369,7 @@ public:
 	void evaluate(EvalContext* context);
 	Type* getType();
 	void gencode(AsmContext*);
+	void genquad(QuadContext*);
 };
 
 typedef enum _ROPR {
@@ -420,6 +431,7 @@ public:
 	void print(FILE*, int);
 	Type* getType();
 	void gencode(AsmContext*);
+	void genquad(QuadContext*);
 };
 
 class RealConstant: public NumConstant {
@@ -476,6 +488,7 @@ public:
 	void genaddr(AsmContext*);
 	void gencode(AsmContext*);
 	bool equals(const Identifier* another) const;
+	void genquad(QuadContext*);
 };
 
 class ArrayElement: public Variable {
@@ -492,6 +505,8 @@ public:
 	Identifier* getId();
 	void genaddr(AsmContext*);
 	void gencode(AsmContext*);
+	void genquad(QuadContext*);
+	void genaddrquad(QuadContext*);
 };
 
 #endif /* NODE_H_ */

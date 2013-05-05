@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <algorithm>
 #include "quad_context.h"
+#include "node.h"
+#include "reg_context.h"
 
 
 template<class V> 
@@ -28,17 +30,17 @@ void clearMap(M* amap) {
 
 
 QuadContext::QuadContext(AsmContext* conc) {
-	quads = new std::vector<Quadruple*>();
 	nodeMap = new std::map<char*, QuadNode*, comp>();
 	valueMap = new std::map<int, QuadNode*>();
 	varCount = 0;
 	roots = new std::vector<QuadNode*>();
 	asmContext = conc;
+	last = NULL;
+
+	quitflag = false;
 }
 
 QuadContext::~QuadContext() {
-	quads->clear();
-	delete quads;
 	nodeMap->clear();
 	delete nodeMap;
 	valueMap->clear();
@@ -48,11 +50,12 @@ QuadContext::~QuadContext() {
 }
 
 void QuadContext::reset() {
-	quads->clear();
 	nodeMap->clear();
 	valueMap->clear();
 	roots->clear();
 	varCount = 0;
+	quitflag = false;
+	asmContext->resetHeap();
 }
 
 void QuadContext::removeRoot(QuadNode* node) {
@@ -68,7 +71,6 @@ void QuadContext::genasm() {
 	for (std::vector<QuadNode*>::iterator it = roots->begin();
 			it != roots->end(); it++) {
 		(*it)->cleanSynonym();
-		(*it)->label(0);
 		// All registers are available
 		(*it)->genasm(asmContext,regc);
 	}
@@ -104,10 +106,10 @@ QuadNode* QuadContext::get(Value* value) {
 	return resultNode;
 }
 
-QuadNode* QuadContext::get(OPR opr, QuadNode* left, QuadNode* right) {
+QuadNode* QuadContext::get(QuadOpr opr, QuadNode* left, QuadNode* right) {
 	char* key = new char[30];
 	QuadNode* result = NULL;
-	sprintf(key, "%d %d %d", left->number, opr, right->number);
+	sprintf(key, "%d %d %d", left == NULL?-1:left->number, opr, right->number);
 	std::map<char*, QuadNode*>::iterator ite = nodeMap->find(key);
 	if (ite != nodeMap->end()) {
 		result = ite->second;
@@ -120,32 +122,31 @@ QuadNode* QuadContext::get(OPR opr, QuadNode* left, QuadNode* right) {
 	return result;
 }
 
-void QuadContext::add(Quadruple* quad) {
+void QuadContext::add(Value* result, QuadOpr opr, Value* left, Value *right) {
 	QuadNode* resultNode = NULL;
-	switch (quad->opr) {
-	case OASSIGN:
+	switch (opr) {
+	case QUAD_ASSIGN:
 		// If an assignment 
-		resultNode = get(quad->right);
+		resultNode = get(right);
 		break;
-	case OPARAM:
-		resultNode = get(quad->right);
-		resultNode = new QuadNode(OPARAM, NULL, resultNode);
+	case QUAD_PARAM:
+	case QUAD_LOAD:
+	case QUAD_ADDR:
+		// If a uniary operation
+		resultNode = get(right);
+		resultNode = get(opr, NULL, resultNode);
 		break;
-	case OCALL:
-		// Save the origin call
-		resultNode = new QuadNode(OCALL, NULL, new QuadNode(quad->right));
-		resultNode->origin = quad;
-		break;
-	case OADD:
-	case OSUB:
-	case OMUL:
-	case ODIV:
-	case OMOD: {
+	case QUAD_SAVE:
+	case QUAD_ADD:
+	case QUAD_SUB:
+	case QUAD_MUL:
+	case QUAD_DIV:
+	case QUAD_MOD: {
 		// If a binary operation
-		QuadNode* left = get(quad->left);
-		QuadNode* right = get(quad->right);
+		QuadNode* qleft = get(left);
+		QuadNode* qright = get(right);
 		// Try to find an existing operator, create one if fails
-		resultNode = get(quad->opr, left, right);
+		resultNode = get(opr, qleft, qright);
 	}
 		break;
 	default:
@@ -153,21 +154,24 @@ void QuadContext::add(Quadruple* quad) {
 	}
 	if (NULL != resultNode) {
 		roots->push_back(resultNode);
-		if (NULL != quad->result) {
+		if (NULL != result) {
 			// For the normal ones with a result
-			QuadNode* someExist = nodeMap->find(quad->result->var)->second;
+			QuadNode* someExist = NULL;
+			if(nodeMap->find(result->var) != nodeMap->end()) {
+				someExist = nodeMap->find(result->var)->second;
+			}
 			if (someExist != NULL && someExist != resultNode) {
 				// An name comes with some new value, remove it from the original value
-				someExist->removeSynonym(quad->result);
+				someExist->removeSynonym(result);
 			}
 			nodeMap->insert(
-					std::pair<char*, QuadNode*>(quad->result->var, resultNode));
-			resultNode->addSynonym(quad->result);
+					std::pair<char*, QuadNode*>(result->var, resultNode));
+			resultNode->addSynonym(result);
 		} else {
 			// For those without result, PARAM or CALL
 		}
 	}
-	quads->push_back(quad);
+	last = result;
 }
 
 Value* QuadContext::newvar() {
@@ -179,9 +183,17 @@ Value* QuadContext::newvar() {
 }
 
 Value* QuadContext::lastresult() {
-	Quadruple* last = quads->back();
-	if (NULL == last) {
-		return NULL;
-	}
-	return last->result;
+	return last;
+}
+
+QuadNode* QuadContext::lastnode() {
+	return roots->back();
+}
+
+void QuadContext::quit() {
+	this->quitflag = true;
+}
+
+bool QuadContext::shouldQuit() {
+	return this->quitflag;
 }

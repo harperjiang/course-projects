@@ -23,9 +23,17 @@ const char* regtoa(Register reg) {
 		return "esp";
 	case ebp:
 		return "ebp";
+	case esi:
+		return "esi";
+	case edi:
+		return "edi";
 	default:
 		return NULL;
 	}
+}
+
+Register reg(int index) {
+	return (Register)index;
 }
 
 AsmContext::AsmContext(FILE* output) {
@@ -35,6 +43,9 @@ AsmContext::AsmContext(FILE* output) {
 
 	history = new AccessHistory();
 	subhistory = new std::stack<Subprogram*>();
+
+	heapTracker = new std::map<char*,int,comp>();
+	heapPointer = 0;
 }
 
 AsmContext::~AsmContext() {
@@ -109,6 +120,19 @@ ActivationRecord* AsmContext::getActRecord(char* id, int* level) {
 		}
 	}
 	return NULL;
+}
+
+int AsmContext::inHeap(char* var) {
+	if(heapTracker->end() == heapTracker->find(var)) {
+		heapTracker->insert(std::pair<char*,int>(var,heapPointer));
+		heapPointer+=4;
+	}
+	return heapTracker->find(var)->second;
+}
+
+void AsmContext::resetHeap() {
+	heapTracker->clear();
+	heapPointer = 0;
 }
 
 char* AsmContext::genlabel() {
@@ -465,6 +489,8 @@ void ATTAsmContext::mov(Register target, Register source, int mode,
 	if (offset == 0) {
 		switch (mode) {
 		case 0: //00
+			if(source == target)
+				return;
 			fprintf(getOutput(), "\tmovl %%%s,%%%s\n", regtoa(source),
 					regtoa(target));
 			break;
@@ -486,6 +512,8 @@ void ATTAsmContext::mov(Register target, Register source, int mode,
 	} else {
 		switch (mode) {
 		case 0: //00
+			if(source == target)
+				return;
 			fprintf(getOutput(), "\tmovl %%%s,%%%s\n", regtoa(source),
 					regtoa(target));
 			break;

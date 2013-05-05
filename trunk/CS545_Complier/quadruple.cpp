@@ -6,53 +6,54 @@
  */
 
 #include "quadruple.h"
+#include "memory_pool.h"
+#include "act_record.h"
+#include "reg_context.h"
 
 static int QUAD_COUNTER = 0;
 
-Quadruple::~Quadruple() {
-	// Do nothing as it will cause double deleting in QuadNode
+MemoryPool<Value>* valuePool = new MemoryPool<Value>();
+MemoryPool<QuadNode>* quadnodePool = new MemoryPool<QuadNode>();
+
+void Value::init() {
+	valuePool->add(this);
 }
 
-QuadNode::QuadNode(Value* value) {
+void QuadNode::init() {	
 	number = QUAD_COUNTER++;
-	this->value = value;
-	this->left = NULL;
-	this->right = NULL;
-	synonym = new std::vector<Value*>();
-	origin = NULL;
+
 	processed = false;
-
-	ilabel = 0;
-	loc = unknown;
-	memory = false;
-	refCount = 0;
-}
-
-QuadNode::QuadNode(OPR opr, QuadNode* left, QuadNode* right) {
-	number = QUAD_COUNTER++;
-	this->opr = opr;
-	this->left = left;
-	this->right = right;
 	synonym = new std::vector<Value*>();
-	this->value = NULL;
-	origin = NULL;
-	processed = false;
-
-	ilabel = 0;
 	loc= unknown;
 	memory = false;
 	refCount = 0;
+	quadnodePool->add(this);
+}
+
+QuadNode::QuadNode(Value* value) {
+	init();
+	this->value = value;
+	this->left = NULL;
+	this->right = NULL;
+	this->opr = QUAD_NONE;
+}
+
+QuadNode::QuadNode(QuadOpr opr, QuadNode* left, QuadNode* right) {
+	init();	
+	this->opr = opr;
+	this->left = left;
+	this->right = right;
+	this->value = NULL;
 }
 
 QuadNode::~QuadNode() {
-	if(left != NULL)
-		delete left;
-	if(right != NULL)
-		delete right;
-	synonym->clear();
-	delete synonym;
+	if(synonym!= NULL) {
+		synonym->clear();
+		delete synonym;
+	}
 	synonym = NULL;
-	origin = NULL;
+	left = NULL;
+	right = NULL;
 }
 
 void QuadNode::addSynonym(Value* name) {
@@ -103,112 +104,223 @@ void QuadNode::cleanSynonym() {
 	}
 }
 
-void QuadNode::genstoreasm(AsmContext* context,bool allowtemp) {
+void QuadNode::genstoreasm(AsmContext* context, RegContext* regc, bool allowtemp) {
 	if(!memory && loc != unknown) {
 		if(value->temp && !allowtemp)
 			return;
-		MemoryUnit* mu = NULL;
-		mu = context->find(value->var,0);
-		context->mov(mu->getPosition(),loc,0);
+		if(NULL == value->var)
+			return;
+		if(value->temp) { // temp value in heap
+			int offset = context->inHeap(value->var);
+			Register temp = edx;
+			if(edx == loc) {
+				temp = esi;
+			}
+			if(regc->get(temp) != NULL)
+				context->push(temp);
+			context->mov(temp, "heap");
+			context->add(temp, offset);
+			context->mov(temp, loc, 2);
+			if(regc->get(temp) != NULL)			
+				context->pop(temp);
+		} else {
+			int level = 0;
+			ActivationRecord* actrecord = context->getActRecord(value->var, &level);
+			int offset = actrecord->offset(value->var);
+			Register temp = edx;
+			if(edx == loc) {
+				temp = esi;
+			}
+			if(regc->get(temp) != NULL)			
+				context->push(temp);
+			if (0 == level) {
+				context->lea(temp, ebp, offset);
+			} else {
+				context->mov(temp, ebp);
+				for (int i = 0; i < level; i++) {
+					// point to the frame
+					context->add(temp, 8);
+					context->mov(temp, temp, 1);
+				}
+				context->add(temp, offset);
+			}
+			context->mov(temp,loc,2);
+			if(regc->get(temp) != NULL)
+				context->pop(temp);
+		}
 		memory = true;
-	}
+	}	
 }
 
-void QuadNode::genloadregasm(AsmContext* context) {
+void QuadNode::genloadregasm(AsmContext* context, RegContext* regc) {
 	if(memory && loc != unknown) {
-		MemoryUnit* mu = context->find(value->var);
-		if(mu != NULL) {
-			context->mov(loc,mu->getPosition(),1);
+		if(value->temp) {
+			int offset = context->inHeap(value->var);
+			if(loc != edx && regc->get(edx) != NULL) {
+				context->push(edx);
+			}
+			context->mov(edx, "heap");
+			context->add(edx, offset);
+			context->mov(loc, edx, 1);
+			if(loc != edx && regc->get(edx) != NULL) {
+				context->pop(edx);
+			}
+		} else {
+			int level = 0;
+			ActivationRecord* actrecord = context->getActRecord(value->var, &level);
+			int offset = actrecord->offset(value->var);
+			if(loc != edx && regc->get(edx) != NULL)
+				context->push(edx);
+			if (0 == level) {
+				context->lea(edx, ebp, offset);
+			} else {
+				context->mov(edx, ebp);
+				for (int i = 0; i < level; i++) {
+					// point to the frame
+					context->add(edx, 8);
+					context->mov(edx, edx, 1);
+				}
+				context->add(edx, offset);
+			}		
+			context->mov(loc,edx,1);
+			if(loc != edx && regc->get(edx) != NULL)
+				context->pop(edx);
 			return;
 		}
 	}
 }
 
-void QuadNode::gencleanregasm(AsmContext* context, RegContext* regc,bool usenow) {
+void QuadNode::gencleanregasm(AsmContext* context, RegContext* regc, bool usenow) {
 	// if use now, check the ref count, 
 	// if ref count == 0, this item can be ignored safely
 	if(!(usenow && refCount <= 0))
-		genstoreasm(context,true);
+		genstoreasm(context,regc,true);
 	regc->clean(loc);
 	loc = unknown;
+}
+
+void QuadNode::gentwinasm(AsmContext* context, RegContext* regc) {
+	left->genasm(context,regc);
+	right->genasm(context,regc);
+	if(left->loc == unknown) {
+		// left was thrown out, get it back
+		Register avail = regc->avail();	
+		if(avail == unknown) {
+			// Randomly choose a register
+			Register next = regc->next();
+			regc->get(next)->gencleanregasm(context,regc,false);
+			avail = next;
+		}
+		regc->put(avail, left);
+		left->loc = avail;
+		// Gen load asm
+		left->genloadregasm(context,regc);
+	}
+}
+
+void QuadNode::genallocregasm(AsmContext* context, RegContext* regc) {
+	Register avail;
+	if(this->loc != unknown)
+		return;
+	// Allocate 
+	avail = regc->avail();
+	if(avail == unknown) {
+		// Clean an unlock register 	
+		Register next = regc->next();
+		regc->get(next)->gencleanregasm(context,regc,false);
+		avail = next;
+	}
+	regc->put(avail, this);
+	this->loc = avail;
 }
 
 void QuadNode::genasm(AsmContext* context, RegContext* regc) {
 	// Decrease ref count
 	refCount --;
-	
-	if((left == NULL && right == NULL) || processed) {
-		if(this->loc != unknown)
-			return;
-		// leaf, move it to register		
-		Register avail = regc->avail();
-		if(avail == unknown) {
-			// Clean an unlock register 	
-			Register next = regc->next();
-			regc->get(next)->gencleanregasm(context,regc,false);
-			avail = next;
-		}
-		regc->put(avail, this);
-		this->loc = avail;
-		
+	if(processed) {
+		genallocregasm(context,regc);
 		if(value->type == TYPE_NUM) {
-			context->mov(avail, value->value);
+				context->mov(loc, value->value);
 		} else {
-			this->memory = true;
-			MemoryUnit* memloc = context->find(value->var);
-			context->mov(avail,memloc->getPosition(),1); 
+			genloadregasm(context,regc);
 		}
-	} else if(left == NULL) {
-		// Uniary operations, call and param
-		// These are all top level nodes
-		switch(opr) {
-		case OCALL:
-			// Call operation will possibly modify all memory units.
-			// Ignore parameter size now
-			context->push(1);
-			context->call("_print");
+		return;
+	}
+	Register dest, src;
+	switch(opr) {
+		case QUAD_NONE:
+			genallocregasm(context, regc);
+			if(value->type == TYPE_NUM) {
+				context->mov(loc, value->value);
+			} else {
+				genloadregasm(context,regc);
+			}
 			break;
-		case OPARAM:
+		case QUAD_PARAM:
 			right->genasm(context,regc);
 			context->push(right->loc);
 			break;
-		default:
+		case QUAD_LOAD:
+			right->genasm(context,regc);
+			genallocregasm(context, regc);
+			context->mov(loc, right->loc, 1);
+			break;
+		case QUAD_SAVE:
+			gentwinasm(context, regc);
+			context->mov(left->loc, right->loc, 2);
+			break;
+		case QUAD_ADDR: {
+			genallocregasm(context, regc);
+			int level = 0;
+			ActivationRecord* actrecord = context->getActRecord(right->value->var, &level);
+			int offset = actrecord->offset(right->value->var);
+			if (0 == level) {
+				context->lea(loc, ebp, offset);
+			} else {
+				context->mov(loc, ebp);
+				for (int i = 0; i < level; i++) {
+					// point to the frame
+					context->add(loc, 8);
+					context->mov(loc, loc, 1);
+				}
+				context->add(loc, offset);
+			}				
 			break;
 		}
-	} else {
-		left->genasm(context,regc);
-		right->genasm(context,regc);
-		if(left->loc == unknown) {
-			// left was thrown out, get it back
-			Register avail = regc->avail();	
-			if(avail == unknown) {
-				// Randomly choose a register
-				Register next = regc->next();
-				regc->get(next)->gencleanregasm(context,regc,false);
-				avail = next;
-			}
-			regc->put(avail, left);
-			left->loc = avail;
-			// Gen load asm
-			left->genloadregasm(context);
-		}
-		Register dest = left->loc;
-		// store left node as we will update the info to be the new node
-		left->gencleanregasm(context,regc,true);
-		Register src = right->loc;
-		switch(opr) {
-		case OADD:
+		case QUAD_ADD:
+			gentwinasm(context,regc);
+			dest = left->loc;
+			src = right->loc;
+			// store left node as we will update the info to be the new node
+			left->gencleanregasm(context,regc,true);
 			context->add(dest,src);
+			this->loc = dest;
+			this->memory = false;
+			regc->put(dest,this);
 			break;
-		case OSUB:
+		case QUAD_SUB:
+			gentwinasm(context,regc);
+			dest = left->loc;
+			src = right->loc;
+			// store left node as we will update the info to be the new node
+			left->gencleanregasm(context,regc,true);
 			context->sub(dest,src);
+			this->loc = dest;
+			this->memory = false;
+			regc->put(dest,this);
 			break;
-		case OMUL:
+		case QUAD_MUL: 
+			gentwinasm(context,regc);
+			dest = left->loc;
+			src = right->loc;
+			// store left node as we will update the info to be the new node
+			left->gencleanregasm(context,regc,true);
+			
 			if(dest != edx)
 				context->push(edx);
 			if(dest != eax)
 				context->push(eax);
-			
+	
 			if(src != eax) {
 				context->mov(eax,dest);
 				context->mul(src);
@@ -225,20 +337,29 @@ void QuadNode::genasm(AsmContext* context, RegContext* regc) {
 				context->mul(edx);	
 			}
 			context->mov(dest,eax);
-			
+	
 			if(dest != eax)
 				context->pop(eax);
 			if(dest != edx)
 				context->pop(edx);
+			this->loc = dest;
+			this->memory = false;
+			regc->put(dest,this);
 			break;	
-		case ODIV:
+		case QUAD_DIV:
+			gentwinasm(context,regc);
+			dest = left->loc;
+			src = right->loc;
+			// store left node as we will update the info to be the new node
+			left->gencleanregasm(context,regc,true);
+			
 			if(dest != edx)
 				context->push(edx);
 			if(dest != eax)
 				context->push(eax);
 			if(dest != ebx)
 				context->push(ebx);
-				
+		
 			if(dest != ebx){
 				context->mov(ebx,src);
 				context->mov(eax,dest);
@@ -252,7 +373,7 @@ void QuadNode::genasm(AsmContext* context, RegContext* regc) {
 				context->pop(ebx);
 			}
 			context->mov(edx,0);
-			
+	
 			context->div(ebx);
 
 			context->mov(dest,eax);
@@ -263,15 +384,24 @@ void QuadNode::genasm(AsmContext* context, RegContext* regc) {
 				context->pop(eax);
 			if(dest != edx)
 				context->pop(edx);
+			this->loc = dest;
+			this->memory = false;
+			regc->put(dest,this);
 			break;
-		case OMOD:
+		case QUAD_MOD:
+			gentwinasm(context,regc);
+			dest = left->loc;
+			src = right->loc;
+			// store left node as we will update the info to be the new node
+			left->gencleanregasm(context,regc,true);
+			
 			if(dest != edx)
 				context->push(edx);
 			if(dest != eax)
 				context->push(eax);
 			if(dest != ebx)
 				context->push(ebx);
-				
+		
 			if(dest != ebx){
 				context->mov(ebx,src);
 				context->mov(eax,dest);
@@ -285,7 +415,7 @@ void QuadNode::genasm(AsmContext* context, RegContext* regc) {
 				context->pop(ebx);
 			}
 			context->mov(edx,0);
-			
+	
 			context->div(ebx);
 
 			context->mov(dest,edx);
@@ -296,34 +426,13 @@ void QuadNode::genasm(AsmContext* context, RegContext* regc) {
 				context->pop(eax);
 			if(dest != edx)
 				context->pop(edx);
+			this->loc = dest;
+			this->memory = false;
+			regc->put(dest,this);
 			break;
 		default:
 			break;
-		}
-		this->loc = dest;
-		this->memory = false;
-		regc->put(dest,this);
 	}
-	this->genstoreasm(context,false);
+	this->genstoreasm(context,regc,false);
 	processed = true;
 }
-
-void QuadNode::label(int flag) {
-	int llabel = 0;
-	int rlabel = 0;
-	if(left == NULL && right == NULL) {// leaf
-		ilabel = flag; // rightmost has 1, other has 0
-		return;
-	}
-	int newflag = 1;
-	if(left != NULL) {
-		left->label(newflag--);
-		llabel = left->ilabel;
-	}
-	if(right != NULL) {
-		right->label(newflag--);
-		rlabel =right->ilabel;
-	}
-	this->ilabel = (llabel == rlabel)?llabel+1:(llabel>=rlabel?llabel:rlabel);
-}
-

@@ -14,6 +14,8 @@
 #include "node.h"
 #include "eval_context.h"
 #include "exception.h"
+#include "memory_pool.h"
+#include "quadruple.h"
 
 #define ESC 27
 
@@ -37,7 +39,11 @@ void print_help_info();
 void parse_input(const char* inputfile, const char* outputFile,
 		const int outputFormat, const int asmstyle);
 
+extern MemoryPool<QuadNode>* quadnodePool;
+extern MemoryPool<Value>* valuePool;
+
 int main(int argc, char** argv) {
+
 	char* outputFile = NULL;
 	int opt = -1;
 	int outputFormat = ASM;
@@ -83,6 +89,9 @@ int main(int argc, char** argv) {
 			break;
 		}
 	}
+	// Release all memories
+	delete quadnodePool;
+	delete valuePool;
 }
 
 void print_help_info() {
