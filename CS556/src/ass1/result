@@ -1,0 +1,12 @@
+this is the plain text of assignment one in cryptography 
+as you have discovered by cracking this assignment it was encrypted using a basic monoalphabetic substitution cipher
+
+for this assignment submit the following items by email before the middle of next month 
+
+first describe the substitution table used for the letters present in the plain text 
+second describe carefully how you break the cipher 
+third describe and implement your own cipher system for encrypting and decrypting text files 
+you may use any programming language of your choice 
+also include a brief discussion comparing the relative security of your cipher to the monoalphabetic substitution cipher used for the text of this assignment
+as part of the submission for the third part provide a live demonstration of your system 
+this assignment was posted three days before the end of august in the year twenty thirteen
