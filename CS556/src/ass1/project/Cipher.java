@@ -15,18 +15,18 @@ public class Cipher {
 			remaining += b;
 
 			while (storing >= 9) {
-				int extract = remaining >> 9;
-				remaining = remaining - (extract << 9);
+				int extract = remaining >> (storing - 9);
+				remaining = remaining - (extract << (storing - 9));
 				storing -= 9;
-				bos.write('A' + remaining / 26);
-				bos.write('A' + remaining % 26);
+				bos.write('A' + extract / 26);
+				bos.write('A' + extract % 26);
 			}
 		}
 
-		remaining <<= (8 - storing);
+		remaining <<= (9 - storing);
 		bos.write('A' + remaining / 26);
 		bos.write('A' + remaining % 26);
-		for (int i = storing; i < 8; i++) {
+		for (int i = storing; i < 9; i++) {
 			bos.write('X');
 			bos.write('Z');
 		}

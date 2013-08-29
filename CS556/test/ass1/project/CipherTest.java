@@ -1,6 +1,6 @@
 package ass1.project;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -8,12 +8,15 @@ public class CipherTest {
 
 	@Test
 	public void testEncrypt() {
-		fail("Not yet implemented");
+		byte[] input = "ABC".getBytes();
+		byte[] result = new Cipher().encrypt(input);
+		assertEquals("FAKFAYXZXZXZ", new String(result));
 	}
 
 	@Test
 	public void testDecrypt() {
-		fail("Not yet implemented");
+		byte[] input = "FAKFAYXZXZXZ".getBytes();
+		assertEquals("ABC", new String(new Cipher().decrypt(input)));
 	}
 
 }
