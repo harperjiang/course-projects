@@ -1,4 +1,4 @@
-package ass1;
+package ass1.solve;
 
 public class CaesarDictionary implements Dictionary {
 
