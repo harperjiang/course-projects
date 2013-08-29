@@ -1,4 +1,4 @@
-package ass1;
+package ass1.solve;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
