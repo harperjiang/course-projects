@@ -1,8 +1,10 @@
-package ass1.project;
+package ass1.project.core;
 
 import java.io.ByteArrayOutputStream;
 
-public class Cipher {
+import ass1.Cipher;
+
+public class Ass1Cipher implements Cipher {
 
 	public byte[] encrypt(byte[] input) {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
