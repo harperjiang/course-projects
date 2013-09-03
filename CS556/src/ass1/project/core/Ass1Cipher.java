@@ -47,19 +47,21 @@ public class Ass1Cipher implements Cipher {
 		}
 		int stored = 0;
 		int remaining = 0;
-		for (int i = 0; i < input.length - 2 - padding * 2; i += 2) {
+		int stop = input.length - 1 - padding * 2;
+		for (int i = 0; i < stop; i += 2) {
 			byte first = input[i];
 			byte second = input[i + 1];
 			remaining = (remaining << 9) + (first - 'A') * 26 + (second - 'A');
 			stored += 9;
-			while (stored >= 8) {
+			while ((i == stop - 1 && stored > padding)
+					|| (i < stop - 1 && stored >= 8)) {
 				int write = remaining >> (stored - 8);
 				bos.write(write);
 				remaining -= (write << (stored - 8));
 				stored -= 8;
 			}
 		}
-		if (!(stored == padding))
+		if (remaining != 0)
 			throw new IllegalArgumentException();
 
 		return bos.toByteArray();
