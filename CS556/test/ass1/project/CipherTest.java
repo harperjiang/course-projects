@@ -13,12 +13,20 @@ public class CipherTest {
 		byte[] input = "ABC".getBytes();
 		byte[] result = new Ass1Cipher().encrypt(input);
 		assertEquals("FAKFAYXZXZXZ", new String(result));
+
+		input = "supraja\n".getBytes();
+		result = new Ass1Cipher().encrypt(input);
+		assertEquals("IWSBOXLIBTFWFDAAXZXZXZXZXZXZXZXZ", new String(result));
+
 	}
 
 	@Test
 	public void testDecrypt() {
 		byte[] input = "FAKFAYXZXZXZ".getBytes();
 		assertEquals("ABC", new String(new Ass1Cipher().decrypt(input)));
+
+		input = "IWSBOXLIBTFWFDAAXZXZXZXZXZXZXZXZ".getBytes();
+		assertEquals("supraja\n", new String(new Ass1Cipher().decrypt(input)));
 	}
 
 }

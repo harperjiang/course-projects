@@ -31,4 +31,17 @@ public class LabeledFileChooser extends JPanel {
 		this.button = new FileButton(textField);
 		add(this.button);
 	}
+
+	public JLabel getLabel() {
+		return label;
+	}
+
+	public JTextField getTextField() {
+		return textField;
+	}
+
+	public FileButton getButton() {
+		return button;
+	}
+
 }
