@@ -47,7 +47,7 @@ public class Ass1Cipher implements Cipher {
 		}
 		int stored = 0;
 		int remaining = 0;
-		for (int i = 0; i < input.length - 1 - padding * 2; i += 2) {
+		for (int i = 0; i < input.length - 2 - padding * 2; i += 2) {
 			byte first = input[i];
 			byte second = input[i + 1];
 			remaining = (remaining << 9) + (first - 'A') * 26 + (second - 'A');
