@@ -1,7 +1,8 @@
-package ass1.solve;
+package utils;
 
 import java.util.HashMap;
 import java.util.Map;
+
 
 public class OneOneDictionary implements Dictionary {
 
