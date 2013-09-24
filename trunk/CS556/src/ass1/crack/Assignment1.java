@@ -1,10 +1,13 @@
-package ass1.solve;
+package ass1.crack;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+
+import utils.Dictionary;
+import utils.OneOneDictionary;
 
 public class Assignment1 {
 

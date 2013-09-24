@@ -1,4 +1,4 @@
-package ass1.solve;
+package utils;
 
 public interface Dictionary {
 

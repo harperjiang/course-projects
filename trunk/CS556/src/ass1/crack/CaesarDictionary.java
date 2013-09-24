@@ -1,4 +1,6 @@
-package ass1.solve;
+package ass1.crack;
+
+import utils.Dictionary;
 
 public class CaesarDictionary implements Dictionary {
 
