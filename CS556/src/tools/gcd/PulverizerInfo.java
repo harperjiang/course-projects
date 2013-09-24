@@ -1,44 +1,46 @@
 package tools.gcd;
 
+import java.math.BigInteger;
+
 public class PulverizerInfo {
 
-	private long x1;
+	private BigInteger x1;
 
-	private long y1;
+	private BigInteger y1;
 
-	private long x2;
+	private BigInteger x2;
 
-	private long y2;
+	private BigInteger y2;
 
 	public PulverizerInfo() {
-		x1 = 1;
-		y1 = 0;
-		x2 = 0;
-		y2 = 1;
+		x1 = BigInteger.ONE;
+		y1 = BigInteger.ZERO;
+		x2 = BigInteger.ZERO;
+		y2 = BigInteger.ONE;
 	}
 
-	public void update(long q) {
-		long tempx = x1 - q * x2;
-		long tempy = y1 - q * y2;
+	public void update(BigInteger q) {
+		BigInteger tempx = x1.subtract(q.multiply(x2));
+		BigInteger tempy = y1.subtract(q.multiply(y2));
 		x1 = x2;
 		y1 = y2;
 		x2 = tempx;
 		y2 = tempy;
 	}
 
-	public long getX1() {
+	public BigInteger getX1() {
 		return x1;
 	}
 
-	public long getY1() {
+	public BigInteger getY1() {
 		return y1;
 	}
 
-	public long getX2() {
+	public BigInteger getX2() {
 		return x2;
 	}
 
-	public long getY2() {
+	public BigInteger getY2() {
 		return y2;
 	}
 
