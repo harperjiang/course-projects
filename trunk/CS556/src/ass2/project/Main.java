@@ -14,18 +14,15 @@ public class Main {
 	 */
 	public static void main(String[] args) throws Exception {
 
-		if (args.length == 0)
-			return;
-		if ("-h".equals(args[0])) {
+		if (args.length == 0 || "-h".equals(args[0])) {
 			System.out.println("Charwise RSA Encryption:");
 			System.out
-					.println("\t-genkey <bitlength> <public_key_file> <private_key_file>: Generate Public/Private Keypairs and write to files");
+					.println("  -genkey <bitlength> <public_key_file> <private_key_file>: Generate Public/Private Keypairs and write to files");
 			System.out
-					.println("\t-encrypt <public_key_file> <plain_text> <cipher_text>: Encrypt Plain text");
+					.println("  -encrypt <public_key_file> <plain_text> <cipher_text>: Encrypt Plain text");
 			System.out
-					.println("\t-encrypt <private_key_file> <cipher_text> <plain_text>: Decrypt Cipher text");
-		}
-		if ("-genkey".equals(args[0])) {
+					.println("  -decrypt <private_key_file> <cipher_text> <plain_text>: Decrypt Cipher text");
+		} else if ("-genkey".equals(args[0])) {
 			int bitlength = Integer.parseInt(args[1]);
 			PrintWriter publicFile = new PrintWriter(new FileOutputStream(
 					args[2]));
@@ -38,8 +35,7 @@ public class Main {
 			privateFile.println(kgen.getPrivateKey());
 			publicFile.close();
 			privateFile.close();
-		}
-		if ("-encrypt".equals(args[0])) {
+		} else if ("-encrypt".equals(args[0])) {
 			BufferedReader keyreader = new BufferedReader(
 					new InputStreamReader(new FileInputStream(args[1])));
 			FileInputStream input = new FileInputStream(args[2]);
@@ -52,8 +48,7 @@ public class Main {
 			input.close();
 			output.close();
 			keyreader.close();
-		}
-		if ("-decrypt".equals(args[0])) {
+		} else if ("-decrypt".equals(args[0])) {
 			BufferedReader keyreader = new BufferedReader(
 					new InputStreamReader(new FileInputStream(args[1])));
 			FileInputStream input = new FileInputStream(args[2]);
