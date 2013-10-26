@@ -18,24 +18,24 @@ public class Cracker {
 		BigInteger b = new BigInteger(
 				"99875420304905788162304238315680480125682219886353666515441718590579015480458");
 
-		// Look for a that g^a mod p = b
-		Random random = new Random(System.currentTimeMillis());
-
-		Set<Long> tested = new HashSet<Long>();
-
+		long threshold = 100000000000l;
 		while (true) {
-			long result = random.nextLong();
-			if(tested.contains(result))
-				continue;
-			if (g.modPow(BigInteger.valueOf(result), p).equals(b)) {
-				System.out.println(result);
-				return;
+			System.out.println("Restart...:" + System.currentTimeMillis());
+			Random random = new Random(System.currentTimeMillis());
+
+			int counter = 0;
+			while (true) {
+				if (counter > threshold)
+					break;
+				long result = random.nextLong();
+				// Look for a that g^a mod p = b
+				if (g.modPow(BigInteger.valueOf(result), p).equals(b)) {
+					System.out.println(result);
+					return;
+				}
+				counter++;
 			}
-			tested.add(result);
-			if(tested.size() >= Integer.MAX_VALUE) {
-				System.out.println("Too much result, brute failed");
-				return;
-			}
+
 		}
 	}
 
