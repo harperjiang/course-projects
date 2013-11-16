@@ -6,7 +6,7 @@ import java.text.MessageFormat;
 import tools.ec.EllipticCurve;
 import tools.ec.EllipticCurve.Element;
 
-public class Main {
+public class Verify {
 
 	/**
 	 * @param args
@@ -19,9 +19,12 @@ public class Main {
 		Element g = new Element(curve, new BigInteger(
 				"147686244687917713362777524310538490730"), new BigInteger(
 				"83517868646140609087900046649718421315"));
+//		Element target = new Element(curve, new BigInteger(
+//				"216591050567009152291214325597583347779"), new BigInteger(
+//				"107398660888944827631602166762428987345"));
 		Element target = new Element(curve, new BigInteger(
-				"216591050567009152291214325597583347779"), new BigInteger(
-				"107398660888944827631602166762428987345"));
+				"126619164277821060853358933323435416364"), new BigInteger(
+				"158108872031274340029916308842712637005"));
 		int threadCount = 6;
 		Element inc = g.mul(threadCount);
 		for (int i = 0; i < threadCount; i++) {
@@ -52,11 +55,11 @@ public class Main {
 			while (!current.equals(target)) {
 				current = current.add(inc);
 				counter += 1;
-				if (counter % 10000000 == 0) {
-					System.out.println(MessageFormat.format(
-							"Processed:{0}:{1}, value {2}", number, counter,
-							current));
-				}
+//				if (counter % 10 == 0) {
+//					System.out.println(MessageFormat.format(
+//							"Processed:{0}:{1}, value {2}", number, counter,
+//							current));
+//				}
 			}
 			System.out.println(MessageFormat.format("Success:{0}:{1}", number,
 					counter));
