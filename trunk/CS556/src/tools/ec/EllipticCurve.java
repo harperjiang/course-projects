@@ -9,8 +9,6 @@ public class EllipticCurve {
 
 	// y^2 = x^3 + ax + b
 
-	private static BigInteger cubic = new BigInteger("3");
-
 	public static Element ZERO = new Element(null, BigInteger.ZERO,
 			BigInteger.ZERO);
 
@@ -47,6 +45,18 @@ public class EllipticCurve {
 				this.y = y.mod(curve.p);
 				curve.validate(x, y);
 			}
+		}
+
+		public boolean equals(Object another) {
+			if (another instanceof Element) {
+				if (this == ZERO || another == ZERO) {
+					return this == another;
+				}
+				Element ae = (Element) another;
+				return ae.curve.equals(curve) && ae.x.equals(x)
+						&& ae.y.equals(y);
+			}
+			return super.equals(another);
 		}
 
 		public Element negate() {
@@ -109,16 +119,16 @@ public class EllipticCurve {
 	}
 
 	public static void main(String[] args) {
-		EllipticCurve ec = new EllipticCurve(new BigInteger("43"),
-				new BigInteger("4"), new BigInteger("34"));
-		Element g = new Element(ec, new BigInteger("12"), new BigInteger("41"));
+		EllipticCurve ec = new EllipticCurve(new BigInteger("7"),
+				new BigInteger("1"), new BigInteger("1"));
+		Element g = new Element(ec, new BigInteger("0"), new BigInteger("1"));
 		// Element e = new Element(ec, new BigInteger("6"), new
 		// BigInteger("39"));
 		// Element e2 = new Element(ec, new BigInteger("12"), new
 		// BigInteger("41"));
 		// Element now = e.mul(2);
 		// System.out.println(MessageFormat.format("({0},{1})", now.x, now.y));
-		for (int i = 1; i < 10; i++) {
+		for (int i = 1; i < 20; i++) {
 			Element now = g.mul(i);
 			System.out.println(MessageFormat.format("({0},{1})", now.x, now.y));
 		}

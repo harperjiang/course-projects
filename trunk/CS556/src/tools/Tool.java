@@ -1,5 +1,7 @@
 package tools;
 
+import java.math.BigInteger;
+
 
 public class Tool {
 
@@ -7,11 +9,11 @@ public class Tool {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		int num = 4567;
-		for(int i = 2 ; i < num;i++) {
-			if(num%i == 0)
-				System.out.println(i);
-		}
+		BigInteger a = new BigInteger("116");
+		BigInteger e = new BigInteger("8");
+		BigInteger p = new BigInteger("227");
+		
+		System.out.println(a.modPow(e, p));
 	}
 
 }
