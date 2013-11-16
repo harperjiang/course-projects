@@ -3,8 +3,6 @@ package tools.ec;
 import java.math.BigInteger;
 import java.text.MessageFormat;
 
-import tools.gcd.GCDUtils;
-
 public class EllipticCurve {
 
 	// y^2 = x^3 + ax + b
@@ -63,6 +61,12 @@ public class EllipticCurve {
 			return new Element(this.curve, x, y.negate());
 		}
 
+		@Override
+		public String toString() {
+			return MessageFormat.format("({0},{1})", this.x.toString(),
+					this.y.toString());
+		}
+
 		public Element add(Element another) {
 			if (another.equals(ZERO))
 				return this;
@@ -78,10 +82,8 @@ public class EllipticCurve {
 						.multiply(this.x.pow(2))
 						.add(curve.a)
 						.multiply(
-								GCDUtils.inverse(
-										this.y.multiply(new BigInteger("2"))
-												.mod(curve.p), curve.p))
-						.mod(curve.p);
+								this.y.multiply(new BigInteger("2"))
+										.modInverse(curve.p)).mod(curve.p);
 				// x3 = m^2 - 2x1
 				// y3 = y1 + m(x3-x1)
 				BigInteger x3 = m.pow(2)
@@ -97,8 +99,8 @@ public class EllipticCurve {
 				BigInteger m = another.y
 						.subtract(this.y)
 						.multiply(
-								GCDUtils.inverse(another.x.subtract(this.x)
-										.mod(curve.p), curve.p)).mod(curve.p);
+								another.x.subtract(this.x).modInverse(curve.p))
+						.mod(curve.p);
 				// x3 = m^2 - (x1+x2)
 				BigInteger x3 = m.pow(2).subtract(this.x.add(another.x))
 						.mod(curve.p);
@@ -109,12 +111,32 @@ public class EllipticCurve {
 			}
 		}
 
-		public Element mul(int num) {
+		public Element slowmul(int num) {
 			Element now = this;
 			for (int i = 1; i < num; i++) {
 				now = now.add(this);
 			}
 			return now;
+		}
+
+		public Element mul(int num) {
+			Element now = this;
+			int count = 0;
+			while (Math.pow(2, count) <= num) {
+				count++;
+			}
+			Element[] pows = new Element[count];
+			pows[0] = now;
+			for (int i = 1; i < pows.length; i++) {
+				pows[i] = pows[i - 1].add(pows[i - 1]);
+			}
+			Element result = EllipticCurve.ZERO;
+			for (int i = 0; i < count; i++) {
+				if ((num & (1 << i)) != 0) {
+					result = result.add(pows[i]);
+				}
+			}
+			return result;
 		}
 	}
 
