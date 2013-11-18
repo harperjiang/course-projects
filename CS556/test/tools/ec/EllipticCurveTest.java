@@ -51,6 +51,22 @@ public class EllipticCurveTest {
 	}
 
 	@Test
+	public void testBigMul() {
+		EllipticCurve curve = new EllipticCurve(new BigInteger(
+				"231980187997634794246138521723892165531"), new BigInteger(
+				"286458106491124997002528249079664631375"), new BigInteger(
+				"300957219209219074658154646971415184777"));
+		Element g = new Element(curve, new BigInteger(
+				"147686244687917713362777524310538490730"), new BigInteger(
+				"83517868646140609087900046649718421315"));
+		for (int i = 1; i < 100000; i++) {
+			Element m1 = g.mul(i);
+			Element m2 = g.mul(new BigInteger(String.valueOf(i)));
+			assertEquals(m1, m2);
+		}
+	}
+
+	@Test
 	public void testMulResult() {
 		EllipticCurve curve = new EllipticCurve(new BigInteger(
 				"231980187997634794246138521723892165531"), new BigInteger(
@@ -59,7 +75,7 @@ public class EllipticCurveTest {
 		Element g = new Element(curve, new BigInteger(
 				"147686244687917713362777524310538490730"), new BigInteger(
 				"83517868646140609087900046649718421315"));
-		Element a = g.mul(10000000);
+		Element a = g.mul((710000000l - 1) * 6l + (5 + 1));
 		System.out.println(a);
 	}
 
@@ -80,18 +96,6 @@ public class EllipticCurveTest {
 		assertEquals(
 				"(147686244687917713362777524310538490730,83517868646140609087900046649718421315)",
 				g.toString());
-	}
-
-	@Test
-	public void testSpeed() {
-		EllipticCurve curve = new EllipticCurve(new BigInteger(
-				"231980187997634794246138521723892165531"), new BigInteger(
-				"286458106491124997002528249079664631375"), new BigInteger(
-				"300957219209219074658154646971415184777"));
-		Element g = new Element(curve, new BigInteger(
-				"147686244687917713362777524310538490730"), new BigInteger(
-				"83517868646140609087900046649718421315"));
-		System.out.println(g.mul(60000000-5));
 	}
 
 	@Test

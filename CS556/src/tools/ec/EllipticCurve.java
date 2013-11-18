@@ -45,6 +45,14 @@ public class EllipticCurve {
 			}
 		}
 
+		public BigInteger getX() {
+			return x;
+		}
+
+		public BigInteger getY() {
+			return y;
+		}
+
 		public boolean equals(Object another) {
 			if (another instanceof Element) {
 				if (this == ZERO || another == ZERO) {
@@ -119,7 +127,7 @@ public class EllipticCurve {
 			return now;
 		}
 
-		public Element mul(int num) {
+		public Element mul(long num) {
 			Element now = this;
 			int count = 0;
 			while (Math.pow(2, count) <= num) {
@@ -132,7 +140,29 @@ public class EllipticCurve {
 			}
 			Element result = EllipticCurve.ZERO;
 			for (int i = 0; i < count; i++) {
-				if ((num & (1 << i)) != 0) {
+				if ((num & (1l << i)) != 0) {
+					result = result.add(pows[i]);
+				}
+			}
+			return result;
+		}
+
+		public Element mul(BigInteger num) {
+			Element now = this;
+			int count = 0;
+			BigInteger two = new BigInteger("2");
+			while (two.pow(count).compareTo(num) <= 0) {
+				count++;
+			}
+			Element[] pows = new Element[count];
+			pows[0] = now;
+			for (int i = 1; i < pows.length; i++) {
+				pows[i] = pows[i - 1].add(pows[i - 1]);
+			}
+			Element result = EllipticCurve.ZERO;
+			for (int i = 0; i < count; i++) {
+				if (!(num.and(BigInteger.ONE.shiftLeft(i)))
+						.equals(BigInteger.ZERO)) {
 					result = result.add(pows[i]);
 				}
 			}
