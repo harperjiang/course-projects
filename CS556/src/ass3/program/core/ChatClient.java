@@ -6,13 +6,18 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import ass3.program.core.ChatterContext.ContextKey;
+import ass3.program.core.ClientStateMachine.State;
 import ass3.program.core.message.ExchSharedKeyRequest;
+import ass3.program.core.message.ExchSharedKeyResponse;
 import ass3.program.core.message.Message;
 import ass3.program.core.message.PublicKeyRequest;
+import ass3.program.core.message.PublicKeyResponse;
 import ass3.program.core.message.Request;
 import ass3.program.core.message.Response;
 import ass3.program.core.message.SendTextRequest;
@@ -94,7 +99,53 @@ public class ChatClient {
 			logger.fine(MessageFormat.format("Processing message {0}:{1}",
 					received.getClass().getName(), received));
 		}
+		// Update State Machine
+		try {
+			if (received instanceof PublicKeyResponse) {
+				stateMachine.transit(State.PUBLIC_KEY_RECEIVED);
+			}
+			if (received instanceof ExchSharedKeyResponse) {
+				stateMachine.transit(State.SHARED_KEY_EXCHANGED);
+			}
+		} catch (IllegalStateException e) {
+			// Illegal Transition, ignore the message
+			return;
+		}
 		((Response) received).process();
+
+		responseReceived(received.getClass());
+	}
+
+	private Map<Class<?>, Object> monitors = new HashMap<Class<?>, Object>();
+
+	private synchronized Object getLock(Class<?> clazz) {
+		if (!monitors.containsKey(clazz)) {
+			monitors.put(clazz, new Object());
+		}
+		return monitors.get(clazz);
+	}
+
+	private synchronized void clearLock(Class<?> clazz) {
+		monitors.remove(clazz);
+	}
+
+	private void waitForResponse(Class<?> clazz) {
+		Object lock = getLock(clazz);
+		synchronized (lock) {
+			try {
+				lock.wait();
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
+	private synchronized void responseReceived(Class<?> clazz) {
+		Object lock = getLock(clazz);
+		synchronized (lock) {
+			lock.notify();
+		}
+		clearLock(clazz);
 	}
 
 	public void sendText(String message) {
@@ -103,11 +154,13 @@ public class ChatClient {
 		case INIT:
 			// TODO Allow the user to indicate bit-length
 			send(new PublicKeyRequest(ck.getA(), ck.getB(), 512));
+			waitForResponse(PublicKeyResponse.class);
 			sendText(message);
 			break;
 		case PUBLIC_KEY_RECEIVED:
 			// TODO Allow user to indicate shared key
 			send(new ExchSharedKeyRequest(ck.getA(), ck.getB(), "shared key"));
+			waitForResponse(ExchSharedKeyResponse.class);
 			sendText(message);
 			break;
 		case SHARED_KEY_EXCHANGED:
@@ -117,5 +170,4 @@ public class ChatClient {
 			throw new IllegalStateException();
 		}
 	}
-
 }
