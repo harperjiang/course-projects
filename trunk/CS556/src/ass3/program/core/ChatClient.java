@@ -5,6 +5,7 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.text.MessageFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,6 +27,8 @@ public class ChatClient {
 	private int port;
 
 	private ClientStateMachine stateMachine;
+
+	private Logger logger = Logger.getLogger(getClass().getName());
 
 	public ChatClient(Chatter parent, String ip, int port) {
 		super();
@@ -70,6 +73,10 @@ public class ChatClient {
 	}
 
 	protected void send(Request msg) {
+		if (logger.isLoggable(Level.FINE)) {
+			logger.fine(MessageFormat.format("Sending message {0}:{1}", msg
+					.getClass().getName(), msg));
+		}
 		connect();
 		// Process returned message
 		try {
@@ -77,13 +84,16 @@ public class ChatClient {
 			new ObjectOutputStream(this.socket.getOutputStream())
 					.writeObject(msg);
 		} catch (IOException e) {
-			Logger.getLogger(getClass().getSimpleName()).log(Level.WARNING,
-					"Exception when send message", e);
+			logger.log(Level.WARNING, "Exception when send message", e);
 			throw new RuntimeException();
 		}
 	}
 
 	protected void process(Message received) {
+		if (logger.isLoggable(Level.FINE)) {
+			logger.fine(MessageFormat.format("Processing message {0}:{1}",
+					received.getClass().getName(), received));
+		}
 		((Response) received).process();
 	}
 
