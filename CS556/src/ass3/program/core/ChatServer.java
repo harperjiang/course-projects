@@ -23,7 +23,11 @@ public class ChatServer {
 		super();
 		this.parent = parent;
 		this.port = port;
-		listen();
+		new Thread(new Runnable() {
+			public void run() {
+				listen();
+			}
+		}).start();
 	}
 
 	public Chatter getParent() {
