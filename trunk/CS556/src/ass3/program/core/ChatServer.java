@@ -88,9 +88,11 @@ public class ChatServer {
 				return;
 			}
 			try {
-				while (!socket.isClosed()
-						&& (socket.getInputStream().available() != 0)) {
+				while (!socket.isClosed()) {
 					try {
+						while (socket.getInputStream().available() == 0) {
+							Thread.sleep(500);
+						}
 						Request request = (Request) new ObjectInputStream(
 								socket.getInputStream()).readObject();
 						if (logger.isDebugEnabled()) {
