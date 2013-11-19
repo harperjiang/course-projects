@@ -13,6 +13,10 @@ public abstract class Message implements Serializable {
 
 	private ContextKey ck;
 
+	public Message() {
+		super();
+	}
+
 	public Message(String from, String to) {
 		super();
 		this.ck = new ContextKey(from, to);
@@ -28,6 +32,10 @@ public abstract class Message implements Serializable {
 
 	public ContextKey getCk() {
 		return ck;
+	}
+
+	public void setCk(ContextKey ck) {
+		this.ck = ck;
 	}
 
 }

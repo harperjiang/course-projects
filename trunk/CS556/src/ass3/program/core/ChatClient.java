@@ -3,12 +3,12 @@ package ass3.program.core;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,8 +85,8 @@ public class ChatClient {
 					.getClass().getName(), msg));
 		}
 		connect();
-		// Process returned message
 		try {
+			msg.setCk(new ContextKey(getFromIp(socket), getToIp(socket)));
 			msg.prepare();
 			new ObjectOutputStream(this.socket.getOutputStream())
 					.writeObject(msg);
@@ -96,6 +96,11 @@ public class ChatClient {
 		}
 	}
 
+	/**
+	 * Process returned message
+	 * 
+	 * @param received
+	 */
 	protected void process(Message received) {
 		if (logger.isDebugEnabled()) {
 			logger.debug(MessageFormat.format("Processing message {0}:{1}",
@@ -171,5 +176,14 @@ public class ChatClient {
 		default:
 			throw new IllegalStateException();
 		}
+	}
+
+	public static final String getFromIp(Socket socket) {
+		return socket.getInetAddress().getHostAddress();
+	}
+
+	public static final String getToIp(Socket socket) {
+		return ((InetSocketAddress) socket.getRemoteSocketAddress())
+				.getAddress().getHostAddress();
 	}
 }
