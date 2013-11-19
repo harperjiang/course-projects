@@ -32,9 +32,11 @@ public class Chatter implements ServerListener {
 	public void messageReceived(ServerMessageEvent event) {
 		// Look for the corresponding client
 		ChatClient client = clients.get(event.getMessage().getFrom());
-		if (null != client) {
-			// Discard the message if no client can be found
-			client.process(event.getMessage());
+		if (null == client) {
+			// Construct a new client if none is found
+			client = new ChatClient(this, event.getMessage().getFrom(), PORT);
+			clients.put(event.getMessage().getFrom(), client);
 		}
+		client.process(event.getMessage());
 	}
 }
