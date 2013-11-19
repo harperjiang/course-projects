@@ -5,17 +5,23 @@ import javax.crypto.spec.SecretKeySpec;
 
 import ass3.program.core.ChatterContext;
 
-public class SendStringRequest extends Request {
+public class SendTextRequest extends Request {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1289859997855444176L;
 
 	private byte[] payload;
 
-	public SendStringRequest(String data) {
-		super();
+	public SendTextRequest(String from, String to, String data) {
+		super(from, to);
 		// Encrypt the data
 		try {
 			Cipher aes = Cipher.getInstance("AES");
-			SecretKeySpec skeySpec = ChatterContext
-					.get(ExchSharedKeyRequest.SHARED_KEY);
+			byte[] shared = ChatterContext.get(getCk(),
+					ExchSharedKeyRequest.SHARED_KEY);
+			SecretKeySpec skeySpec = new SecretKeySpec(shared, "AES");
 			aes.init(Cipher.ENCRYPT_MODE, skeySpec);
 			aes.update(data.getBytes());
 			aes.doFinal();
