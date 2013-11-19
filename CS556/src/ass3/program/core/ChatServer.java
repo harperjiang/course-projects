@@ -2,7 +2,6 @@ package ass3.program.core;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -100,10 +99,8 @@ public class ChatServer {
 									"Received message {0}:{1}", request
 											.getClass().getName(), request));
 						}
-						if (ssm.transit(request)) { // Discard invalid message
-							listener.messageReceived(new ServerMessageEvent(
-									ChatServer.this, request));
-						}
+						listener.messageReceived(new ServerMessageEvent(
+								ChatServer.this, request));
 					} catch (SocketException e) {
 						if (socket != null && !socket.isClosed())
 							socket.close();
