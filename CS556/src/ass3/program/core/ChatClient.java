@@ -12,6 +12,7 @@ import ass3.program.core.ChatterContext.ContextKey;
 import ass3.program.core.message.ExchSharedKeyRequest;
 import ass3.program.core.message.Message;
 import ass3.program.core.message.PublicKeyRequest;
+import ass3.program.core.message.Request;
 import ass3.program.core.message.Response;
 import ass3.program.core.message.SendTextRequest;
 
@@ -20,6 +21,7 @@ public class ChatClient {
 	private Chatter parent;
 	private String ip;
 	private Socket socket;
+	private ContextKey ck;
 
 	private int port;
 
@@ -35,8 +37,11 @@ public class ChatClient {
 
 	public ContextKey getContextKey() {
 		try {
-			return new ContextKey(InetAddress.getLocalHost().getHostAddress(),
-					this.ip);
+			if (null == ck) {
+				ck = new ContextKey(
+						InetAddress.getLocalHost().getHostAddress(), this.ip);
+			}
+			return ck;
 		} catch (UnknownHostException e) {
 			throw new RuntimeException(e);
 		}
@@ -64,10 +69,11 @@ public class ChatClient {
 		}
 	}
 
-	protected void send(Message msg) {
+	protected void send(Request msg) {
 		connect();
 		// Process returned message
 		try {
+			msg.prepare();
 			new ObjectOutputStream(this.socket.getOutputStream())
 					.writeObject(msg);
 		} catch (IOException e) {
