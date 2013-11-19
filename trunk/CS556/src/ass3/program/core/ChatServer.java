@@ -86,27 +86,32 @@ public class ChatServer {
 				logger.log(Level.WARNING, "The socket is not connected");
 				return;
 			}
-			while (!socket.isClosed()) {
-				try {
-					Request request = (Request) new ObjectInputStream(
-							socket.getInputStream()).readObject();
-					if (ssm.transit(request)) { // Discard invalid message
-						listener.messageReceived(new ServerMessageEvent(
-								ChatServer.this, ((InetSocketAddress) socket
-										.getRemoteSocketAddress()).getAddress()
-										.toString(), request));
-					}
-				} catch (SocketException e) {
+			try {
+				while (!socket.isClosed()
+						&& (socket.getInputStream().available() != 0)) {
 					try {
+						Request request = (Request) new ObjectInputStream(
+								socket.getInputStream()).readObject();
+						if (ssm.transit(request)) { // Discard invalid message
+							listener.messageReceived(new ServerMessageEvent(
+									ChatServer.this,
+									((InetSocketAddress) socket
+											.getRemoteSocketAddress())
+											.getAddress().toString(), request));
+						}
+					} catch (SocketException e) {
 						if (socket != null && !socket.isClosed())
 							socket.close();
-					} catch (Exception e0) {
-						throw new RuntimeException(e0);
+						throw e;
+					} catch (Exception e) {
+						logger.log(Level.WARNING, "Error processing message", e);
 					}
-					throw new RuntimeException(e);
-				} catch (Exception e) {
-					logger.log(Level.WARNING, "Error processing message", e);
 				}
+			} catch (Exception e) {
+				logger.log(Level.WARNING, "Error reading socket", e);
+				if (e instanceof RuntimeException)
+					throw (RuntimeException) e;
+				throw new RuntimeException(e);
 			}
 		}
 	}
