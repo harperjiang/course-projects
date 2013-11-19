@@ -3,7 +3,7 @@ package ass3.program.core;
 import java.util.HashMap;
 import java.util.Map;
 
-import ass3.program.core.message.Message;
+import ass3.program.core.message.SendTextRequest;
 
 public class Chatter implements ServerListener {
 
@@ -20,13 +20,15 @@ public class Chatter implements ServerListener {
 		clients = new HashMap<String, ChatClient>();
 	}
 
-	public void send(String target, Message message) {
+	public void send(String target, String message) {
 		// Make sure that we have a client to the target
 		if (!clients.containsKey(target)) {
 			ChatClient client = new ChatClient(this, target, PORT);
 			clients.put(target, client);
 		}
-		clients.get(target).send(message);
+		ChatClient client = clients.get(target);
+		client.send(new SendTextRequest(client.getContextKey().getA(), client
+				.getContextKey().getB(), message));
 	}
 
 	@Override
