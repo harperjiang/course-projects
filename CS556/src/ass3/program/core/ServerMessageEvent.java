@@ -13,20 +13,21 @@ public class ServerMessageEvent extends EventObject {
 
 	private String clientId;
 
-	private Request command;
+	private Request message;
 
-	public ServerMessageEvent(ChatServer source, String clientId, Request command) {
+	public ServerMessageEvent(ChatServer source, String clientId,
+			Request message) {
 		super(source);
 		this.clientId = clientId;
-		this.command = command;
+		this.message = message;
 	}
 
 	public String getClientId() {
 		return clientId;
 	}
 
-	public Request getCommand() {
-		return command;
+	public Request getMessage() {
+		return message;
 	}
 
 }

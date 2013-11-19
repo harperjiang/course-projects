@@ -1,6 +1,7 @@
 package ass3.program.core;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -9,18 +10,24 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import ass3.program.core.message.Request;
-import ass3.program.core.message.MessageParser;
 
 public class ChatServer {
+
+	private Chatter parent;
 
 	private int port;
 
 	private ServerListener listener;
 
-	public ChatServer(int port) {
+	public ChatServer(Chatter parent, int port) {
 		super();
+		this.parent = parent;
 		this.port = port;
 		listen();
+	}
+
+	public Chatter getParent() {
+		return parent;
 	}
 
 	public int getPort() {
@@ -77,12 +84,14 @@ public class ChatServer {
 			}
 			while (!socket.isClosed()) {
 				try {
-					Request cmd = MessageParser.parse(socket.getInputStream());
-					listener.commandReceived(new ServerMessageEvent(
-							ChatServer.this, ((InetSocketAddress) socket
-									.getRemoteSocketAddress()).getAddress()
-									.toString(), cmd));
-					ssm.transit(cmd);
+					Request request = (Request) new ObjectInputStream(
+							socket.getInputStream()).readObject();
+					if (ssm.transit(request)) { // Discard invalid message
+						listener.messageReceived(new ServerMessageEvent(
+								ChatServer.this, ((InetSocketAddress) socket
+										.getRemoteSocketAddress()).getAddress()
+										.toString(), request));
+					}
 				} catch (SocketException e) {
 					try {
 						if (socket != null && !socket.isClosed())

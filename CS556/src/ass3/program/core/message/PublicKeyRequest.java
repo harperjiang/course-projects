@@ -7,12 +7,19 @@ import ass3.program.core.ChatterContext;
 
 public class PublicKeyRequest extends Request {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1257806048691099422L;
+
 	public static final String PRIVATE_KEY = "PrivateKey";
+
+	public static final String PUBLIC_KEY = "PublicKey";
 
 	private int bitLength;
 
-	public PublicKeyRequest(int bitLength) {
-		super();
+	public PublicKeyRequest(String from, String to, int bitLength) {
+		super(from, to);
 		this.bitLength = bitLength;
 	}
 
@@ -27,8 +34,9 @@ public class PublicKeyRequest extends Request {
 			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("ElGamal",
 					"BC");
 			KeyPair keyPair = keyGen.generateKeyPair();
-			ChatterContext.put(PRIVATE_KEY, keyPair.getPrivate());
-			return new PublicKeyResponse(keyPair.getPublic());
+			ChatterContext.put(getCk(), PRIVATE_KEY, keyPair.getPrivate());
+			return new PublicKeyResponse(getTo(), getFrom(),
+					keyPair.getPublic());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
