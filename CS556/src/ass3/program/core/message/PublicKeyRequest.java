@@ -1,6 +1,6 @@
 package ass3.program.core.message;
 
-public class PublicKeyRequest {
+public class PublicKeyRequest extends Request {
 
 	private int bitLength;
 
@@ -13,4 +13,7 @@ public class PublicKeyRequest {
 		return bitLength;
 	}
 
+	public Message respond() {
+
+	}
 }
