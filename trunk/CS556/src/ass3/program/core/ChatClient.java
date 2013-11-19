@@ -14,7 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ass3.program.core.ChatterContext.ContextKey;
-import ass3.program.core.ClientStateMachine.State;
+import ass3.program.core.ClientStateMachine.CState;
+import ass3.program.core.ServerStateMachine.SState;
 import ass3.program.core.message.ExchSharedKeyRequest;
 import ass3.program.core.message.ExchSharedKeyResponse;
 import ass3.program.core.message.Message;
@@ -33,7 +34,9 @@ public class ChatClient {
 
 	private int port;
 
-	private ClientStateMachine stateMachine;
+	private ServerStateMachine serverState;
+
+	private ClientStateMachine clientState;
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -42,7 +45,8 @@ public class ChatClient {
 		this.parent = parent;
 		this.ip = ip;
 		this.port = port;
-		this.stateMachine = new ClientStateMachine();
+		this.serverState = new ServerStateMachine();
+		this.clientState = new ClientStateMachine();
 	}
 
 	public ContextKey getContextKey() {
@@ -79,7 +83,7 @@ public class ChatClient {
 		}
 	}
 
-	protected void send(Request msg) {
+	protected void send(Message msg) {
 		if (logger.isDebugEnabled()) {
 			logger.debug(MessageFormat.format("Sending message {0}:{1}", msg
 					.getClass().getName(), msg));
@@ -106,21 +110,38 @@ public class ChatClient {
 			logger.debug(MessageFormat.format("Processing message {0}:{1}",
 					received.getClass().getName(), received));
 		}
-		// Update State Machine
-		try {
-			if (received instanceof PublicKeyResponse) {
-				stateMachine.transit(State.PUBLIC_KEY_RECEIVED);
+		if (received instanceof Request) {
+			Request request = (Request) received;
+			try {
+				if (request instanceof PublicKeyRequest) {
+					serverState.transit(SState.PUBLIC_KEY_SENT);
+				}
+				if (request instanceof ExchSharedKeyRequest) {
+					serverState.transit(SState.SHARED_KEY_RECEIVED);
+				}
+			} catch (IllegalStateException e) {
+				// Ignore illegal exception
+				return;
 			}
-			if (received instanceof ExchSharedKeyResponse) {
-				stateMachine.transit(State.SHARED_KEY_EXCHANGED);
-			}
-		} catch (IllegalStateException e) {
-			// Illegal Transition, ignore the message
-			return;
+			send(request.respond());
 		}
-		((Response) received).process();
-
-		responseReceived(received.getClass());
+		if (received instanceof Response) {
+			// Update State Machine
+			try {
+				if (received instanceof PublicKeyResponse) {
+					clientState.transit(CState.PUBLIC_KEY_RECEIVED);
+				}
+				if (received instanceof ExchSharedKeyResponse) {
+					clientState.transit(CState.SHARED_KEY_EXCHANGED);
+				}
+			} catch (IllegalStateException e) {
+				// Illegal Transition, ignore the message
+				return;
+			}
+			((Response) received).process();
+			// Release the clients that are waiting for the response
+			responseReceived(received.getClass());
+		}
 	}
 
 	private Map<Class<?>, Object> monitors = new HashMap<Class<?>, Object>();
@@ -157,7 +178,7 @@ public class ChatClient {
 
 	public void sendText(String message) {
 		ContextKey ck = getContextKey();
-		switch (stateMachine.getCurrentState()) {
+		switch (clientState.getCurrentState()) {
 		case INIT:
 			// TODO Allow the user to indicate bit-length
 			send(new PublicKeyRequest(ck.getA(), ck.getB(), 512));
