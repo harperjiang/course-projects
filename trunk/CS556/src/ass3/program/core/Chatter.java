@@ -27,8 +27,7 @@ public class Chatter implements ServerListener {
 			clients.put(target, client);
 		}
 		ChatClient client = clients.get(target);
-		client.send(new SendTextRequest(client.getContextKey().getA(), client
-				.getContextKey().getB(), message));
+		client.sendText(message);
 	}
 
 	@Override

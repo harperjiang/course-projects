@@ -1,5 +1,6 @@
 package ass3.program.core;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,7 +8,12 @@ import utils.StringUtils;
 
 public class ChatterContext {
 
-	public static final class ContextKey {
+	public static final class ContextKey implements Serializable {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -5371740632367245004L;
 
 		private String a;
 
