@@ -9,7 +9,9 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ass3.program.core.ChatterContext.ContextKey;
 import ass3.program.core.ClientStateMachine.State;
@@ -33,7 +35,7 @@ public class ChatClient {
 
 	private ClientStateMachine stateMachine;
 
-	private Logger logger = Logger.getLogger(getClass().getName());
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	public ChatClient(Chatter parent, String ip, int port) {
 		super();
@@ -78,8 +80,8 @@ public class ChatClient {
 	}
 
 	protected void send(Request msg) {
-		if (logger.isLoggable(Level.FINE)) {
-			logger.fine(MessageFormat.format("Sending message {0}:{1}", msg
+		if (logger.isDebugEnabled()) {
+			logger.debug(MessageFormat.format("Sending message {0}:{1}", msg
 					.getClass().getName(), msg));
 		}
 		connect();
@@ -89,14 +91,14 @@ public class ChatClient {
 			new ObjectOutputStream(this.socket.getOutputStream())
 					.writeObject(msg);
 		} catch (IOException e) {
-			logger.log(Level.WARNING, "Exception when send message", e);
+			logger.warn("Exception when send message", e);
 			throw new RuntimeException();
 		}
 	}
 
 	protected void process(Message received) {
-		if (logger.isLoggable(Level.FINE)) {
-			logger.fine(MessageFormat.format("Processing message {0}:{1}",
+		if (logger.isDebugEnabled()) {
+			logger.debug(MessageFormat.format("Processing message {0}:{1}",
 					received.getClass().getName(), received));
 		}
 		// Update State Machine

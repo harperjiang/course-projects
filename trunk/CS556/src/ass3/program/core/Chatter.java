@@ -3,8 +3,6 @@ package ass3.program.core;
 import java.util.HashMap;
 import java.util.Map;
 
-import ass3.program.core.message.SendTextRequest;
-
 public class Chatter implements ServerListener {
 
 	public static final int PORT = 3423;
