@@ -35,7 +35,7 @@ public class ChatClient {
 	}
 
 	public void send(Message message) {
-
+		
 	}
 
 }
