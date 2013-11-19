@@ -1,5 +1,12 @@
 package ass3.program.core.message;
 
-public abstract class Message {
+import java.io.Serializable;
+
+public abstract class Message implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6339908857519182439L;
 
 }

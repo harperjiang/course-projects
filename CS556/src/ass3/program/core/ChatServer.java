@@ -4,11 +4,12 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import ass3.program.core.message.Request;
-import ass3.program.core.message.RequestParser;
+import ass3.program.core.message.MessageParser;
 
 public class ChatServer {
 
@@ -74,17 +75,25 @@ public class ChatServer {
 				logger.log(Level.WARNING, "The socket is not connected");
 				return;
 			}
-			try {
-				while (!socket.isClosed()) {
-					Request cmd = RequestParser.parse(socket.getInputStream());
-					ssm.transit(cmd);
+			while (!socket.isClosed()) {
+				try {
+					Request cmd = MessageParser.parse(socket.getInputStream());
 					listener.commandReceived(new ServerMessageEvent(
 							ChatServer.this, ((InetSocketAddress) socket
-									.getRemoteSocketAddress()).getHostString(),
-							cmd));
+									.getRemoteSocketAddress()).getAddress()
+									.toString(), cmd));
+					ssm.transit(cmd);
+				} catch (SocketException e) {
+					try {
+						if (socket != null && !socket.isClosed())
+							socket.close();
+					} catch (Exception e0) {
+						throw new RuntimeException(e0);
+					}
+					throw new RuntimeException(e);
+				} catch (Exception e) {
+					logger.log(Level.WARNING, "Error processing message", e);
 				}
-			} catch (Exception e) {
-				logger.log(Level.WARNING, "Error when processing message", e);
 			}
 		}
 	}
