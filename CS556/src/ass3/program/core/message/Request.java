@@ -11,8 +11,5 @@ public abstract class Request extends Message {
 		super(from, to);
 	}
 
-	public void prepare() {
-	}
-
 	public abstract Message respond();
 }

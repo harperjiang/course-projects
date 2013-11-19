@@ -2,22 +2,22 @@ package ass3.program.core;
 
 public class ClientStateMachine {
 
-	protected static enum State {
+	protected static enum CState {
 		INIT, PUBLIC_KEY_RECEIVED, SHARED_KEY_EXCHANGED
 	}
 
-	private State currentState;
+	private CState currentState;
 
 	public ClientStateMachine() {
 		super();
-		currentState = State.INIT;
+		currentState = CState.INIT;
 	}
 
-	public State getCurrentState() {
+	public CState getCurrentState() {
 		return currentState;
 	}
 
-	public void transit(State to) {
+	public void transit(CState to) {
 		// TODO block invalid state transition
 		currentState = to;
 	}

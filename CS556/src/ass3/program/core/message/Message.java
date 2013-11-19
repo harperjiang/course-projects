@@ -22,6 +22,9 @@ public abstract class Message implements Serializable {
 		this.ck = new ContextKey(from, to);
 	}
 
+	public void prepare() {
+	}
+
 	public String getFrom() {
 		return ck.getA();
 	}
