@@ -7,8 +7,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.text.MessageFormat;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ass3.program.core.message.Request;
 
@@ -74,7 +75,7 @@ public class ChatServer {
 
 		private ServerStateMachine ssm;
 
-		private Logger logger = Logger.getLogger(ServerThread.class.getName());
+		private Logger logger = LoggerFactory.getLogger(ServerThread.class);
 
 		public ServerThread(Socket socket, ServerStateMachine ssm) {
 			this.socket = socket;
@@ -83,7 +84,7 @@ public class ChatServer {
 
 		public void run() {
 			if (!socket.isConnected()) {
-				logger.log(Level.WARNING, "The socket is not connected");
+				logger.warn("The socket is not connected");
 				return;
 			}
 			try {
@@ -92,8 +93,8 @@ public class ChatServer {
 					try {
 						Request request = (Request) new ObjectInputStream(
 								socket.getInputStream()).readObject();
-						if (logger.isLoggable(Level.FINE)) {
-							logger.fine(MessageFormat.format(
+						if (logger.isDebugEnabled()) {
+							logger.debug(MessageFormat.format(
 									"Received message {0}:{1}", request
 											.getClass().getName(), request));
 						}
@@ -109,11 +110,11 @@ public class ChatServer {
 							socket.close();
 						throw e;
 					} catch (Exception e) {
-						logger.log(Level.WARNING, "Error processing message", e);
+						logger.warn("Error processing message", e);
 					}
 				}
 			} catch (Exception e) {
-				logger.log(Level.WARNING, "Error reading socket", e);
+				logger.warn("Error reading socket", e);
 				if (e instanceof RuntimeException)
 					throw (RuntimeException) e;
 				throw new RuntimeException(e);
