@@ -179,7 +179,8 @@ public class ChatClient {
 	}
 
 	public static final String getFromIp(Socket socket) {
-		return socket.getInetAddress().getHostAddress();
+		return ((InetSocketAddress) socket.getLocalSocketAddress())
+				.getAddress().getHostAddress();
 	}
 
 	public static final String getToIp(Socket socket) {
