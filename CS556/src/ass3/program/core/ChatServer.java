@@ -6,6 +6,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.text.MessageFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -73,8 +74,7 @@ public class ChatServer {
 
 		private ServerStateMachine ssm;
 
-		private Logger logger = Logger.getLogger(ServerThread.class
-				.getSimpleName());
+		private Logger logger = Logger.getLogger(ServerThread.class.getName());
 
 		public ServerThread(Socket socket, ServerStateMachine ssm) {
 			this.socket = socket;
@@ -92,6 +92,11 @@ public class ChatServer {
 					try {
 						Request request = (Request) new ObjectInputStream(
 								socket.getInputStream()).readObject();
+						if (logger.isLoggable(Level.FINE)) {
+							logger.fine(MessageFormat.format(
+									"Received message {0}:{1}", request
+											.getClass().getName(), request));
+						}
 						if (ssm.transit(request)) { // Discard invalid message
 							listener.messageReceived(new ServerMessageEvent(
 									ChatServer.this,
