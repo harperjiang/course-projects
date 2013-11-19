@@ -102,10 +102,7 @@ public class ChatServer {
 						}
 						if (ssm.transit(request)) { // Discard invalid message
 							listener.messageReceived(new ServerMessageEvent(
-									ChatServer.this,
-									((InetSocketAddress) socket
-											.getRemoteSocketAddress())
-											.getAddress().toString(), request));
+									ChatServer.this, request));
 						}
 					} catch (SocketException e) {
 						if (socket != null && !socket.isClosed())
