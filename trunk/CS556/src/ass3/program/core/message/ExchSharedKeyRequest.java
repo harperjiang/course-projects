@@ -1,10 +1,9 @@
 package ass3.program.core.message;
 
 import java.security.PrivateKey;
-import java.security.PublicKey;
 
-import javax.crypto.Cipher;
-
+import tools.elgamal.Cipher;
+import tools.elgamal.ElgamalCipher;
 import ass3.program.core.ChatterContext;
 
 public class ExchSharedKeyRequest extends Request {
@@ -21,12 +20,11 @@ public class ExchSharedKeyRequest extends Request {
 	public ExchSharedKeyRequest(String from, String to, String plainKey) {
 		super(from, to);
 
-		PublicKey key = ChatterContext
-				.get(getCk(), PublicKeyRequest.PUBLIC_KEY);
+		Object key = ChatterContext.get(getCk(), PublicKeyRequest.PUBLIC_KEY);
 		byte[] shared = plainKey.getBytes();
 		ChatterContext.put(getCk(), SHARED_KEY, shared);
 		try {
-			Cipher elgamal = Cipher.getInstance("ElGamal/None/NoPadding", "BC");
+			Cipher elgamal = new ElgamalCipher();
 			elgamal.init(Cipher.ENCRYPT_MODE, key);
 			elgamal.update(shared);
 			this.encryptedKey = elgamal.doFinal();
@@ -41,7 +39,7 @@ public class ExchSharedKeyRequest extends Request {
 		PrivateKey key = ChatterContext.get(getCk(),
 				PublicKeyRequest.PRIVATE_KEY);
 		try {
-			Cipher elgamal = Cipher.getInstance("ElGamal/None/NoPadding", "BC");
+			Cipher elgamal = new ElgamalCipher();
 			elgamal.init(Cipher.DECRYPT_MODE, key);
 			elgamal.update(encryptedKey);
 			byte[] sharedKey = elgamal.doFinal();

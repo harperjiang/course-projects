@@ -1,7 +1,5 @@
 package ass3.program.core.message;
 
-import java.security.PublicKey;
-
 import ass3.program.core.ChatterContext;
 
 public class PublicKeyResponse extends Response {
@@ -10,14 +8,14 @@ public class PublicKeyResponse extends Response {
 	 */
 	private static final long serialVersionUID = 3693550271388882552L;
 
-	private PublicKey key;
+	private Object key;
 
-	public PublicKeyResponse(String from, String to, PublicKey publicKey) {
+	public PublicKeyResponse(String from, String to, Object publicKey) {
 		super(from, to);
 		this.key = publicKey;
 	}
 
-	public PublicKey getKey() {
+	public Object getKey() {
 		return key;
 	}
 

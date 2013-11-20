@@ -1,8 +1,6 @@
 package ass3.program.core.message;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-
+import ass2.project.KeyGenerator;
 import ass3.program.core.ChatterContext;
 
 public class PublicKeyRequest extends Request {
@@ -30,15 +28,8 @@ public class PublicKeyRequest extends Request {
 	public Message respond() {
 		// Generate Key Pair and respond the public key, the private key is
 		// stored in the context
-		try {
-			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("ElGamal",
-					"BC");
-			KeyPair keyPair = keyGen.generateKeyPair();
-			ChatterContext.put(getCk(), PRIVATE_KEY, keyPair.getPrivate());
-			return new PublicKeyResponse(getTo(), getFrom(),
-					keyPair.getPublic());
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		KeyGenerator keyGen = new KeyGenerator(bitLength);
+		ChatterContext.put(getCk(), PRIVATE_KEY, keyGen.getPrivateKey());
+		return new PublicKeyResponse(getTo(), getFrom(), keyGen.getPublicKey());
 	}
 }
