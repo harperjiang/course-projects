@@ -13,8 +13,12 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 
 import ass3.program.core.Chatter;
+import ass3.program.core.MessageEvent;
+import ass3.program.core.MessageListener;
+import ass3.program.core.message.Message;
+import ass3.program.core.message.SendTextRequest;
 
-public class MainFrame extends JFrame {
+public class MainFrame extends JFrame implements MessageListener {
 
 	/**
 	 * 
@@ -32,6 +36,7 @@ public class MainFrame extends JFrame {
 		// Data Init
 		chatFrames = new HashMap<String, ChatFrame>();
 		chatter = new Chatter();
+		chatter.addListener(this);
 
 		// UI Init
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -80,6 +85,23 @@ public class MainFrame extends JFrame {
 	 */
 	public static void main(String[] args) {
 		new MainFrame();
+	}
+
+	/**
+	 * This method will be invoked by multiple ChatClient threads. Thus should
+	 * be synchronized
+	 */
+	@Override
+	public synchronized void messageReceived(MessageEvent event) {
+		Message message = event.getContent();
+		if (message instanceof SendTextRequest) {
+			SendTextRequest st = (SendTextRequest) message;
+			String target = st.getFrom();
+			if (!chatFrames.containsKey(target)) {
+				ChatFrame cf = new ChatFrame(target, this);
+			}
+			chatFrames.get(target).messageReceived(event);
+		}
 	}
 
 }
