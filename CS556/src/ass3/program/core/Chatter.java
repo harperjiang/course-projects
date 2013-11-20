@@ -2,6 +2,8 @@ package ass3.program.core;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import javax.swing.event.EventListenerList;
 
@@ -12,6 +14,8 @@ public class Chatter implements ServerListener, MessageListener {
 	private ChatServer server;
 
 	private Map<String, ChatClient> clients;
+
+	private Executor threadPool = Executors.newFixedThreadPool(5);
 
 	public Chatter() {
 		super();
@@ -27,8 +31,8 @@ public class Chatter implements ServerListener, MessageListener {
 			client.setListener(this);
 			clients.put(target, client);
 		}
-		ChatClient client = clients.get(target);
-		client.sendText(message);
+		final ChatClient client = clients.get(target);
+		threadPool.execute(new SendTextTask(client, message));
 	}
 
 	@Override
@@ -57,5 +61,21 @@ public class Chatter implements ServerListener, MessageListener {
 
 	public void removeListener(MessageListener l) {
 		listeners.remove(MessageListener.class, l);
+	}
+
+	protected static final class SendTextTask implements Runnable {
+
+		private ChatClient client;
+
+		private String text;
+
+		public SendTextTask(ChatClient client, String text) {
+			this.client = client;
+			this.text = text;
+		}
+
+		public void run() {
+			client.sendText(text);
+		}
 	}
 }
