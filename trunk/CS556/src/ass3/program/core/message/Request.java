@@ -12,4 +12,6 @@ public abstract class Request extends Message {
 	}
 
 	public abstract Message respond();
+
+	public abstract Message respondError(int error);
 }

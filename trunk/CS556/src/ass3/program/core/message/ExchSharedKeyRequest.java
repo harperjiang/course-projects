@@ -52,4 +52,11 @@ public class ExchSharedKeyRequest extends Request {
 		}
 	}
 
+	@Override
+	public Message respondError(int error) {
+		Response resp = new ExchSharedKeyResponse(getTo(), getFrom());
+		resp.setError(error);
+		return resp;
+	}
+
 }

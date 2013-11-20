@@ -76,4 +76,11 @@ public class SendTextRequest extends Request {
 		return new SendTextResponse(getCk().getB(), getCk().getA());
 	}
 
+	@Override
+	public Message respondError(int error) {
+		Response resp = new SendTextResponse(getCk().getB(), getCk().getA());
+		resp.setError(error);
+		return resp;
+	}
+
 }

@@ -25,11 +25,13 @@ public class Chatter implements ServerListener, MessageListener {
 	}
 
 	public void send(String target, String message) {
-		// Make sure that we have a client to the target
-		if (!clients.containsKey(target)) {
-			ChatClient client = new ChatClient(this, target, PORT);
-			client.setListener(this);
-			clients.put(target, client);
+		synchronized (clients) {
+			// Make sure that we have a client to the target
+			if (!clients.containsKey(target)) {
+				ChatClient client = new ChatClient(this, target, PORT);
+				client.setListener(this);
+				clients.put(target, client);
+			}
 		}
 		final ChatClient client = clients.get(target);
 		threadPool.execute(new SendTextTask(client, message));
@@ -38,20 +40,32 @@ public class Chatter implements ServerListener, MessageListener {
 	@Override
 	public void messageReceived(ServerMessageEvent event) {
 		// Look for the corresponding client
-		ChatClient client = clients.get(event.getMessage().getFrom());
-		if (null == client) {
-			// Construct a new client if none is found
-			client = new ChatClient(this, event.getMessage().getFrom(), PORT);
-			client.setListener(this);
-			clients.put(event.getMessage().getFrom(), client);
+		String target = event.getMessage().getFrom();
+		synchronized (clients) {
+			if (!clients.containsKey(target)) {
+				// Construct a new client if none is found
+				ChatClient client = new ChatClient(this, event.getMessage()
+						.getFrom(), PORT);
+				client.setListener(this);
+				clients.put(event.getMessage().getFrom(), client);
+			}
 		}
-		client.process(event.getMessage());
+		clients.get(target).process(event.getMessage());
 	}
 
 	@Override
 	public void messageReceived(MessageEvent event) {
 		for (MessageListener l : listeners.getListeners(MessageListener.class))
 			l.messageReceived(event);
+	}
+
+	public void dropChatter(String target) {
+		synchronized (clients) {
+			ChatClient client = clients.get(target);
+			clients.remove(target);
+			if (null != client)
+				client.dispose();
+		}
 	}
 
 	private EventListenerList listeners = new EventListenerList();
