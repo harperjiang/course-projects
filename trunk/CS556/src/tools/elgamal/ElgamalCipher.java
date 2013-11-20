@@ -15,7 +15,7 @@ public class ElgamalCipher implements Cipher {
 
 	private int type;
 
-	private BigInteger key;
+	private Key key;
 
 	private ByteArrayOutputStream buffer;
 
@@ -24,10 +24,10 @@ public class ElgamalCipher implements Cipher {
 
 	public void init(int type, Object key) {
 		this.type = type;
-		if (!(key instanceof BigInteger)) {
+		if (!(key instanceof Key)) {
 			throw new IllegalArgumentException();
 		}
-		this.key = (BigInteger) key;
+		this.key = (Key) key;
 		buffer = new ByteArrayOutputStream();
 		random = new Random(System.currentTimeMillis());
 	}
@@ -47,11 +47,21 @@ public class ElgamalCipher implements Cipher {
 			for (byte b : data) {
 				BigInteger k = randomSand();
 				BigInteger m = BigInteger.valueOf(b);
-				
+				PublicKey pk = (PublicKey) key;
+				BigInteger mask = pk.getG().modPow(k, pk.getP());
+				BigInteger sand = pk.getB().modPow(k, pk.getP());
+				BigInteger msg = m.multiply(sand).mod(pk.getP());
+				// TODO Write msg and sand
 			}
 		}
 		case DECRYPT_MODE: {
-			BigInteger m = 
+			BigInteger msg = null;
+			BigInteger sand = null;
+			PrivateKey pk = (PrivateKey) key;
+			BigInteger mask = sand.modPow(pk.getA(), pk.getP());
+			BigInteger m = msg.multiply(mask.modInverse(pk.getP())).mod(
+					pk.getP());
+			// TODO Write m
 		}
 		default:
 			throw new IllegalArgumentException();
