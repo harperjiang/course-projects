@@ -1,9 +1,9 @@
 package ass3.program.core.message;
 
-import java.security.PrivateKey;
 
 import tools.elgamal.Cipher;
 import tools.elgamal.ElgamalCipher;
+import tools.elgamal.PrivateKey;
 import ass3.program.core.ChatterContext;
 
 public class ExchSharedKeyRequest extends Request {
