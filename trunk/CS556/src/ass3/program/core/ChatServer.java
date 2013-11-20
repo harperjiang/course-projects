@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ass3.program.core.message.Message;
+import ass3.program.core.message.Request;
+import ass3.program.core.message.Response;
 
 public class ChatServer {
 
@@ -90,6 +92,14 @@ public class ChatServer {
 						}
 						Message message = (Message) new ObjectInputStream(
 								socket.getInputStream()).readObject();
+						// Update the IP info carried by the message
+						if (message instanceof Request) {
+							message.getCk()
+									.setA(ChatClient.getRemoteIp(socket));
+						}
+						if (message instanceof Response) {
+							// Do nothing cause reponse get info from request
+						}
 						if (logger.isDebugEnabled()) {
 							logger.debug(MessageFormat.format(
 									"Received message {0}:{1}", message

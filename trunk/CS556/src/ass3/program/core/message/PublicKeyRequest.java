@@ -29,7 +29,7 @@ public class PublicKeyRequest extends Request {
 		// Generate Key Pair and respond the public key, the private key is
 		// stored in the context
 		KeyGenerator keyGen = new KeyGenerator(bitLength);
-		ChatterContext.put(getCk(), PRIVATE_KEY, keyGen.getPrivateKey());
+		ChatterContext.put(getCk().getA(), PRIVATE_KEY, keyGen.getPrivateKey());
 		return new PublicKeyResponse(getTo(), getFrom(), keyGen.getPublicKey());
 	}
 }

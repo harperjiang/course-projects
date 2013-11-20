@@ -90,7 +90,13 @@ public class ChatClient {
 		}
 		connect();
 		try {
-			msg.setCk(new ContextKey(getFromIp(socket), getToIp(socket)));
+			// Update the IP info carried by the message
+			if (msg instanceof Request) {
+				msg.getCk().setB(getRemoteIp(socket));
+			}
+			if (msg instanceof Response) {
+				// DO nothing cause the response get info from request
+			}
 			msg.prepare();
 			new ObjectOutputStream(this.socket.getOutputStream())
 					.writeObject(msg);
@@ -199,12 +205,12 @@ public class ChatClient {
 		}
 	}
 
-	public static final String getFromIp(Socket socket) {
+	public static final String getLocalIp(Socket socket) {
 		return ((InetSocketAddress) socket.getLocalSocketAddress())
 				.getAddress().getHostAddress();
 	}
 
-	public static final String getToIp(Socket socket) {
+	public static final String getRemoteIp(Socket socket) {
 		return ((InetSocketAddress) socket.getRemoteSocketAddress())
 				.getAddress().getHostAddress();
 	}

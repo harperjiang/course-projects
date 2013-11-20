@@ -35,6 +35,14 @@ public class ChatterContext {
 			return b;
 		}
 
+		public void setA(String a) {
+			this.a = a;
+		}
+
+		public void setB(String b) {
+			this.b = b;
+		}
+
 		@Override
 		public boolean equals(Object obj) {
 			if (!(obj instanceof ContextKey))
@@ -54,7 +62,7 @@ public class ChatterContext {
 
 	}
 
-	private Map<ContextKey, Map<String, Object>> context = new HashMap<ContextKey, Map<String, Object>>();
+	private Map<String, Map<String, Object>> context = new HashMap<String, Map<String, Object>>();
 
 	private static ChatterContext INSTANCE = new ChatterContext();
 
@@ -62,28 +70,28 @@ public class ChatterContext {
 		return INSTANCE;
 	}
 
-	public static synchronized void put(ContextKey ck, String key, Object value) {
-		Map<String, Object> data = getInstance().context.get(ck);
+	public static synchronized void put(String chooser, String key, Object value) {
+		Map<String, Object> data = getInstance().context.get(chooser);
 		if (data == null) {
 			data = new HashMap<String, Object>();
-			getInstance().context.put(ck, data);
+			getInstance().context.put(chooser, data);
 		}
 		data.put(key, value);
 
 		// TODO This context should be regularly cleared later
 	}
 
-	public static synchronized <T> T get(ContextKey ck, String key) {
-		Map<String, Object> data = getInstance().context.get(ck);
+	public static synchronized <T> T get(String chooser, String key) {
+		Map<String, Object> data = getInstance().context.get(chooser);
 		if (data == null) {
 			data = new HashMap<String, Object>();
-			getInstance().context.put(ck, data);
+			getInstance().context.put(chooser, data);
 		}
 		return (T) data.get(key);
 	}
 
-	public static synchronized void clear(ContextKey ck) {
-		getInstance().context.remove(ck);
+	public static synchronized void clear(String chooser) {
+		getInstance().context.remove(chooser);
 	}
 
 }
