@@ -53,8 +53,7 @@ public class ChatServer {
 			serverSocket = new ServerSocket(port);
 			while (true) {
 				Socket client = serverSocket.accept();
-				ServerThread thread = new ServerThread(client,
-						new ServerStateMachine());
+				ServerThread thread = new ServerThread(client);
 				thread.start();
 			}
 		} catch (IOException e) {
@@ -72,13 +71,10 @@ public class ChatServer {
 
 		private Socket socket;
 
-		private ServerStateMachine ssm;
-
 		private Logger logger = LoggerFactory.getLogger(ServerThread.class);
 
-		public ServerThread(Socket socket, ServerStateMachine ssm) {
+		public ServerThread(Socket socket) {
 			this.socket = socket;
-			this.ssm = ssm;
 		}
 
 		public void run() {
