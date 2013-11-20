@@ -41,7 +41,7 @@ public class SendTextRequest extends Request {
 	public String getText() {
 		try {
 			Cipher aes = Cipher.getInstance("AES");
-			byte[] shared = ChatterContext.get(getCk().getB(),
+			byte[] shared = ChatterContext.get(getCk().getA(),
 					ExchSharedKeyRequest.SHARED_KEY);
 			SecretKeySpec skeySpec = new SecretKeySpec(shared, "AES");
 			aes.init(Cipher.DECRYPT_MODE, skeySpec);
