@@ -53,6 +53,8 @@ public class ChatFrame extends JFrame implements MessageListener {
 			public void windowClosed(WindowEvent e) {
 				ChatFrame.this.parent.getChatFrames().remove(
 						ChatFrame.this.target);
+				ChatFrame.this.parent.getChatter().dropChatter(
+						ChatFrame.this.target);
 			}
 		});
 

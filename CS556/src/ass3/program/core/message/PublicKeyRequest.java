@@ -32,4 +32,11 @@ public class PublicKeyRequest extends Request {
 		ChatterContext.put(getCk().getA(), PRIVATE_KEY, keyGen.getPrivateKey());
 		return new PublicKeyResponse(getTo(), getFrom(), keyGen.getPublicKey());
 	}
+
+	@Override
+	public Message respondError(int error) {
+		Response resp = new PublicKeyResponse(getTo(), getFrom(), null);
+		resp.setError(error);
+		return resp;
+	}
 }

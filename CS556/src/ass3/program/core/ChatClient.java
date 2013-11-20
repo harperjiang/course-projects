@@ -26,6 +26,7 @@ import ass3.program.core.message.PublicKeyResponse;
 import ass3.program.core.message.Request;
 import ass3.program.core.message.Response;
 import ass3.program.core.message.SendTextRequest;
+import ass3.program.core.message.SendTextResponse;
 
 public class ChatClient {
 
@@ -140,25 +141,30 @@ public class ChatClient {
 					// Do nothing now
 				}
 			} catch (IllegalStateException e) {
-				// Ignore illegal exception
+				send(request.respondError(Response.ERROR_NO_AUTHORIZED));
 				return;
 			}
 			send(request.respond());
 		}
 		if (received instanceof Response) {
 			// Update State Machine
+			Response resp = (Response) received;
 			try {
-				if (received instanceof PublicKeyResponse) {
-					clientState.transit(CState.PUBLIC_KEY_RECEIVED);
-				}
-				if (received instanceof ExchSharedKeyResponse) {
-					clientState.transit(CState.SHARED_KEY_EXCHANGED);
+				if (resp.getError() != 0) {
+					clientState.transit(CState.INIT);
+				} else {
+					if (received instanceof PublicKeyResponse) {
+						clientState.transit(CState.PUBLIC_KEY_RECEIVED);
+					}
+					if (received instanceof ExchSharedKeyResponse) {
+						clientState.transit(CState.SHARED_KEY_EXCHANGED);
+					}
 				}
 			} catch (IllegalStateException e) {
 				// Illegal Transition, ignore the message
 				return;
 			}
-			((Response) received).process();
+			resp.process();
 			// Release the clients that are waiting for the response
 			responseReceived(received.getClass());
 		}
@@ -230,6 +236,12 @@ public class ChatClient {
 			break;
 		case SHARED_KEY_EXCHANGED:
 			send(new SendTextRequest(ck.getA(), ck.getB(), message));
+			waitForResponse(SendTextResponse.class);
+			// Check self state to determine whether need to resend
+			if (!(clientState.getCurrentState() == CState.SHARED_KEY_EXCHANGED)) {
+				// Error encountered, Resend
+				sendText(message);
+			}
 			break;
 		default:
 			throw new IllegalStateException();
@@ -244,5 +256,18 @@ public class ChatClient {
 	public static final String getRemoteIp(Socket socket) {
 		return ((InetSocketAddress) socket.getRemoteSocketAddress())
 				.getAddress().getHostAddress();
+	}
+
+	/**
+	 * Quit and releaser resource
+	 */
+	public void dispose() {
+		ChatterContext.clear(ip);
+		try {
+			socket.close();
+		} catch (Exception e) {
+			LoggerFactory.getLogger(getClass()).warn(
+					"Error while releasing client", e);
+		}
 	}
 }
