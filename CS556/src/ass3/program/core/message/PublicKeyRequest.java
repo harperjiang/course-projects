@@ -1,6 +1,6 @@
 package ass3.program.core.message;
 
-import ass2.project.KeyGenerator;
+import tools.elgamal.KeyGenerator;
 import ass3.program.core.ChatterContext;
 
 public class PublicKeyRequest extends Request {
