@@ -5,34 +5,40 @@ import java.util.Random;
 
 public class KeyGenerator {
 
-	private BigInteger n;
+	private BigInteger p;
 
-	private BigInteger e;
+	private BigInteger g;
 
-	private BigInteger d;
+	private BigInteger a;
+
+	private BigInteger b;
 
 	public KeyGenerator(int bitlength) {
 		Random random = new Random(System.currentTimeMillis());
 		BigInteger p = BigInteger.probablePrime(bitlength, random);
-		BigInteger q = BigInteger.probablePrime(bitlength, random);
-		n = p.multiply(q);
-		// First calculate d
-		e = BigInteger.probablePrime(bitlength, random);
-		BigInteger phi = p.subtract(BigInteger.ONE).multiply(
-				q.subtract(BigInteger.ONE));
-		d = e.modInverse(phi);
+		// Use Random number to find a generator
+		while (true) {
+			BigInteger pg = BigInteger.probablePrime(bitlength, random).mod(p);
+			if (!pg.equals(BigInteger.ONE)
+					&& !pg.modPow(BigInteger.valueOf(2), p).equals(
+							BigInteger.ONE)
+					&& !pg.modPow(
+							p.subtract(BigInteger.ONE).divide(
+									BigInteger.valueOf(2)), p).equals(
+							BigInteger.ONE)) {
+				g = pg;
+				break;
+			}
+		}
+		a = BigInteger.probablePrime(bitlength - 1, random);
+		b = a.modPow(g, a);
 	}
 
-	public BigInteger getBase() {
-		return n;
+	public PublicKey getPublicKey() {
+		return new PublicKey(p, g, b);
 	}
 
-	public BigInteger getPublicKey() {
-		return e;
+	public PrivateKey getPrivateKey() {
+		return new PrivateKey(p, g, a);
 	}
-
-	public BigInteger getPrivateKey() {
-		return d;
-	}
-
 }
