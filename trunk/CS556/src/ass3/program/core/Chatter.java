@@ -42,6 +42,7 @@ public class Chatter implements ServerListener, MessageListener {
 		if (null == client) {
 			// Construct a new client if none is found
 			client = new ChatClient(this, event.getMessage().getFrom(), PORT);
+			client.setListener(this);
 			clients.put(event.getMessage().getFrom(), client);
 		}
 		client.process(event.getMessage());
