@@ -29,10 +29,25 @@ public class SendTextRequest extends Request {
 					ExchSharedKeyRequest.SHARED_KEY);
 			SecretKeySpec skeySpec = new SecretKeySpec(shared, "AES");
 			aes.init(Cipher.ENCRYPT_MODE, skeySpec);
-			aes.update(data.getBytes());
+			aes.update(data.getBytes("utf8"));
 			payload = aes.doFinal();
 			data = null;
 			// TODO Change this part to per-char encryption
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public String getText() {
+		try {
+			Cipher aes = Cipher.getInstance("AES");
+			byte[] shared = ChatterContext.get(getCk().getB(),
+					ExchSharedKeyRequest.SHARED_KEY);
+			SecretKeySpec skeySpec = new SecretKeySpec(shared, "AES");
+			aes.init(Cipher.DECRYPT_MODE, skeySpec);
+			aes.update(payload);
+			String result = new String(aes.doFinal(), "utf8");
+			return result;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -44,7 +59,7 @@ public class SendTextRequest extends Request {
 
 	@Override
 	public Message respond() {
-		return null;
+		return new SendTextResponse(getCk().getB(), getCk().getA());
 	}
 
 }

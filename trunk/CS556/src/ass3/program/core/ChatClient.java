@@ -127,6 +127,9 @@ public class ChatClient {
 				if (request instanceof ExchSharedKeyRequest) {
 					serverState.transit(SState.SHARED_KEY_RECEIVED);
 				}
+				if (request instanceof SendTextRequest) {
+					// Do nothing now
+				}
 			} catch (IllegalStateException e) {
 				// Ignore illegal exception
 				return;
@@ -150,6 +153,21 @@ public class ChatClient {
 			// Release the clients that are waiting for the response
 			responseReceived(received.getClass());
 		}
+		// Notify the listener
+		MessageListener l = getListener();
+		if (null != l) {
+			l.messageReceived(new MessageEvent(this, received));
+		}
+	}
+
+	private MessageListener listener;
+
+	public MessageListener getListener() {
+		return listener;
+	}
+
+	public void setListener(MessageListener listener) {
+		this.listener = listener;
 	}
 
 	private Map<Class<?>, Object> monitors = new HashMap<Class<?>, Object>();
