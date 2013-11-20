@@ -10,7 +10,7 @@ import java.text.MessageFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ass3.program.core.message.Request;
+import ass3.program.core.message.Message;
 
 public class ChatServer {
 
@@ -88,15 +88,15 @@ public class ChatServer {
 						while (socket.getInputStream().available() == 0) {
 							Thread.sleep(500);
 						}
-						Request request = (Request) new ObjectInputStream(
+						Message message = (Message) new ObjectInputStream(
 								socket.getInputStream()).readObject();
 						if (logger.isDebugEnabled()) {
 							logger.debug(MessageFormat.format(
-									"Received message {0}:{1}", request
-											.getClass().getName(), request));
+									"Received message {0}:{1}", message
+											.getClass().getName(), message));
 						}
 						listener.messageReceived(new ServerMessageEvent(
-								ChatServer.this, request));
+								ChatServer.this, message));
 					} catch (SocketException e) {
 						if (socket != null && !socket.isClosed())
 							socket.close();
