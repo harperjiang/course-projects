@@ -25,7 +25,7 @@ public class SendTextRequest extends Request {
 		// Encrypt the data
 		try {
 			Cipher aes = Cipher.getInstance("AES");
-			byte[] shared = ChatterContext.get(getCk(),
+			byte[] shared = ChatterContext.get(getCk().getB(),
 					ExchSharedKeyRequest.SHARED_KEY);
 			SecretKeySpec skeySpec = new SecretKeySpec(shared, "AES");
 			aes.init(Cipher.ENCRYPT_MODE, skeySpec);

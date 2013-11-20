@@ -21,7 +21,7 @@ public class PublicKeyResponse extends Response {
 
 	@Override
 	public void process() {
-		ChatterContext.put(getCk(), PublicKeyRequest.PUBLIC_KEY, key);
+		ChatterContext.put(getCk().getA(), PublicKeyRequest.PUBLIC_KEY, key);
 	}
 
 }
