@@ -15,7 +15,7 @@ public class KeyGenerator {
 
 	public KeyGenerator(int bitlength) {
 		Random random = new Random(System.currentTimeMillis());
-		BigInteger p = BigInteger.probablePrime(bitlength, random);
+		p = BigInteger.probablePrime(bitlength, random);
 		// Use Random number to find a generator
 		while (true) {
 			BigInteger pg = BigInteger.probablePrime(bitlength, random).mod(p);
@@ -30,8 +30,8 @@ public class KeyGenerator {
 				break;
 			}
 		}
-		a = BigInteger.probablePrime(bitlength - 1, random);
-		b = a.modPow(g, a);
+		a = BigInteger.probablePrime(bitlength - 1, random).mod(p);
+		b = g.modPow(a, p);
 	}
 
 	public PublicKey getPublicKey() {
