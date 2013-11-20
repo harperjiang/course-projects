@@ -13,6 +13,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import tools.config.ConfigLoader;
+
 import ass3.program.core.ChatterContext.ContextKey;
 import ass3.program.core.ClientStateMachine.CState;
 import ass3.program.core.ServerStateMachine.SState;
@@ -186,14 +188,16 @@ public class ChatClient {
 		ContextKey ck = getContextKey();
 		switch (clientState.getCurrentState()) {
 		case INIT:
-			// TODO Allow the user to indicate bit-length
-			send(new PublicKeyRequest(ck.getA(), ck.getB(), 512));
+			// Allow the user to indicate bit-length
+			send(new PublicKeyRequest(ck.getA(), ck.getB(),
+					ConfigLoader.loadInt("key", "ELGAMAL_BITLENGTH")));
 			waitForResponse(PublicKeyResponse.class);
 			sendText(message);
 			break;
 		case PUBLIC_KEY_RECEIVED:
-			// TODO Allow user to indicate shared key
-			send(new ExchSharedKeyRequest(ck.getA(), ck.getB(), "shared key"));
+			// Allow user to indicate shared key
+			send(new ExchSharedKeyRequest(ck.getA(), ck.getB(), ConfigLoader
+					.load("key", "AES_KEY").getBytes()));
 			waitForResponse(ExchSharedKeyResponse.class);
 			sendText(message);
 			break;
