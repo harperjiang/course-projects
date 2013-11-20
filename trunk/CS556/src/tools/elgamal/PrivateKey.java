@@ -4,6 +4,11 @@ import java.math.BigInteger;
 
 public class PrivateKey implements Key {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4333648762781513559L;
+
 	private BigInteger p;
 
 	private BigInteger g;

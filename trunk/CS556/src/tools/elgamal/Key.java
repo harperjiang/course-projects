@@ -1,5 +1,7 @@
 package tools.elgamal;
 
-public interface Key {
+import java.io.Serializable;
+
+public interface Key extends Serializable {
 
 }
