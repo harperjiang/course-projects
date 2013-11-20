@@ -18,8 +18,8 @@ public class ExchSharedKeyRequest extends Request {
 
 	public ExchSharedKeyRequest(String from, String to, byte[] plainKey) {
 		super(from, to);
-		if (plainKey.length != 128 && plainKey.length != 256
-				&& plainKey.length != 192) {
+		if (plainKey.length != 16 && plainKey.length != 32
+				&& plainKey.length != 24) {
 			throw new IllegalArgumentException("Invalid Key Length");
 		}
 		Object key = ChatterContext.get(getCk().getB(),
