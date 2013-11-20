@@ -3,6 +3,10 @@ package ass3.program.ui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.DateFormat;
@@ -72,6 +76,16 @@ public class ChatFrame extends JFrame implements MessageListener {
 
 		inputArea = new JTextArea();
 		inputArea.setBorder(new LineBorder(Color.gray, 2));
+		inputArea.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					String message = inputArea.getText();
+					sendMessage(message.trim());
+					inputArea.setText(null);
+				}
+			}
+		});
 		downPanel.add(inputArea, BorderLayout.CENTER);
 
 		JPanel buttonPanel = new JPanel();
@@ -80,6 +94,12 @@ public class ChatFrame extends JFrame implements MessageListener {
 
 		JButton sendButton = new JButton("Send");
 		buttonPanel.add(sendButton);
+		sendButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				sendMessage(inputArea.getText());
+				inputArea.setText(null);
+			}
+		});
 
 		doLayout();
 		setVisible(true);

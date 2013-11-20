@@ -98,7 +98,7 @@ public class MainFrame extends JFrame implements MessageListener {
 			SendTextRequest st = (SendTextRequest) message;
 			String target = st.getFrom();
 			if (!chatFrames.containsKey(target)) {
-				ChatFrame cf = new ChatFrame(target, this);
+				new ChatFrame(target, this);
 			}
 			chatFrames.get(target).messageReceived(event);
 		}
