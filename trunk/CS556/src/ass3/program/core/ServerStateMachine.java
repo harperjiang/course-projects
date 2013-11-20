@@ -1,6 +1,5 @@
 package ass3.program.core;
 
-
 public class ServerStateMachine {
 
 	protected static enum SState {
@@ -26,6 +25,12 @@ public class ServerStateMachine {
 			currentState = newstate;
 			break;
 		default:
+			throw new IllegalStateException();
+		}
+	}
+
+	public void verify(SState state) {
+		if (state != currentState) {
 			throw new IllegalStateException();
 		}
 	}

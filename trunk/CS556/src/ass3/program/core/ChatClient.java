@@ -139,6 +139,7 @@ public class ChatClient {
 				}
 				if (request instanceof SendTextRequest) {
 					// Do nothing now
+					serverState.verify(SState.SHARED_KEY_RECEIVED);
 				}
 			} catch (IllegalStateException e) {
 				send(request.respondError(Response.ERROR_NO_AUTHORIZED));
