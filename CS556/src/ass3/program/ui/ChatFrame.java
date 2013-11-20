@@ -43,19 +43,16 @@ public class ChatFrame extends JFrame implements MessageListener {
 		this.target = target;
 		this.parent = parent;
 		parent.getChatFrames().put(target, this);
-		this.parent.getChatter().addListener(this);
 
 		this.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosed(WindowEvent e) {
 				ChatFrame.this.parent.getChatFrames().remove(
 						ChatFrame.this.target);
-				ChatFrame.this.parent.getChatter().removeListener(
-						ChatFrame.this);
 			}
 		});
 
-		setTitle("Chat");
+		setTitle(MessageFormat.format("Chat with {0}", target));
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setSize(400, 600);
 
