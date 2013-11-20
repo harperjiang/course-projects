@@ -1,5 +1,8 @@
 package ass3.program.core.message;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -29,9 +32,14 @@ public class SendTextRequest extends Request {
 					ExchSharedKeyRequest.SHARED_KEY);
 			SecretKeySpec skeySpec = new SecretKeySpec(shared, "AES");
 			aes.init(Cipher.ENCRYPT_MODE, skeySpec);
-			aes.update(data.getBytes("utf8"));
-			payload = aes.doFinal();
+
+			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+			for (byte b : data.getBytes("utf8")) {
+				aes.update(new byte[] { b });
+				buffer.write(aes.doFinal());
+			}
 			data = null;
+			payload = buffer.toByteArray();
 			// TODO Change this part to per-char encryption
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -43,10 +51,16 @@ public class SendTextRequest extends Request {
 			Cipher aes = Cipher.getInstance("AES");
 			byte[] shared = ChatterContext.get(getCk().getA(),
 					ExchSharedKeyRequest.SHARED_KEY);
+			byte[] buffer = new byte[16];
+			ByteArrayInputStream input = new ByteArrayInputStream(payload);
+			ByteArrayOutputStream output = new ByteArrayOutputStream();
 			SecretKeySpec skeySpec = new SecretKeySpec(shared, "AES");
 			aes.init(Cipher.DECRYPT_MODE, skeySpec);
-			aes.update(payload);
-			String result = new String(aes.doFinal(), "utf8");
+			while (input.read(buffer) > 0) {
+				aes.update(buffer);
+				output.write(aes.doFinal()[0]);
+			}
+			String result = new String(output.toByteArray(), "utf8");
 			return result;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
