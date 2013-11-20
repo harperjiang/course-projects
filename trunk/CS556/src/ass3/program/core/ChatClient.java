@@ -5,6 +5,7 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -14,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import tools.config.ConfigLoader;
-
 import ass3.program.core.ChatterContext.ContextKey;
 import ass3.program.core.ClientStateMachine.CState;
 import ass3.program.core.ServerStateMachine.SState;
@@ -102,6 +102,15 @@ public class ChatClient {
 			msg.prepare();
 			new ObjectOutputStream(this.socket.getOutputStream())
 					.writeObject(msg);
+		} catch (SocketException e) {
+			// Reconnect for socket exception
+			try {
+				socket.close();
+			} catch (IOException e1) {
+				logger.warn("Encounter exception on closing socket, ignore.",
+						e1);
+			}
+			send(msg);
 		} catch (IOException e) {
 			logger.warn("Exception when send message", e);
 			throw new RuntimeException();
