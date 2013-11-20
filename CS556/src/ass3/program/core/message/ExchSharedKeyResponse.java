@@ -1,6 +1,6 @@
 package ass3.program.core.message;
 
-public class ExchSharedKeyResponse extends Message {
+public class ExchSharedKeyResponse extends Response {
 
 	/**
 	 * 
@@ -9,6 +9,10 @@ public class ExchSharedKeyResponse extends Message {
 
 	public ExchSharedKeyResponse(String from, String to) {
 		super(from, to);
+	}
+
+	@Override
+	public void process() {
 	}
 
 }

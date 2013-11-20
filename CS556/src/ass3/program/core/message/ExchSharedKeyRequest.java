@@ -1,6 +1,5 @@
 package ass3.program.core.message;
 
-
 import tools.elgamal.Cipher;
 import tools.elgamal.ElgamalCipher;
 import tools.elgamal.PrivateKey;
@@ -17,17 +16,19 @@ public class ExchSharedKeyRequest extends Request {
 
 	private byte[] encryptedKey;
 
-	public ExchSharedKeyRequest(String from, String to, String plainKey) {
+	public ExchSharedKeyRequest(String from, String to, byte[] plainKey) {
 		super(from, to);
-
+		if (plainKey.length != 128 && plainKey.length != 256
+				&& plainKey.length != 192) {
+			throw new IllegalArgumentException("Invalid Key Length");
+		}
 		Object key = ChatterContext.get(getCk().getB(),
 				PublicKeyRequest.PUBLIC_KEY);
-		byte[] shared = plainKey.getBytes();
-		ChatterContext.put(getCk().getB(), SHARED_KEY, shared);
+		ChatterContext.put(getCk().getB(), SHARED_KEY, plainKey);
 		try {
 			Cipher elgamal = new ElgamalCipher();
 			elgamal.init(Cipher.ENCRYPT_MODE, key);
-			elgamal.update(shared);
+			elgamal.update(plainKey);
 			this.encryptedKey = elgamal.doFinal();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
