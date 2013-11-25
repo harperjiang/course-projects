@@ -6,19 +6,20 @@ import robocode.AdvancedRobot;
 import robocode.Rules;
 import clarkson.cs551.robocode.common.AbsolutePos;
 import clarkson.cs551.robocode.common.GeometricUtils;
+import clarkson.cs551.robocode.common.Velocity;
 
-public class LinearTargetingHandler extends AbstractTargetingHandler {
+public class LinearHandler extends AbstractTargetingHandler {
 
 	private int firePower = 2;
 
-	public LinearTargetingHandler() {
+	public LinearHandler() {
 		super(3);
 	}
 
 	@Override
 	protected FireResult estimate(AdvancedRobot robot) {
 		// TODO Modify this
-		AbsolutePos mypos = new AbsolutePos(0l, new Point2D.Double(0, 0));
+		AbsolutePos mypos = new AbsolutePos(0l, new Point2D.Double(0, 0), null);
 		if (paths.size() < 3) {
 			return null;
 		}
@@ -40,25 +41,19 @@ public class LinearTargetingHandler extends AbstractTargetingHandler {
 
 		System.out.println("Estimate time to hit:" + t);
 
+		Point2D.Double velopoint = new Point2D.Double(vx, vy);
+
 		AbsolutePos newp = new AbsolutePos(p3.getTime() + (long) Math.ceil(t),
-				new Point2D.Double(p3.getX() + vx * t, p3.getY() + vy * t));
+				new Point2D.Double(p3.getX() + vx * t, p3.getY() + vy * t),
+				new Velocity(GeometricUtils.getRadian(velopoint),
+						GeometricUtils.getDistance(velopoint)));
 
 		System.out.println("New Point will be:" + newp);
 
-		double radian = GeometricUtils.getRadian(mypos, newp);
+		double radian = GeometricUtils.getRadian(mypos.getPosition(),
+				newp.getPosition());
 		double gunHeading = GeometricUtils.absoluteHeading(robot
 				.getGunHeadingRadians());
-		if (Math.abs(gunHeading - radian) <= Rules.GUN_TURN_RATE_RADIANS) {
-			// Enough time to turn gun to position
-			// TODO Take my position into account
-			return new FireResult(gunHeading - radian, firePower);
-		}
-		// Just turn gun as much as possible
-		if ((radian >= gunHeading && Math.abs(radian - gunHeading) < Math.PI)
-				|| ((radian < gunHeading) && (Math.abs(radian - gunHeading) > Math.PI))) {
-			return new FireResult(-Rules.GUN_TURN_RATE_RADIANS, firePower);
-		} else {
-			return new FireResult(Rules.GUN_TURN_RATE_RADIANS, 0d);
-		}
+		return new FireResult(gunHeading - radian, firePower);
 	}
 }
