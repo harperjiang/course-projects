@@ -12,7 +12,6 @@ public class LockingHandler implements RadarHandler {
 
 	@Override
 	public void enemyScanned(AdvancedRobot self, ScannedRobotEvent event) {
-		System.out.println("Scanned");
 		lastPosition = new RelativePos(self.getHeadingRadians()
 				+ event.getBearingRadians(), event.getDistance());
 	}
@@ -20,11 +19,9 @@ public class LockingHandler implements RadarHandler {
 	@Override
 	public void action(AdvancedRobot robot) {
 		if (null == lastPosition) {
-			System.out.println("No target");
 			robot.setTurnRadarRightRadians(2 * Math.PI);
 			return;
 		}
-		System.out.println("Target acquired");
 		double radarStart = robot.getRadarHeadingRadians();
 		double target = lastPosition.getDirection();
 		double turn = Utils.normalRelativeAngle(target - radarStart);
