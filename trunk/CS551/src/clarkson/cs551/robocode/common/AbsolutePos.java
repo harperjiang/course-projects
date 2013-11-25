@@ -9,10 +9,16 @@ public class AbsolutePos {
 
 	private Point2D.Double position;
 
-	public AbsolutePos(long time, Point2D.Double pos) {
+	private Velocity velocity;
+
+	private Point2D.Double myPosition;
+
+	public AbsolutePos(long time, Point2D.Double pos, Velocity velocity) {
 		super();
 		this.time = time;
 		this.position = pos;
+		this.velocity = velocity;
+		this.myPosition = new Point2D.Double(0, 0);
 	}
 
 	public double getX() {
@@ -39,9 +45,25 @@ public class AbsolutePos {
 		this.position = position;
 	}
 
+	public Velocity getVelocity() {
+		return velocity;
+	}
+
+	public void setVelocity(Velocity velocity) {
+		this.velocity = velocity;
+	}
+
+	public Point2D.Double getMyPosition() {
+		return myPosition;
+	}
+
+	public void setMyPosition(Point2D.Double myPosition) {
+		this.myPosition = myPosition;
+	}
+
 	@Override
 	public String toString() {
-		return MessageFormat.format("({0},{1}) at {2}", position.x, position.y,
-				time);
+		return MessageFormat.format("({0},{1}),({3},{4}) at {2}", position.x,
+				position.y, time, velocity.getDirection(), velocity.getValue());
 	}
 }

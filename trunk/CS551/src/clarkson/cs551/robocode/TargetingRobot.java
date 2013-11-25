@@ -5,7 +5,7 @@ import robocode.ScannedRobotEvent;
 import clarkson.cs551.robocode.moving.Coordinate;
 import clarkson.cs551.robocode.radar.LockingHandler;
 import clarkson.cs551.robocode.radar.RadarHandler;
-import clarkson.cs551.robocode.targeting.LinearTargetingHandler;
+import clarkson.cs551.robocode.targeting.LinearHandler;
 import clarkson.cs551.robocode.targeting.TargetingHandler;
 
 public class TargetingRobot extends AdvancedRobot {
@@ -19,7 +19,7 @@ public class TargetingRobot extends AdvancedRobot {
 	public TargetingRobot() {
 		super();
 		radarHandler = new LockingHandler();
-		targetingHandler = new LinearTargetingHandler();
+		targetingHandler = new LinearHandler();
 	}
 
 	@Override
