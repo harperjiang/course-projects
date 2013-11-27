@@ -23,8 +23,8 @@ public class LinearHandler extends AbstractTargetingHandler {
 		if (paths.size() < 2) {
 			return null;
 		}
-		AbsolutePos p2 = paths.get(1);
-		AbsolutePos p3 = paths.get(2);
+		AbsolutePos p2 = paths.get(0);
+		AbsolutePos p3 = paths.get(1);
 
 		double vx = (p3.getX() - p2.getX()) / (p3.getTime() - p2.getTime());
 		double vy = (p3.getY() - p2.getY()) / (p3.getTime() - p2.getTime());
