@@ -20,7 +20,7 @@ public class LinearHandler extends AbstractTargetingHandler {
 	protected FireResult estimate(AdvancedRobot robot) {
 		// TODO Modify this
 		AbsolutePos mypos = new AbsolutePos(0l, new Point2D.Double(0, 0), null);
-		if (paths.size() < 3) {
+		if (paths.size() < 2) {
 			return null;
 		}
 		AbsolutePos p2 = paths.get(1);
