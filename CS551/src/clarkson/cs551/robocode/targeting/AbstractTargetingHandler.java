@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import robocode.AdvancedRobot;
+import robocode.Bullet;
+import robocode.BulletHitBulletEvent;
+import robocode.BulletHitEvent;
+import robocode.BulletMissedEvent;
 import robocode.Rules;
 import robocode.ScannedRobotEvent;
 import robocode.util.Utils;
@@ -26,6 +30,11 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 	}
 
 	@Override
+	public void initialize(AdvancedRobot robot) {
+		loadData(robot);
+	}
+
+	@Override
 	public void enemyScanned(AdvancedRobot self, ScannedRobotEvent event) {
 		// Set the minimal interval of data collected
 		long lastTime = -pathInterval;
@@ -43,6 +52,26 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 		System.out.println(pos);
 		paths.add(pos);
 		onNewPath(pos);
+	}
+
+	@Override
+	public void bulletFired(Bullet bullet) {
+
+	}
+
+	@Override
+	public void bulletHit(AdvancedRobot self, BulletHitEvent event) {
+
+	}
+
+	@Override
+	public void bulletMissed(AdvancedRobot self, BulletMissedEvent event) {
+
+	}
+
+	@Override
+	public void bulletHitBullet(AdvancedRobot robot, BulletHitBulletEvent event) {
+
 	}
 
 	protected AbsolutePos generatePos(AdvancedRobot robot,
@@ -74,7 +103,8 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 			// TODO Take my position into account
 			turnRight(robot, result.getFireDirection());
 			if (robot.getGunHeat() == 0 && result.getFirePower() > 0) {
-				robot.setFire(result.getFirePower());
+				Bullet bullet = robot.setFireBullet(result.getFirePower());
+				this.bulletFired(bullet);
 			}
 		} else {
 			// Just turn gun as much as possible
@@ -127,6 +157,15 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 		public void setFirePower(double firePower) {
 			this.firePower = firePower;
 		}
+	}
+
+	@Override
+	public void storeData(AdvancedRobot robot) {
+
+	}
+
+	@Override
+	public void loadData(AdvancedRobot robot) {
 
 	}
 }
