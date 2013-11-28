@@ -5,12 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import robocode.AdvancedRobot;
 import robocode.Bullet;
 import robocode.BulletHitBulletEvent;
 import robocode.BulletHitEvent;
 import robocode.BulletMissedEvent;
 import robocode.ScannedRobotEvent;
+import clarkson.cs551.BasicRobot;
 import clarkson.cs551.robocode.common.AbsolutePos;
 import clarkson.cs551.robocode.common.RandomUtils;
 
@@ -41,7 +41,7 @@ public class MixedTargetingHandler extends AbstractTargetingHandler {
 	}
 
 	@Override
-	protected FireResult estimate(AdvancedRobot robot) {
+	protected FireResult estimate(BasicRobot robot) {
 		// Randomly choose a Handler to handle
 		lastChoice = RandomUtils.randomChoose(weights);
 		return handlers.get(lastChoice).estimate(robot);
@@ -54,7 +54,7 @@ public class MixedTargetingHandler extends AbstractTargetingHandler {
 	}
 
 	@Override
-	public void enemyScanned(AdvancedRobot self, ScannedRobotEvent event) {
+	public void enemyScanned(BasicRobot self, ScannedRobotEvent event) {
 		for (AbstractTargetingHandler handler : handlers)
 			handler.enemyScanned(self, event);
 	}
@@ -65,19 +65,19 @@ public class MixedTargetingHandler extends AbstractTargetingHandler {
 	}
 
 	@Override
-	public void bulletHit(AdvancedRobot self, BulletHitEvent event) {
+	public void bulletHit(BasicRobot self, BulletHitEvent event) {
 		// Do nothing
 		history.remove(event.getBullet());
 	}
 
 	@Override
-	public void bulletHitBullet(AdvancedRobot robot, BulletHitBulletEvent event) {
+	public void bulletHitBullet(BasicRobot robot, BulletHitBulletEvent event) {
 		// Do nothing
 		history.remove(event.getBullet());
 	}
 
 	@Override
-	public void bulletMissed(AdvancedRobot self, BulletMissedEvent event) {
+	public void bulletMissed(BasicRobot self, BulletMissedEvent event) {
 		int index = history.remove(event.getBullet());
 		weights.set(index, weights.get(index) / 2);
 	}
