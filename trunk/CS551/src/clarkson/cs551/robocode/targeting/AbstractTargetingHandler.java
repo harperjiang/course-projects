@@ -4,7 +4,6 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
-import robocode.AdvancedRobot;
 import robocode.Bullet;
 import robocode.BulletHitBulletEvent;
 import robocode.BulletHitEvent;
@@ -12,6 +11,7 @@ import robocode.BulletMissedEvent;
 import robocode.Rules;
 import robocode.ScannedRobotEvent;
 import robocode.util.Utils;
+import clarkson.cs551.BasicRobot;
 import clarkson.cs551.robocode.common.AbsolutePos;
 import clarkson.cs551.robocode.common.GeometricUtils;
 import clarkson.cs551.robocode.common.Velocity;
@@ -30,12 +30,12 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 	}
 
 	@Override
-	public void initialize(AdvancedRobot robot) {
+	public void initialize(BasicRobot robot) {
 		loadData(robot);
 	}
 
 	@Override
-	public void enemyScanned(AdvancedRobot self, ScannedRobotEvent event) {
+	public void enemyScanned(BasicRobot self, ScannedRobotEvent event) {
 		// Set the minimal interval of data collected
 		long lastTime = -pathInterval;
 		if (paths.size() > 0) {
@@ -54,29 +54,7 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 		onNewPath(pos);
 	}
 
-	@Override
-	public void bulletFired(Bullet bullet) {
-
-	}
-
-	@Override
-	public void bulletHit(AdvancedRobot self, BulletHitEvent event) {
-
-	}
-
-	@Override
-	public void bulletMissed(AdvancedRobot self, BulletMissedEvent event) {
-
-	}
-
-	@Override
-	public void bulletHitBullet(AdvancedRobot robot, BulletHitBulletEvent event) {
-
-	}
-
-	protected AbsolutePos generatePos(AdvancedRobot robot,
-			ScannedRobotEvent event) {
-		// TODO Temporarily assume that robot doesn't move
+	protected AbsolutePos generatePos(BasicRobot robot, ScannedRobotEvent event) {
 		double bearing = event.getBearingRadians();
 		double heading = GeometricUtils.absoluteHeading(robot
 				.getHeadingRadians());
@@ -84,13 +62,15 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 				.getHeadingRadians());
 		double direction = Utils.normalAbsoluteAngle(heading - bearing);
 		double distance = event.getDistance();
+		Point2D.Double mypos = robot.getPosition();
 		return new AbsolutePos(robot.getTime(), new Point2D.Double(distance
-				* Math.cos(direction), distance * Math.sin(direction)),
-				new Velocity(enemyHeading, event.getVelocity()));
+				* Math.cos(direction) + mypos.x, distance * Math.sin(direction)
+				+ mypos.y), mypos, new Velocity(enemyHeading,
+				event.getVelocity()));
 	}
 
 	@Override
-	public void action(AdvancedRobot robot) {
+	public void action(BasicRobot robot) {
 		// Calculate the next position
 		FireResult result = estimate(robot);
 		if (result == null) {
@@ -118,7 +98,7 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 		return;
 	}
 
-	protected void turnRight(AdvancedRobot robot, double value) {
+	protected void turnRight(BasicRobot robot, double value) {
 		robot.setTurnGunRightRadians(value);
 		// Adjust the radar position for locking
 		robot.setTurnRadarRightRadians(robot.getRadarTurnRemainingRadians()
@@ -129,7 +109,7 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 
 	}
 
-	protected abstract FireResult estimate(AdvancedRobot robot);
+	protected abstract FireResult estimate(BasicRobot robot);
 
 	public static final class FireResult {
 
@@ -160,12 +140,32 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 	}
 
 	@Override
-	public void storeData(AdvancedRobot robot) {
+	public void storeData(BasicRobot robot) {
 
 	}
 
 	@Override
-	public void loadData(AdvancedRobot robot) {
+	public void loadData(BasicRobot robot) {
+
+	}
+
+	@Override
+	public void bulletFired(Bullet bullet) {
+
+	}
+
+	@Override
+	public void bulletHit(BasicRobot self, BulletHitEvent event) {
+
+	}
+
+	@Override
+	public void bulletMissed(BasicRobot self, BulletMissedEvent event) {
+
+	}
+
+	@Override
+	public void bulletHitBullet(BasicRobot robot, BulletHitBulletEvent event) {
 
 	}
 }

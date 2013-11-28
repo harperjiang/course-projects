@@ -3,8 +3,8 @@ package clarkson.cs551.robocode.targeting;
 import java.awt.geom.Point2D;
 import java.util.Random;
 
-import robocode.AdvancedRobot;
 import robocode.Rules;
+import clarkson.cs551.BasicRobot;
 import clarkson.cs551.robocode.common.AbsolutePos;
 import clarkson.cs551.robocode.common.GeometricUtils;
 
@@ -25,7 +25,7 @@ public class GuessFactorHandler extends AbstractTargetingHandler {
 	private Random random;
 
 	@Override
-	protected FireResult estimate(AdvancedRobot robot) {
+	protected FireResult estimate(BasicRobot robot) {
 		System.out.println("Fire Prediction");
 		int sum = 0;
 		for (int i = 0; i < summary.length; i++)

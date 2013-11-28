@@ -2,8 +2,8 @@ package clarkson.cs551.robocode.targeting;
 
 import java.awt.geom.Point2D;
 
-import robocode.AdvancedRobot;
 import robocode.Rules;
+import clarkson.cs551.BasicRobot;
 import clarkson.cs551.robocode.common.AbsolutePos;
 import clarkson.cs551.robocode.common.GeometricUtils;
 
@@ -16,9 +16,8 @@ public class CircularHandler extends AbstractTargetingHandler {
 	}
 
 	@Override
-	protected FireResult estimate(AdvancedRobot robot) {
-		// TODO Modify this
-		AbsolutePos mypos = new AbsolutePos(0l, new Point2D.Double(0, 0), null);
+	protected FireResult estimate(BasicRobot robot) {
+		Point2D.Double mypos = robot.getPosition();
 		if (paths.size() < 3) {
 			return null;
 		}
@@ -30,8 +29,8 @@ public class CircularHandler extends AbstractTargetingHandler {
 			// Deal with the not moving case
 			return new FireResult(GeometricUtils.absoluteHeading(robot
 					.getGunHeadingRadians())
-					- GeometricUtils.getRadian(mypos.getPosition(),
-							p3.getPosition()), firePower);
+					- GeometricUtils.getRadian(mypos, p3.getPosition()),
+					firePower);
 		}
 		// x(2x0-2x1)+y(2y0-2y1) = x0^2+y0^2-x1^2-y1^2
 		// x(2x1-2x2)+y(2x1-2x2) = x1^2+y1^2-x2^2-y2^2
@@ -70,8 +69,7 @@ public class CircularHandler extends AbstractTargetingHandler {
 			double theta = theta3 + thetaspeed * tval;
 			testp = new Point2D.Double(Math.cos(theta) * a + x, Math.sin(theta)
 					* a + y);
-			double val = Math.abs(r
-					- GeometricUtils.getDistance(mypos.getPosition(), testp));
+			double val = Math.abs(r - GeometricUtils.getDistance(mypos, testp));
 
 			if (val <= threshold)
 				break;
@@ -79,7 +77,7 @@ public class CircularHandler extends AbstractTargetingHandler {
 		}
 		double direction = GeometricUtils.absoluteHeading(robot
 				.getGunHeadingRadians())
-				- GeometricUtils.getRadian(mypos.getPosition(), testp);
+				- GeometricUtils.getRadian(mypos, testp);
 		if (tval < maxt) {
 			return new FireResult(direction, firePower);
 		} else {

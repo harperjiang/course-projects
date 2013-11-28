@@ -2,8 +2,8 @@ package clarkson.cs551.robocode.targeting;
 
 import java.awt.geom.Point2D;
 
-import robocode.AdvancedRobot;
 import robocode.Rules;
+import clarkson.cs551.BasicRobot;
 import clarkson.cs551.robocode.common.AbsolutePos;
 import clarkson.cs551.robocode.common.GeometricUtils;
 import clarkson.cs551.robocode.common.Velocity;
@@ -17,9 +17,8 @@ public class LinearHandler extends AbstractTargetingHandler {
 	}
 
 	@Override
-	protected FireResult estimate(AdvancedRobot robot) {
-		// TODO Modify this
-		AbsolutePos mypos = new AbsolutePos(0l, new Point2D.Double(0, 0), null);
+	protected FireResult estimate(BasicRobot robot) {
+		Point2D.Double mypos = robot.getPosition();
 		if (paths.size() < 2) {
 			return null;
 		}
@@ -45,13 +44,12 @@ public class LinearHandler extends AbstractTargetingHandler {
 
 		AbsolutePos newp = new AbsolutePos(p3.getTime() + (long) Math.ceil(t),
 				new Point2D.Double(p3.getX() + vx * t, p3.getY() + vy * t),
-				new Velocity(GeometricUtils.getRadian(velopoint),
+				mypos, new Velocity(GeometricUtils.getRadian(velopoint),
 						GeometricUtils.getDistance(velopoint)));
 
 		System.out.println("New Point will be:" + newp);
 
-		double radian = GeometricUtils.getRadian(mypos.getPosition(),
-				newp.getPosition());
+		double radian = GeometricUtils.getRadian(mypos, newp.getPosition());
 		double gunHeading = GeometricUtils.absoluteHeading(robot
 				.getGunHeadingRadians());
 		return new FireResult(gunHeading - radian, firePower);
