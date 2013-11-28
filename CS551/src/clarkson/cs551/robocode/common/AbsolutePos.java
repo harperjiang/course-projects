@@ -13,12 +13,13 @@ public class AbsolutePos {
 
 	private Point2D.Double myPosition;
 
-	public AbsolutePos(long time, Point2D.Double pos, Velocity velocity) {
+	public AbsolutePos(long time, Point2D.Double pos, Point2D.Double myPos,
+			Velocity velocity) {
 		super();
 		this.time = time;
 		this.position = pos;
 		this.velocity = velocity;
-		this.myPosition = new Point2D.Double(0, 0);
+		this.myPosition = myPos;
 	}
 
 	public double getX() {
