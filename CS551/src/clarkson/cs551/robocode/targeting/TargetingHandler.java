@@ -24,9 +24,11 @@ public interface TargetingHandler {
 	public void bulletHitBullet(BasicRobot robot, BulletHitBulletEvent event);
 
 	public AccuracySta getStatistic();
-	
+
 	public void storeData(BasicRobot robot);
 
 	public void loadData(BasicRobot robot);
+
+	public void clearBattleData(BasicRobot robot);
 
 }

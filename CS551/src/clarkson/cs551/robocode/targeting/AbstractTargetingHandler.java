@@ -155,6 +155,11 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 	public void loadData(BasicRobot robot) {
 
 	}
+	
+	@Override
+	public void clearBattleData(BasicRobot robot) {
+		
+	}
 
 	@Override
 	public void bulletFired(BasicRobot robot, Bullet bullet) {

@@ -1,5 +1,6 @@
 package clarkson.cs551.robocode;
 
+import robocode.BattleEndedEvent;
 import robocode.BulletHitBulletEvent;
 import robocode.BulletHitEvent;
 import robocode.BulletMissedEvent;
@@ -25,9 +26,6 @@ public class BattleRobot extends BasicRobot {
 		radarHandler = new LockingHandler();
 		targetingHandler = new MixedTargetingHandler();
 		movingHandler = new AStarTreeHandler();
-
-		movingHandler.initialize(this);
-		targetingHandler.initialize(this);
 	}
 
 	@Override
@@ -35,6 +33,10 @@ public class BattleRobot extends BasicRobot {
 		setAdjustGunForRobotTurn(true);
 		setAdjustRadarForGunTurn(true);
 		setAdjustRadarForRobotTurn(true);
+
+		movingHandler.initialize(this);
+		targetingHandler.initialize(this);
+
 		while (true) {
 			radarHandler.action(this);
 			movingHandler.action(this);
@@ -69,5 +71,10 @@ public class BattleRobot extends BasicRobot {
 	public void onRoundEnded(RoundEndedEvent event) {
 		targetingHandler.storeData(this);
 		movingHandler.storeData(this);
+	}
+
+	@Override
+	public void onBattleEnded(BattleEndedEvent event) {
+		targetingHandler.clearBattleData(this);
 	}
 }
