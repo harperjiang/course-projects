@@ -32,6 +32,9 @@ public class BattleRobot extends BasicRobot {
 
 	@Override
 	public void run() {
+		setAdjustGunForRobotTurn(true);
+		setAdjustRadarForGunTurn(true);
+		setAdjustRadarForRobotTurn(true);
 		while (true) {
 			radarHandler.action(this);
 			movingHandler.action(this);
