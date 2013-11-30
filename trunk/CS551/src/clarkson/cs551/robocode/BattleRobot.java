@@ -6,22 +6,27 @@ import robocode.BulletMissedEvent;
 import robocode.RoundEndedEvent;
 import robocode.ScannedRobotEvent;
 import clarkson.cs551.BasicRobot;
+import clarkson.cs551.robocode.moving.AStarTreeHandler;
+import clarkson.cs551.robocode.moving.MovingHandler;
 import clarkson.cs551.robocode.radar.LockingHandler;
 import clarkson.cs551.robocode.radar.RadarHandler;
 import clarkson.cs551.robocode.targeting.MixedTargetingHandler;
 import clarkson.cs551.robocode.targeting.TargetingHandler;
 
-public class TargetingRobot extends BasicRobot {
-
+public class BattleRobot extends BasicRobot {
 	private RadarHandler radarHandler;
 
 	private TargetingHandler targetingHandler;
 
-	public TargetingRobot() {
+	private MovingHandler movingHandler;
+
+	public BattleRobot() {
 		super();
 		radarHandler = new LockingHandler();
 		targetingHandler = new MixedTargetingHandler();
+		movingHandler = new AStarTreeHandler();
 
+		movingHandler.initialize(this);
 		targetingHandler.initialize(this);
 	}
 
@@ -29,6 +34,7 @@ public class TargetingRobot extends BasicRobot {
 	public void run() {
 		while (true) {
 			radarHandler.action(this);
+			movingHandler.action(this);
 			targetingHandler.action(this);
 			execute();
 		}
@@ -37,6 +43,7 @@ public class TargetingRobot extends BasicRobot {
 	@Override
 	public void onScannedRobot(ScannedRobotEvent event) {
 		radarHandler.enemyScanned(this, event);
+		movingHandler.enemyScanned(this, event);
 		targetingHandler.enemyScanned(this, event);
 	}
 
@@ -58,5 +65,6 @@ public class TargetingRobot extends BasicRobot {
 	@Override
 	public void onRoundEnded(RoundEndedEvent event) {
 		targetingHandler.storeData(this);
+		movingHandler.storeData(this);
 	}
 }
