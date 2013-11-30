@@ -82,7 +82,7 @@ public class MixedTargetingHandler extends AbstractTargetingHandler {
 			if (min > weights.get(i))
 				min = weights.get(i);
 		}
-		if (min <= 0.01d)
+		while (min <= 0.01d)
 			for (int i = 0; i < weights.size(); i++) {
 				weights.set(i, weights.get(i) * 100);
 			}
