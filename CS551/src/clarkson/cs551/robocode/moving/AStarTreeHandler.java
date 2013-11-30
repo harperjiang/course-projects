@@ -138,7 +138,7 @@ public class AStarTreeHandler extends AbstractMovingHandler {
 		double bulletTurn = newdist / Rules.getBulletSpeed(1.0d);
 		double movable = SimulationUtils.distance((int) bulletTurn);
 		// Moving faraway is preferred
-		value += (newdist - olddist + movable);
+		value += 10 * (newdist - olddist + movable);
 
 		// TODO: If too far away cannot have good shooting rate
 
