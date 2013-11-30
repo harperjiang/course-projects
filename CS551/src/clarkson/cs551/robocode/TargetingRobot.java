@@ -1,30 +1,28 @@
 package clarkson.cs551.robocode;
 
-import robocode.AdvancedRobot;
 import robocode.BattleEndedEvent;
 import robocode.BulletHitBulletEvent;
 import robocode.BulletHitEvent;
 import robocode.BulletMissedEvent;
+import robocode.RoundEndedEvent;
 import robocode.ScannedRobotEvent;
-import clarkson.cs551.robocode.moving.Coordinate;
+import clarkson.cs551.BasicRobot;
 import clarkson.cs551.robocode.radar.LockingHandler;
 import clarkson.cs551.robocode.radar.RadarHandler;
 import clarkson.cs551.robocode.targeting.MixedTargetingHandler;
 import clarkson.cs551.robocode.targeting.TargetingHandler;
 
-public class TargetingRobot extends AdvancedRobot {
+public class TargetingRobot extends BasicRobot {
 
 	private RadarHandler radarHandler;
 
 	private TargetingHandler targetingHandler;
 
-	private Coordinate coordinate;
-
 	public TargetingRobot() {
 		super();
 		radarHandler = new LockingHandler();
 		targetingHandler = new MixedTargetingHandler();
-		
+
 		targetingHandler.initialize(this);
 	}
 
@@ -59,8 +57,7 @@ public class TargetingRobot extends AdvancedRobot {
 	}
 
 	@Override
-	public void onBattleEnded(BattleEndedEvent event) {
+	public void onRoundEnded(RoundEndedEvent event) {
 		targetingHandler.storeData(this);
 	}
-
 }
