@@ -118,6 +118,7 @@ public class AStarTreeHandler extends AbstractMovingHandler {
 		double looking = GeometricUtils.getRadian(robot.getPosition(),
 				enemyStatus.getPosition());
 
+		// Moving a long distance is preferred
 		double value = GeometricUtils.getDistance(robot.getPosition(), expect);
 
 		// If energy change indicate bullet fire
@@ -130,12 +131,13 @@ public class AStarTreeHandler extends AbstractMovingHandler {
 				value -= damage;
 		}
 
-		// Moving direction
+		// Moving direction, moving orthgonal is preferred
 		value += 500 * (1 - Math.abs(Math.cos(moving - looking)));
 
 		// If too close that cannot dodge bullet
 		double bulletTurn = newdist / Rules.getBulletSpeed(1.0d);
 		double movable = SimulationUtils.distance((int) bulletTurn);
+		// Moving faraway is preferred
 		value += (newdist - olddist + movable);
 
 		// TODO: If too far away cannot have good shooting rate
