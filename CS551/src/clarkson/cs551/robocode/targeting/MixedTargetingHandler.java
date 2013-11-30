@@ -82,11 +82,12 @@ public class MixedTargetingHandler extends AbstractTargetingHandler {
 			if (min > weights.get(i))
 				min = weights.get(i);
 		}
-		while (min <= 0.01d)
+		while (min <= 0.01d) {
+			min *= 100;
 			for (int i = 0; i < weights.size(); i++) {
 				weights.set(i, weights.get(i) * 100);
 			}
-
+		}
 		File dataFile = robot.getDataFile(DATA_FILE);
 		try {
 			PrintWriter pw = new PrintWriter(new RobocodeFileOutputStream(
