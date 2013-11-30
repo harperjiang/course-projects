@@ -48,8 +48,6 @@ public abstract class AbstractMovingHandler implements MovingHandler {
 					break;
 				Operation opr = operations.peek();
 				if (!opr.submitted()) {
-					System.out.println("Executing Operation:"
-							+ opr.getClass().getSimpleName());
 					opr.execute(robot);
 				}
 				if (opr.done()) {
