@@ -17,13 +17,13 @@ public class RotateOperation extends AbstractOperation {
 	public void execute(BasicRobot robot) {
 		this.robot = robot;
 		if (Math.abs(angle) <= Math.PI / 2) {
-			robot.setTurnLeft(angle);
+			robot.setTurnLeftRadians(angle);
 		} else {
 			double rotate = Math.PI - Math.abs(angle);
 			if (angle > 0) {
-				robot.setTurnRight(rotate);
+				robot.setTurnRightRadians(rotate);
 			} else {
-				robot.setTurnLeft(rotate);
+				robot.setTurnLeftRadians(rotate);
 			}
 		}
 		super.execute(robot);

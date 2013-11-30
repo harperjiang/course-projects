@@ -11,9 +11,15 @@ public abstract class AbstractMovingHandler implements MovingHandler {
 
 	private Stack<Operation> operations;
 
+	private boolean interrupt = false;
+
 	public AbstractMovingHandler() {
 		super();
 		operations = new Stack<Operation>();
+	}
+
+	protected void triggerInterrupt() {
+		interrupt = true;
 	}
 
 	@Override
@@ -22,26 +28,30 @@ public abstract class AbstractMovingHandler implements MovingHandler {
 			Point2D.Double nextpos = estimate(robot);
 			if (null == nextpos)
 				return;
-			System.out.println("Current Pos:" + robot.getPosition());
-			System.out.println("Moving to position:" + nextpos);
 			double distance = GeometricUtils.getDistance(robot.getPosition(),
 					nextpos);
 			double angle = Utils.normalRelativeAngle(GeometricUtils.getRadian(
 					robot.getPosition(), nextpos)
 					- GeometricUtils.absoluteHeading(robot.getHeading()));
-			System.out.println("Distance is:" + distance);
-			System.out.println("Angle is:" + angle);
 			operations.push(new MoveOperation(distance,
 					Math.abs(angle) > Math.PI / 2));
 			operations.push(new RotateOperation(angle));
 			action(robot);
+		} else if (interrupt) {
+			operations.clear();
+			interrupt = false;
+			action(robot);
 		} else {
+			// Execute operation
 			while (true) {
 				if (operations.isEmpty())
 					break;
 				Operation opr = operations.peek();
-				if (!opr.submitted())
+				if (!opr.submitted()) {
+					System.out.println("Executing Operation:"
+							+ opr.getClass().getSimpleName());
 					opr.execute(robot);
+				}
 				if (opr.done()) {
 					operations.pop();
 				} else {

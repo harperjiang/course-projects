@@ -19,7 +19,7 @@ public abstract class BasicRobot extends AdvancedRobot {
 	public void onStatus(StatusEvent e) {
 		super.onStatus(e);
 		position.x = e.getStatus().getX();
-		position.y = getBattleFieldHeight() - e.getStatus().getY();
+		position.y = e.getStatus().getY();
 	}
 
 	public Double getPosition() {
