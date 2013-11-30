@@ -110,9 +110,6 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 
 	protected void turnRight(BasicRobot robot, double value) {
 		robot.setTurnGunRightRadians(value);
-		// Adjust the radar position for locking
-		robot.setTurnRadarRightRadians(robot.getRadarTurnRemainingRadians()
-				- value);
 	}
 
 	protected void onNewPath(AbsolutePos path) {

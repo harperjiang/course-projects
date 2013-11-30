@@ -24,6 +24,9 @@ public class MovingRobot extends BasicRobot {
 
 	@Override
 	public void run() {
+		setAdjustGunForRobotTurn(true);
+		setAdjustRadarForGunTurn(true);
+		setAdjustRadarForRobotTurn(true);
 		while (true) {
 			radarHandler.action(this);
 			movingHandler.action(this);
@@ -41,7 +44,7 @@ public class MovingRobot extends BasicRobot {
 	public void onBattleEnded(BattleEndedEvent event) {
 		movingHandler.storeData(this);
 	}
-	
+
 	@Override
 	public void onStatus(StatusEvent e) {
 		super.onStatus(e);

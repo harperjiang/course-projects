@@ -27,6 +27,9 @@ public class TargetingRobot extends BasicRobot {
 
 	@Override
 	public void run() {
+		setAdjustGunForRobotTurn(true);
+		setAdjustRadarForGunTurn(true);
+		setAdjustRadarForRobotTurn(true);
 		while (true) {
 			radarHandler.action(this);
 			targetingHandler.action(this);
