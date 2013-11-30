@@ -15,7 +15,5 @@ public class RuleHandler extends AbstractMovingHandler {
 
 	@Override
 	public void enemyScanned(BasicRobot robot, ScannedRobotEvent event) {
-		// TODO Auto-generated method stub
-		super.enemyScanned(robot, event);
 	}
 }
