@@ -19,7 +19,6 @@ public class MovingRobot extends BasicRobot {
 		super();
 		radarHandler = new LockingHandler();
 		movingHandler = new AStarTreeHandler();
-		movingHandler.initialize(this);
 	}
 
 	@Override
@@ -27,6 +26,9 @@ public class MovingRobot extends BasicRobot {
 		setAdjustGunForRobotTurn(true);
 		setAdjustRadarForGunTurn(true);
 		setAdjustRadarForRobotTurn(true);
+
+		movingHandler.initialize(this);
+
 		while (true) {
 			radarHandler.action(this);
 			movingHandler.action(this);
