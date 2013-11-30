@@ -56,7 +56,7 @@ public class AStarTreeHandler extends AbstractMovingHandler {
 			cost[i] += heuristic(robot, expects[i], lastStatus);
 		}
 		// Look for the minimal value
-		double val = 0;
+		double val = Double.MIN_VALUE;
 		int index = -1;
 		for (int i = 0; i < cost.length; i++) {
 			if (cost[i] > val) {
@@ -65,6 +65,11 @@ public class AStarTreeHandler extends AbstractMovingHandler {
 			}
 		}
 		// The choice is i
+		if (index == -1) {
+			// If bug in algorithm cause no result, move to center
+			return new Point2D.Double(robot.getBattleFieldWidth() / 2,
+					robot.getBattleFieldHeight() / 2);
+		}
 		return expects[index];
 	}
 
