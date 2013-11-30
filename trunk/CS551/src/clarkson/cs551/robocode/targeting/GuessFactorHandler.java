@@ -26,12 +26,14 @@ public class GuessFactorHandler extends AbstractTargetingHandler {
 
 	@Override
 	protected FireResult estimate(BasicRobot robot) {
-		System.out.println("Fire Prediction");
+		if (enableLogging)
+			System.out.println("Fire Prediction");
 		int sum = 0;
 		for (int i = 0; i < summary.length; i++)
 			sum += summary[i];
 		if (sum == 0) {
-			System.out.println("No data");
+			if (enableLogging)
+				System.out.println("No data");
 			return null;
 		}
 		random.nextInt(sum);
@@ -41,7 +43,8 @@ public class GuessFactorHandler extends AbstractTargetingHandler {
 			i++;
 			current += summary[i];
 		}
-		System.out.println("Fire to interval:" + i);
+		if (enableLogging)
+			System.out.println("Fire to interval:" + i);
 		// Fire to interval i
 		AbsolutePos last = paths.get(paths.size() - 1);
 		double distance = GeometricUtils.getDistance(last.getMyPosition(),
@@ -54,14 +57,20 @@ public class GuessFactorHandler extends AbstractTargetingHandler {
 				new Point2D.Double(last.getX() + dx, last.getY() + dy));
 		double minTheta = GeometricUtils.getRadian(last.getMyPosition(),
 				new Point2D.Double(last.getX() - dx, last.getY() - dy));
-		System.out.println("Estimate max theta is " + maxTheta);
-		System.out.println("Estimate min theta is " + minTheta);
+		if (enableLogging) {
+			System.out.println("Estimate max theta is " + maxTheta);
+			System.out.println("Estimate min theta is " + minTheta);
+		}
 		double fireDirection = minTheta
 				+ ((maxTheta - minTheta) * i / interval);
-		System.out.println("Estimate direction is " + fireDirection);
-		System.out
-				.println("Direction is "
-						+ (GeometricUtils.absoluteHeading(robot.getGunHeading()) - fireDirection));
+
+		if (enableLogging) {
+			System.out.println("Estimate direction is " + fireDirection);
+			System.out
+					.println("Direction is "
+							+ (GeometricUtils.absoluteHeading(robot
+									.getGunHeading()) - fireDirection));
+		}
 		return new FireResult(GeometricUtils.absoluteHeading(robot
 				.getGunHeadingRadians()) - fireDirection, firePower);
 	}
@@ -70,38 +79,43 @@ public class GuessFactorHandler extends AbstractTargetingHandler {
 	protected void onNewPath(AbsolutePos path) {
 		if (paths.size() < 2)
 			return;
-
-		System.out.println("Data collection");
+		if (enableLogging)
+			System.out.println("Data collection");
 		AbsolutePos from = paths.get(paths.size() - 2);
 		AbsolutePos to = paths.get(paths.size() - 1);
 
 		long time = to.getTime() - from.getTime();
 		double dx = time * from.getVelocity().getVx();
 		double dy = time * from.getVelocity().getVy();
-
-		System.out.println("Dx is " + dx);
-		System.out.println("Dy is " + dy);
-
+		if (enableLogging) {
+			System.out.println("Dx is " + dx);
+			System.out.println("Dy is " + dy);
+		}
 		double maxTheta = GeometricUtils.getRadian(from.getMyPosition(),
 				new Point2D.Double(from.getX() + dx, from.getY() + dy));
-		System.out.println("Max Theta:" + maxTheta);
+		if (enableLogging)
+			System.out.println("Max Theta:" + maxTheta);
 		double minTheta = GeometricUtils.getRadian(from.getMyPosition(),
 				new Point2D.Double(from.getX() - dx, from.getY() - dy));
-		System.out.println("Min Theta:" + minTheta);
+		if (enableLogging)
+			System.out.println("Min Theta:" + minTheta);
 		double actualTheta = GeometricUtils.getRadian(from.getMyPosition(),
 				to.getPosition());
 		if (actualTheta > maxTheta)
 			actualTheta = maxTheta;
 		if (actualTheta < minTheta)
 			actualTheta = minTheta;
-		System.out.println("Actual Theta:" + actualTheta);
+		if (enableLogging)
+			System.out.println("Actual Theta:" + actualTheta);
 
 		double step = (maxTheta - minTheta) / interval;
-		System.out.println("Step is " + step);
+		if (enableLogging)
+			System.out.println("Step is " + step);
 		int in = (int) Math.floor((actualTheta - minTheta) / step);
 		if (in == interval)
 			in = interval - 1;
-		System.out.println("Interval:" + in);
+		if (enableLogging)
+			System.out.println("Interval:" + in);
 		summary[in] += 1;
 	}
 }

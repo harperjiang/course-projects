@@ -49,35 +49,39 @@ public class MixedTargetingHandler extends AbstractTargetingHandler {
 
 	@Override
 	protected void onNewPath(AbsolutePos path) {
+		super.onNewPath(path);
 		for (AbstractTargetingHandler handler : handlers)
 			handler.onNewPath(path);
 	}
 
 	@Override
 	public void enemyScanned(BasicRobot self, ScannedRobotEvent event) {
+		super.enemyScanned(self, event);
 		for (AbstractTargetingHandler handler : handlers)
 			handler.enemyScanned(self, event);
 	}
 
 	@Override
-	public void bulletFired(Bullet bullet) {
+	public void bulletFired(BasicRobot robot, Bullet bullet) {
+		super.bulletFired(robot, bullet);
 		history.put(bullet, lastChoice);
 	}
 
 	@Override
 	public void bulletHit(BasicRobot self, BulletHitEvent event) {
-		// Do nothing
+		super.bulletHit(self, event);
 		history.remove(event.getBullet());
 	}
 
 	@Override
 	public void bulletHitBullet(BasicRobot robot, BulletHitBulletEvent event) {
-		// Do nothing
+		super.bulletHitBullet(robot, event);
 		history.remove(event.getBullet());
 	}
 
 	@Override
 	public void bulletMissed(BasicRobot self, BulletMissedEvent event) {
+		super.bulletMissed(self, event);
 		int index = history.remove(event.getBullet());
 		weights.set(index, weights.get(index) / 2);
 	}

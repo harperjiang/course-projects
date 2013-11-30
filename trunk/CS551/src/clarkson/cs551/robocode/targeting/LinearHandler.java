@@ -37,8 +37,8 @@ public class LinearHandler extends AbstractTargetingHandler {
 		double t = (-b + Math.sqrt(Math.pow(b, 2) - 4 * a * c)) / (2 * a);
 
 		// (x3+vx*t)^2+(y3+vy*t)^2) = t^2* bulletSpeed^2
-
-		System.out.println("Estimate time to hit:" + t);
+		if (enableLogging)
+			System.out.println("Estimate time to hit:" + t);
 
 		Point2D.Double velopoint = new Point2D.Double(vx, vy);
 
@@ -46,8 +46,8 @@ public class LinearHandler extends AbstractTargetingHandler {
 				new Point2D.Double(p3.getX() + vx * t, p3.getY() + vy * t),
 				mypos, new Velocity(GeometricUtils.getRadian(velopoint),
 						GeometricUtils.getDistance(velopoint)));
-
-		System.out.println("New Point will be:" + newp);
+		if (enableLogging)
+			System.out.println("New Point will be:" + newp);
 
 		double radian = GeometricUtils.getRadian(mypos, newp.getPosition());
 		double gunHeading = GeometricUtils.absoluteHeading(robot
