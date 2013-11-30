@@ -8,12 +8,12 @@ import robocode.ScannedRobotEvent;
 import clarkson.cs551.BasicRobot;
 
 public interface TargetingHandler {
-	
+
 	public void initialize(BasicRobot robot);
 
 	public void enemyScanned(BasicRobot self, ScannedRobotEvent event);
 
-	public void bulletFired(Bullet bullet);
+	public void bulletFired(BasicRobot self, Bullet bullet);
 
 	public void bulletHit(BasicRobot self, BulletHitEvent event);
 
@@ -23,6 +23,8 @@ public interface TargetingHandler {
 
 	public void bulletHitBullet(BasicRobot robot, BulletHitBulletEvent event);
 
+	public AccuracySta getStatistic();
+	
 	public void storeData(BasicRobot robot);
 
 	public void loadData(BasicRobot robot);

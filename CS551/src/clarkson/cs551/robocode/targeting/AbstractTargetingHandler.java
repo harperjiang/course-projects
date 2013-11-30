@@ -24,9 +24,14 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 
 	private int pathInterval = 1;
 
+	private AccuracySta statistic;
+
+	protected boolean enableLogging = false;
+
 	public AbstractTargetingHandler(int length) {
 		this.pathLength = length;
 		this.paths = new ArrayList<AbsolutePos>();
+		this.statistic = new AccuracySta();
 	}
 
 	@Override
@@ -49,7 +54,8 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 			paths.remove(0);
 		}
 		AbsolutePos pos = generatePos(self, event);
-		System.out.println(pos);
+		if (enableLogging)
+			System.out.println(pos);
 		paths.add(pos);
 		onNewPath(pos);
 	}
@@ -84,7 +90,7 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 			turnRight(robot, result.getFireDirection());
 			if (robot.getGunHeat() == 0 && result.getFirePower() > 0) {
 				Bullet bullet = robot.setFireBullet(result.getFirePower());
-				this.bulletFired(bullet);
+				this.bulletFired(robot, bullet);
 			}
 		} else {
 			// Just turn gun as much as possible
@@ -96,6 +102,10 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 			}
 		}
 		return;
+	}
+
+	public AccuracySta getStatistic() {
+		return statistic;
 	}
 
 	protected void turnRight(BasicRobot robot, double value) {
@@ -150,22 +160,26 @@ public abstract class AbstractTargetingHandler implements TargetingHandler {
 	}
 
 	@Override
-	public void bulletFired(Bullet bullet) {
-
+	public void bulletFired(BasicRobot robot, Bullet bullet) {
+		AbsolutePos target = paths.get(paths.size() - 1);
+		double distance = GeometricUtils.getDistance(target.getMyPosition(),
+				target.getPosition());
+		int equiv = (int) (distance / robot.getWidth());
+		statistic.fired(equiv);
 	}
 
 	@Override
 	public void bulletHit(BasicRobot self, BulletHitEvent event) {
-
+		statistic.hit();
 	}
 
 	@Override
 	public void bulletMissed(BasicRobot self, BulletMissedEvent event) {
-
+		statistic.missed();
 	}
 
 	@Override
 	public void bulletHitBullet(BasicRobot robot, BulletHitBulletEvent event) {
-
+		statistic.missed();
 	}
 }
