@@ -52,6 +52,15 @@ public class ChatClient {
 		this.clientState = new ClientStateMachine();
 	}
 
+	public ChatClient(Chatter parent, Socket socket) {
+		this(parent, null, 0);
+		InetSocketAddress remote = (InetSocketAddress) socket
+				.getRemoteSocketAddress();
+		ip = remote.getAddress().getHostAddress();
+		port = remote.getPort();
+		this.socket = socket;
+	}
+
 	public ContextKey getContextKey() {
 		try {
 			if (null == ck) {

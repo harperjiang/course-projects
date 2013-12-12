@@ -24,6 +24,10 @@ public class Chatter implements ServerListener, MessageListener {
 		clients = new HashMap<String, ChatClient>();
 	}
 
+	protected void registerClient(ChatClient client) {
+		clients.put(client.getIp(), client);
+	}
+
 	public void send(String target, String message) {
 		synchronized (clients) {
 			// Make sure that we have a client to the target

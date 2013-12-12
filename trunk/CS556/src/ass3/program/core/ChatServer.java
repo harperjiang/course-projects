@@ -54,8 +54,10 @@ public class ChatServer {
 		try {
 			serverSocket = new ServerSocket(port);
 			while (true) {
-				Socket client = serverSocket.accept();
-				ServerThread thread = new ServerThread(client);
+				Socket clientSocket = serverSocket.accept();
+				getParent().registerClient(
+						new ChatClient(getParent(), clientSocket));
+				ServerThread thread = new ServerThread(clientSocket);
 				thread.start();
 			}
 		} catch (IOException e) {
