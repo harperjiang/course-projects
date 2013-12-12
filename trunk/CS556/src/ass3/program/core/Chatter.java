@@ -72,6 +72,10 @@ public class Chatter implements ServerListener, MessageListener {
 		}
 	}
 
+	public ChatServer getServer() {
+		return server;
+	}
+
 	private EventListenerList listeners = new EventListenerList();
 
 	public void addListener(MessageListener l) {
