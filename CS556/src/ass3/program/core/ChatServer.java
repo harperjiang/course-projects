@@ -93,9 +93,12 @@ public class ChatServer {
 			try {
 				while (!socket.isClosed()) {
 					try {
-						while (socket.getInputStream().available() == 0) {
+						while (!socket.isClosed()
+								&& socket.getInputStream().available() == 0) {
 							Thread.sleep(500);
 						}
+						if (socket.isClosed())
+							break;
 						Message message = (Message) new ObjectInputStream(
 								socket.getInputStream()).readObject();
 						// Update the IP info carried by the message
