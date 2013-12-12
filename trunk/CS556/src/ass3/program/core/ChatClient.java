@@ -144,9 +144,11 @@ public class ChatClient {
 			try {
 				if (request instanceof PublicKeyRequest) {
 					serverState.transit(SState.PUBLIC_KEY_SENT);
+					clientState.transit(CState.PUBLIC_KEY_RECEIVED);
 				}
 				if (request instanceof ExchSharedKeyRequest) {
 					serverState.transit(SState.SHARED_KEY_RECEIVED);
+					clientState.transit(CState.SHARED_KEY_EXCHANGED);
 				}
 				if (request instanceof SendTextRequest) {
 					// Do nothing now
@@ -167,9 +169,11 @@ public class ChatClient {
 				} else {
 					if (received instanceof PublicKeyResponse) {
 						clientState.transit(CState.PUBLIC_KEY_RECEIVED);
+						serverState.transit(SState.PUBLIC_KEY_SENT);
 					}
 					if (received instanceof ExchSharedKeyResponse) {
 						clientState.transit(CState.SHARED_KEY_EXCHANGED);
+						serverState.transit(SState.SHARED_KEY_RECEIVED);
 					}
 				}
 			} catch (IllegalStateException e) {
