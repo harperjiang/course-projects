@@ -26,6 +26,7 @@ public class Chatter implements ServerListener, MessageListener {
 
 	protected void registerClient(ChatClient client) {
 		clients.put(client.getIp(), client);
+		client.setListener(this);
 	}
 
 	public void send(String target, String message) {
@@ -33,8 +34,7 @@ public class Chatter implements ServerListener, MessageListener {
 			// Make sure that we have a client to the target
 			if (!clients.containsKey(target)) {
 				ChatClient client = new ChatClient(this, target, PORT);
-				client.setListener(this);
-				clients.put(target, client);
+				registerClient(client);
 			}
 		}
 		final ChatClient client = clients.get(target);
@@ -50,8 +50,7 @@ public class Chatter implements ServerListener, MessageListener {
 				// Construct a new client if none is found
 				ChatClient client = new ChatClient(this, event.getMessage()
 						.getFrom(), PORT);
-				client.setListener(this);
-				clients.put(event.getMessage().getFrom(), client);
+				registerClient(client);
 			}
 		}
 		clients.get(target).process(event.getMessage());
