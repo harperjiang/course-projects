@@ -57,8 +57,7 @@ public class ChatServer {
 				Socket clientSocket = serverSocket.accept();
 				getParent().registerClient(
 						new ChatClient(getParent(), clientSocket));
-				ServerThread thread = new ServerThread(clientSocket);
-				thread.start();
+				monitor(clientSocket);
 			}
 		} catch (IOException e) {
 			if (null != serverSocket)
@@ -69,6 +68,11 @@ public class ChatServer {
 				}
 			throw new RuntimeException(e);
 		}
+	}
+
+	public void monitor(Socket socket) {
+		ServerThread thread = new ServerThread(socket);
+		thread.start();
 	}
 
 	protected final class ServerThread extends Thread {
@@ -125,4 +129,5 @@ public class ChatServer {
 			}
 		}
 	}
+
 }

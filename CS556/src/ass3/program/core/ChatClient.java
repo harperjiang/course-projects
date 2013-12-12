@@ -90,6 +90,8 @@ public class ChatClient {
 			return;
 		try {
 			socket = new Socket(ip, port);
+			// Register server thread
+			getParent().getServer().monitor(socket);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
