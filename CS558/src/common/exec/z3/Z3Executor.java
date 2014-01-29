@@ -31,6 +31,9 @@ public class Z3Executor implements Executor {
 			
 			String exe = MessageFormat.format("{0}{1}bin{1}{2}", FOLDER,
 					File.separator, "z3");
+			File exeFile = new File(exe);
+			if(!exeFile.exists())
+				throw new IllegalArgumentException("Cannot find z3 executable");
 
 			ProcessBuilder builder = new ProcessBuilder(exe, "-smt2", "-in");
 			builder.redirectErrorStream(true);

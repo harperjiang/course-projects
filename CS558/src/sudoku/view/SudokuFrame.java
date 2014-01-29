@@ -37,7 +37,7 @@ public class SudokuFrame extends JFrame {
 	private JPanel centerPanel;
 
 	private SudokuModel model = new SudokuModel(3);
-	
+
 	private boolean runned = false;
 
 	/**
@@ -164,7 +164,7 @@ public class SudokuFrame extends JFrame {
 									"Please reset to start a new game");
 						} catch (Exception e) {
 							JOptionPane.showMessageDialog(SudokuFrame.this,
-									"Cannot Solve this. Please reset.");
+									"Error encountered:" + e.getMessage());
 						} finally {
 							SwingUtilities.invokeLater(new Runnable() {
 								public void run() {
@@ -195,6 +195,11 @@ public class SudokuFrame extends JFrame {
 			}
 		});
 		toolBar.add(new AbstractAction("Output File") {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1077606462081824800L;
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser jfc = new JFileChooser();
@@ -224,7 +229,7 @@ public class SudokuFrame extends JFrame {
 	}
 
 	protected Map<String, Object> solve() {
-		if(runned)
+		if (runned)
 			throw new IllegalStateException();
 		runned = true;
 		Map<String, Object> result = new HashMap<String, Object>();
