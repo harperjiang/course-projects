@@ -1,4 +1,4 @@
-package sudoku.ui;
+package sudoku.view;
 
 import java.awt.Dimension;
 import java.awt.Font;

@@ -1,4 +1,4 @@
-package sudoku.ui;
+package sudoku.view;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -6,6 +6,7 @@ import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
@@ -15,7 +16,8 @@ import javax.swing.JPanel;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 
-import sudoku.model.SudokuSolver;
+import sudoku.model.SudokuModel;
+import common.exec.z3.Z3Executor;
 
 public class SudokuFrame extends JFrame {
 
@@ -24,17 +26,14 @@ public class SudokuFrame extends JFrame {
 	 */
 	private static final long serialVersionUID = -6275020573594671300L;
 
-	private SudokuSolver solver;
-
 	private JPanel centerPanel;
+
+	private SudokuModel model = new SudokuModel(3);
 
 	/**
 	 * @param args
 	 */
 	public SudokuFrame() {
-
-		solver = new SudokuSolver();
-
 		setTitle("Sudoku");
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setLayout(new BorderLayout());
@@ -54,7 +53,7 @@ public class SudokuFrame extends JFrame {
 	}
 
 	protected void rearrangeGrid() {
-		int size = solver.getWidth();
+		int size = model.getWidth();
 		int preferredSize = (50 + 2) * size;
 		setSize(new Dimension(preferredSize, preferredSize + 80));
 		centerPanel.removeAll();
@@ -67,10 +66,10 @@ public class SudokuFrame extends JFrame {
 							SudokuFrame.this, "Input Number For this val");
 					try {
 						int val = Integer.parseInt(input);
-						int size = solver.getWidth();
+						int size = model.getWidth();
 						NumberButton button = (NumberButton) e.getSource();
 						int index = button.getIndex();
-						solver.setNumber(index / size, index % size, val);
+						model.setNumber(index / size, index % size, val);
 						button.setText(input);
 					} catch (IllegalStateException exception) {
 						JOptionPane.showMessageDialog(SudokuFrame.this,
@@ -95,6 +94,11 @@ public class SudokuFrame extends JFrame {
 	protected JToolBar generateToolBar() {
 		JToolBar toolBar = new JToolBar();
 		toolBar.add(new AbstractAction("Setting") {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 9080171741285023506L;
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String input = JOptionPane.showInputDialog(SudokuFrame.this,
@@ -103,7 +107,7 @@ public class SudokuFrame extends JFrame {
 					int value = Integer.parseInt(input);
 					if (value < 2 || value > 10)
 						throw new IllegalArgumentException();
-					solver.setSize(value);
+					model.setSize(value);
 					SudokuFrame.this.rearrangeGrid();
 				} catch (NumberFormatException ex) {
 					JOptionPane.showMessageDialog(SudokuFrame.this,
@@ -112,6 +116,11 @@ public class SudokuFrame extends JFrame {
 			}
 		});
 		toolBar.add(new AbstractAction("Solve") {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -3763555402878998957L;
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				final BlockDialog block = new BlockDialog(SudokuFrame.this);
@@ -120,15 +129,22 @@ public class SudokuFrame extends JFrame {
 				Thread thread = new Thread() {
 					public void run() {
 						try {
-							final Map<String, Integer> values = solver.solve();
+							final Map<String, Object> values = SudokuFrame.this
+									.solve();
+							if (null == values) {
+								JOptionPane.showMessageDialog(SudokuFrame.this,
+										"Cannot Solve this. Please reset.");
+								return;
+							}
 							SwingUtilities.invokeAndWait(new Runnable() {
 								public void run() {
-									int val = solver.getWidth();
+									int val = model.getWidth();
 									val *= val;
 									for (int i = 0; i < val; i++) {
 										NumberButton nb = (NumberButton) centerPanel
 												.getComponent(i);
-										int result = values.get("a" + i);
+										int result = (Integer) values
+												.get("var_" + i);
 										nb.setText(String.valueOf(result));
 									}
 								}
@@ -155,9 +171,14 @@ public class SudokuFrame extends JFrame {
 			}
 		});
 		toolBar.add(new AbstractAction("Reset") {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 6030131870109218735L;
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				solver.reset();
+				model.reset();
 				SudokuFrame.this.rearrangeGrid();
 				SudokuFrame.this.repaint();
 			}
@@ -168,5 +189,17 @@ public class SudokuFrame extends JFrame {
 	@Override
 	public void print(Graphics g) {
 		super.print(g);
+	}
+
+	protected Map<String, Object> solve() {
+		Map<String, Object> result = new HashMap<String, Object>();
+		boolean solvable = new Z3Executor().execute(model, result);
+		if (solvable)
+			return result;
+		return null;
+	}
+
+	public static void main(String[] args) {
+		new SudokuFrame();
 	}
 }
