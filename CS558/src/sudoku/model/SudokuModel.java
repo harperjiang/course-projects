@@ -21,8 +21,6 @@ public class SudokuModel implements Model {
 
 	private List<int[]> assigned;
 
-	private boolean runned = false;
-
 	public SudokuModel(int size) {
 		super();
 		this.size = size;
@@ -30,9 +28,6 @@ public class SudokuModel implements Model {
 	}
 
 	public void setNumber(int i, int j, int value) {
-		if (runned) {
-			throw new IllegalStateException();
-		}
 		if (value > size * size || value <= 0) {
 			throw new IllegalArgumentException(MessageFormat.format(
 					"Value {0} is not in valid range", value));
@@ -42,13 +37,10 @@ public class SudokuModel implements Model {
 
 	public void reset() {
 		assigned = new ArrayList<int[]>();
-		runned = false;
 	}
 
 	@Override
 	public List<Statement> generate() {
-		if (runned)
-			throw new IllegalStateException();
 		int total = size * size * size * size;
 		List<Statement> result = new ArrayList<Statement>();
 
@@ -101,8 +93,6 @@ public class SudokuModel implements Model {
 		}
 
 		result.add(new Check());
-
-		runned = true;
 		return result;
 	}
 

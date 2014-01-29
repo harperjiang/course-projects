@@ -6,10 +6,15 @@ import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -17,7 +22,10 @@ import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 
 import sudoku.model.SudokuModel;
+
 import common.exec.z3.Z3Executor;
+import common.model.Statement;
+import common.model.StatementPrinter;
 
 public class SudokuFrame extends JFrame {
 
@@ -29,6 +37,8 @@ public class SudokuFrame extends JFrame {
 	private JPanel centerPanel;
 
 	private SudokuModel model = new SudokuModel(3);
+	
+	private boolean runned = false;
 
 	/**
 	 * @param args
@@ -181,6 +191,28 @@ public class SudokuFrame extends JFrame {
 				model.reset();
 				SudokuFrame.this.rearrangeGrid();
 				SudokuFrame.this.repaint();
+				SudokuFrame.this.runned = false;
+			}
+		});
+		toolBar.add(new AbstractAction("Output File") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser jfc = new JFileChooser();
+				jfc.setMultiSelectionEnabled(false);
+				if (JFileChooser.APPROVE_OPTION == jfc
+						.showSaveDialog(SudokuFrame.this)) {
+					try {
+						FileOutputStream fos = new FileOutputStream(jfc
+								.getSelectedFile());
+						output(fos);
+					} catch (IOException ioe) {
+						JOptionPane.showMessageDialog(SudokuFrame.this,
+								"Error writing to selected file.");
+					} catch (IllegalStateException ise) {
+						JOptionPane.showMessageDialog(SudokuFrame.this,
+								"Please reset to start a new game");
+					}
+				}
 			}
 		});
 		return toolBar;
@@ -192,11 +224,19 @@ public class SudokuFrame extends JFrame {
 	}
 
 	protected Map<String, Object> solve() {
+		if(runned)
+			throw new IllegalStateException();
+		runned = true;
 		Map<String, Object> result = new HashMap<String, Object>();
 		boolean solvable = new Z3Executor().execute(model, result);
 		if (solvable)
 			return result;
 		return null;
+	}
+
+	protected void output(OutputStream output) {
+		List<Statement> gen = model.generate();
+		StatementPrinter.print(gen, output);
 	}
 
 	public static void main(String[] args) {
