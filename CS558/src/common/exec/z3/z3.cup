@@ -1,0 +1,46 @@
+package common.exec.z3;
+
+import java_cup.runtime.*;
+import java.util.List;
+import java.util.ArrayList;
+import common.exec.*;
+import common.model.Type;
+
+/* Terminals (tokens returned by the scanner). */
+terminal	MODEL, UNSAT, SAT;
+terminal	TRUE, FALSE;
+terminal 	INT, BOOL;
+terminal	ERROR;
+terminal	DEFINE;
+terminal	LB, RB;
+terminal String	STRING, ID;
+terminal Integer NUM;
+
+/* Non-terminals */
+non terminal List<Result> statements;
+non terminal Result statement;
+non terminal List<Assign> assigns;
+non terminal Assign    assign;
+non terminal Type	   type;
+non terminal Object	   val;
+start with statements;
+
+/* The grammar */
+
+statements ::=	statement:s1 statements:s2 	{: RESULT = s2; s2.add(s1); :}
+			|	statement:s1			   	{: RESULT = new ArrayList<Result>(); RESULT.add(s1); :};
+
+statement  ::=	LB ERROR STRING:s1 RB	   	{: RESULT = new ErrorResult(s1); :}
+			|	SAT						   	{: RESULT = new SatResult(true); :}
+			|	UNSAT					   	{: RESULT = new SatResult(false); :}
+			|	LB MODEL assigns:s1 RB	    {: RESULT = new AssignResult(s1); :};
+
+assigns	   ::=  assign:a1 assigns:a2 		{: RESULT = a2; a2.add(a1); :}
+			|	assign:a1					{: RESULT = new ArrayList<Assign>();RESULT.add(a1); :};			
+assign	   ::=  LB DEFINE ID:a1 LB RB type val:a2 RB {: RESULT = new Assign(a1, a2); :};
+
+type	   ::=  BOOL						{: RESULT = Type.Bool;:}
+			|	INT							{: RESULT = Type.Int;:};
+val		   ::=	TRUE					   	{: RESULT = true; :}
+			|	FALSE					   	{: RESULT = false; :}
+			|	NUM:v1						{: RESULT = v1;:};
