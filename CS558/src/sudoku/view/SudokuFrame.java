@@ -45,6 +45,7 @@ public class SudokuFrame extends JFrame {
 	 */
 	public SudokuFrame() {
 		setTitle("Sudoku");
+		setResizable(false);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setLayout(new BorderLayout());
 
